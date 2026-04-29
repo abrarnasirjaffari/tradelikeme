@@ -50,6 +50,42 @@ pub mod vault {
         msg!("Deposited {} USDC into vault", amount);
         Ok(())
     }
+
+    /// Withdraw USDC from the vault back to the user.
+    /// Only the vault owner can call this. Transfers `amount` from the vault's
+    /// token account to the user's token account using the PDA as signer.
+    pub fn withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
+        require!(amount > 0, VaultError::ZeroAmount);
+        require!(
+            ctx.accounts.vault.balance >= amount,
+            VaultError::InsufficientFunds
+        );
+
+        // PDA signs the transfer on behalf of the vault token account
+        let user_key = ctx.accounts.vault.user_pubkey;
+        let strategy_id = ctx.accounts.vault.strategy_id;
+        let bump = ctx.accounts.vault.bump;
+        let seeds: &[&[u8]] = &[b"vault", user_key.as_ref(), &strategy_id, &[bump]];
+        let signer_seeds = &[seeds];
+
+        let cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            Transfer {
+                from: ctx.accounts.vault_token_account.to_account_info(),
+                to: ctx.accounts.user_token_account.to_account_info(),
+                authority: ctx.accounts.vault.to_account_info(),
+            },
+            signer_seeds,
+        );
+        token::transfer(cpi_ctx, amount)?;
+
+        ctx.accounts.vault.balance = ctx.accounts.vault.balance
+            .checked_sub(amount)
+            .ok_or(VaultError::Overflow)?;
+
+        msg!("Withdrew {} USDC from vault", amount);
+        Ok(())
+    }
 }
 
 // ── Accounts contexts ──────────────────────────────────────────────────────
@@ -72,6 +108,33 @@ pub struct InitializeVault<'info> {
     pub user: Signer<'info>,
 
     pub system_program: Program<'info, System>,
+}
+
+/// Withdraw USDC from an existing vault back to the user.
+/// The vault PDA acts as the token account authority (PDA signer).
+#[derive(Accounts)]
+pub struct Withdraw<'info> {
+    #[account(
+        mut,
+        seeds = [b"vault", user.key().as_ref(), &vault.strategy_id],
+        bump = vault.bump,
+        has_one = user_pubkey @ VaultError::Unauthorized,
+    )]
+    pub vault: Account<'info, Vault>,
+
+    #[account(mut)]
+    pub vault_token_account: Account<'info, TokenAccount>,
+
+    #[account(mut)]
+    pub user_token_account: Account<'info, TokenAccount>,
+
+    #[account(mut)]
+    pub user: Signer<'info>,
+
+    /// CHECK: must match vault.user_pubkey
+    pub user_pubkey: AccountInfo<'info>,
+
+    pub token_program: Program<'info, Token>,
 }
 
 /// Deposit USDC into an existing vault.
@@ -137,4 +200,6 @@ pub enum VaultError {
     Overflow,
     #[msg("Signer is not the vault owner")]
     Unauthorized,
+    #[msg("Insufficient vault balance")]
+    InsufficientFunds,
 }
