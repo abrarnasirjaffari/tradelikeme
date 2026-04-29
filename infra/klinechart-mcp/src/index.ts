@@ -4,6 +4,10 @@ import { registerOpenChart } from "./tools/open_chart.js";
 import { registerSetSymbol } from "./tools/set_symbol.js";
 import { registerSetTimeframe } from "./tools/set_timeframe.js";
 import { registerScreenshot } from "./tools/screenshot.js";
+import { registerToggleIndicator } from "./tools/toggle_indicator.js";
+import { registerGetOhlcv } from "./tools/get_ohlcv.js";
+import { registerScrollChart } from "./tools/scroll_chart.js";
+import { registerGetPrice } from "./tools/get_price.js";
 
 const server = new McpServer({
   name: "klinechart-mcp",
@@ -14,6 +18,10 @@ registerOpenChart(server);
 registerSetSymbol(server);
 registerSetTimeframe(server);
 registerScreenshot(server);
+registerToggleIndicator(server);
+registerGetOhlcv(server);
+registerScrollChart(server);
+registerGetPrice(server);
 
 async function main() {
   const transport = new StdioServerTransport();

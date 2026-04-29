@@ -194,11 +194,11 @@
 - [x] KC28 — Write tool `set_symbol` — changes symbol, waits for data-ready
 - [x] KC29 — Write tool `set_timeframe` — changes tf, waits for data-ready
 - [x] KC30 — Write tool `screenshot` — Playwright screenshot → base64 PNG string returned
-- [ ] KC31 — Write tool `toggle_indicator` — evaluate JS in page to show/hide indicator by name
-- [ ] KC32 — Write tool `get_ohlcv` — return raw candle JSON from datafeed cache
-- [ ] KC33 — Write tool `scroll_chart` — evaluate JS to scroll N bars back
-- [ ] KC34 — Write tool `get_price` — return latest close price from datafeed cache
-- [ ] KC35 — Register all 8 tools in `src/index.ts`
+- [x] KC31 — Write tool `toggle_indicator` — evaluate JS in page to show/hide indicator by name
+- [x] KC32 — Write tool `get_ohlcv` — return raw candle JSON from datafeed cache
+- [x] KC33 — Write tool `scroll_chart` — evaluate JS to scroll N bars back
+- [x] KC34 — Write tool `get_price` — return latest close price from datafeed cache
+- [x] KC35 — Register all 8 tools in `src/index.ts`
 
 ### Phase 6 — Build + Test
 
