@@ -17,7 +17,11 @@ async function makeTokenAccount(
   mint: PublicKey,
   owner: PublicKey
 ): Promise<PublicKey> {
-  return createAccount(provider.connection, (provider.wallet as anchor.Wallet).payer, mint, owner);
+  // Pass an explicit Keypair so spl-token creates a plain token account (not an
+  // associated token account). Associated accounts require the owner to be on the
+  // ed25519 curve, which PDAs are not — this avoids TokenOwnerOffCurveError.
+  const kp = Keypair.generate();
+  return createAccount(provider.connection, (provider.wallet as anchor.Wallet).payer, mint, owner, kp);
 }
 
 async function fundTokenAccount(
@@ -569,6 +573,20 @@ describe("vault — settle_epoch()", () => {
       .signers([u])
       .rpc();
 
+    // Baseline: settle once with no profit so opening_balance == depositAmount
+    // Without this, the first real settle_epoch would treat the entire deposit as profit.
+    await program.methods
+      .settleEpoch()
+      .accounts({
+        vault: pda,
+        vaultTokenAccount: vTA,
+        platformTokenAccount: pwTA,
+        agent: a.publicKey,
+        tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+      })
+      .signers([a])
+      .rpc();
+
     return { u, a, pw, s, pda, uTA, vTA, pwTA };
   }
 
@@ -628,15 +646,27 @@ describe("vault — settle_epoch()", () => {
       })
       .signers([user])
       .rpc();
+
+    // Baseline: settle once with no profit so opening_balance == initial deposit.
+    // Without this, the first real settle_epoch sees the whole deposit as profit.
+    await program.methods
+      .settleEpoch()
+      .accounts({
+        vault: vaultPda,
+        vaultTokenAccount,
+        platformTokenAccount,
+        agent: agent.publicKey,
+        tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+      })
+      .signers([agent])
+      .rpc();
   });
 
   it("V15-1: 20/80 split — platform gets exactly 20% of profit", async () => {
-    // Simulate profit: mint 200 USDC directly into vault token account (trading gains)
-    const profit = 200_000_000; // 200 USDC profit
-    await fundTokenAccount(provider, mint, mintAuthority, vaultTokenAccount, profit);
-
-    // Manually sync vault.balance to reflect the simulated profit
-    // (in production the agent updates balance; here we deposit the profit amount)
+    // Simulate trading profit: deposit 200 USDC on top of the initial 1000 USDC.
+    // This moves tokens into the vault token account AND increments vault.balance,
+    // so settle_epoch sees profit = balance - opening_balance = 200 USDC.
+    const profit = 200_000_000; // 200 USDC
     await program.methods
       .deposit(new BN(profit))
       .accounts({
@@ -734,9 +764,8 @@ describe("vault — settle_epoch()", () => {
     // Use a fresh vault with odd profit that doesn't divide evenly
     const { u, a, pw, s, pda, uTA, vTA, pwTA } = await setupFreshVault(10, 1_000_000_000);
 
-    // Add 1 raw unit profit (indivisible by 5)
-    const oddProfit = 1; // 1 raw unit
-    await fundTokenAccount(provider, mint, mintAuthority, vTA, oddProfit);
+    // Add 1 raw unit profit (indivisible by 5) — floor(1 * 20 / 100) = 0
+    const oddProfit = 1;
     await program.methods
       .deposit(new BN(oddProfit))
       .accounts({
@@ -751,6 +780,7 @@ describe("vault — settle_epoch()", () => {
       .rpc();
 
     const stateBefore = await program.account.vault.fetch(pda);
+    const platformBefore = await getAccount(provider.connection, pwTA);
 
     await program.methods
       .settleEpoch()
@@ -767,8 +797,12 @@ describe("vault — settle_epoch()", () => {
     const stateAfter = await program.account.vault.fetch(pda);
     const platformAfter = await getAccount(provider.connection, pwTA);
 
-    // floor(1 * 20 / 100) = 0, so platform gets nothing, user keeps everything
-    assert.equal(Number(platformAfter.amount), 0, "platform fee should floor to 0 on tiny profit");
+    // floor(1 * 20 / 100) = 0 — measure delta so prior epoch fees don't interfere
+    assert.equal(
+      Number(platformAfter.amount) - Number(platformBefore.amount),
+      0,
+      "platform fee should floor to 0 on tiny profit"
+    );
     assert.equal(
       stateAfter.balance.toNumber(),
       stateBefore.balance.toNumber(),
