@@ -181,10 +181,10 @@
 
 ### Phase 4 — Playwright Browser Manager
 
-- [ ] KC21 — Create `infra/klinechart-mcp/src/browser.ts`
-- [ ] KC22 — Write `launch()` — start Playwright Chromium headless, open chart page
-- [ ] KC23 — Write `navigate(symbol, tf)` — set URL params + wait for `data-ready`
-- [ ] KC24 — Write `close()` — graceful browser shutdown
+- [x] KC21 — Create `infra/klinechart-mcp/src/browser.ts`
+- [x] KC22 — Write `launch()` — start Playwright Chromium headless, open chart page
+- [x] KC23 — Write `navigate(symbol, tf)` — set URL params + wait for `data-ready`
+- [x] KC24 — Write `close()` — graceful browser shutdown
 - [ ] KC25 — Test `launch()` + `navigate("SOLUSDT", "4H")` — confirm page loads
 
 ### Phase 5 — MCP Tools (one task per tool)
