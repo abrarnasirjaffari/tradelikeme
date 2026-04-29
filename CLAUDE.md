@@ -54,7 +54,7 @@ TradeLikeMe is a verified-strategy trading marketplace. Users deposit funds, a p
 ### Remaining Accounts (A7–A20)
 - A7–A8: Twilio (WhatsApp) — not started
 - A9–A10: Telegram bot — not started
-- A11–A12: AWS Bedrock Claude Opus 4.6 — not verified
+- A11–A12: AWS Bedrock — model `anthropic.claude-opus-4-6-v1` confirmed ACTIVE in us-east-1. Need dedicated IAM user + keys next session.
 - A13–A17: CEX API keys (WEEX, Bybit, BingX, Binance, Bitget) — not started
 - A18: Colosseum registration — ACTION REQUIRED by May 4
 - A19: tradelikeme.xyz domain — not verified

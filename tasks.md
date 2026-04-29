@@ -12,12 +12,12 @@
 - [x] A4 — Save Phantom wallet private key (base58) to .env
 - [x] A5 — Create Solana devnet account via `solana-keygen new` (pubkey: 35Jt4Uz9NDXAZcwUaNHqr1TMtpdgvtHKHW3NnrRRi6p4, on EC2)
 - [x] A6 — Airdrop devnet SOL for testing — 2.5 SOL confirmed on devnet
-- [ ] A7 — Create Twilio account at twilio.com
-- [ ] A8 — Enable Twilio WhatsApp sandbox, copy Account SID + Auth Token
-- [ ] A9 — Create Telegram bot via @BotFather, copy bot token
-- [ ] A10 — Get Telegram chat ID for notifications
-- [ ] A11 — Verify AWS Bedrock access for Claude Opus 4.6 in us-east-1
-- [ ] A12 — Request Claude Opus 4.6 model access in AWS Bedrock console (if not already enabled)
+- [⏸] A7 — Create Twilio account at twilio.com — ON HOLD (WhatsApp post-hackathon)
+- [⏸] A8 — Enable Twilio WhatsApp sandbox, copy Account SID + Auth Token — ON HOLD
+- [x] A9 — Create Telegram bot via @BotFather — @tradelikeme_alerts_bot, token saved to .env
+- [x] A10 — Get Telegram chat ID for notifications — 6398964627 saved to .env
+- [ ] A11 — Verify AWS Bedrock access for Claude Opus 4.6 in us-east-1 — model ACTIVE, invoke test pending next session
+- [ ] A12 — Create dedicated IAM user + keys for Bedrock Claude Opus 4.6, save to .env — next session
 - [ ] A13 — Create WEEX account, generate trade-only API key
 - [ ] A14 — Create Bybit account, generate trade-only API key
 - [ ] A15 — Create BingX account, generate trade-only API key
@@ -274,12 +274,12 @@
 - [ ] N4 — Create trading_agent/channels/telegram.py
 - [ ] N5 — Write `send_telegram(chat_id, message)` — send via Bot API
 - [ ] N6 — Write `send_photo_telegram(chat_id, image_path, caption)` — send chart screenshot
-- [ ] N7 — Create trading_agent/channels/whatsapp.py
-- [ ] N8 — Write `send_whatsapp(phone, message)` — send via Twilio sandbox
+- [⏸] N7 — Create trading_agent/channels/whatsapp.py — ON HOLD
+- [⏸] N8 — Write `send_whatsapp(phone, message)` — send via Twilio sandbox — ON HOLD
 - [ ] N9 — Define all event types: ZONE_TOUCH, TRADE_ENTERED, TP1_HIT, TP2_HIT, SL_HIT, BALANCE_LOW, AGENT_DOWN, DAILY_SUMMARY
 - [ ] N10 — Write message templates for each event type
 - [ ] N11 — Test Telegram send on real bot
-- [ ] N12 — Test WhatsApp send via Twilio sandbox
+- [⏸] N12 — Test WhatsApp send via Twilio sandbox — ON HOLD
 
 ---
 
@@ -337,7 +337,7 @@
 - [ ] ET5 — Full flow test: settle_epoch() runs, 20% goes to platform wallet on-chain
 - [ ] ET6 — Full flow test: user calls withdraw(), receives 80% share
 - [ ] ET7 — Test Telegram notification received on all 9 event types
-- [ ] ET8 — Test WhatsApp notification received on zone touch + TP hit
+- [⏸] ET8 — Test WhatsApp notification received on zone touch + TP hit — ON HOLD
 - [ ] ET9 — Test 2 simultaneous strategies — verify zero overlap in state/positions
 - [ ] ET10 — Test MIN_BALANCE gate — trading stops below threshold
 
