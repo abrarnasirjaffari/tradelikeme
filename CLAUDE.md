@@ -38,13 +38,19 @@ TradeLikeMe is a verified-strategy trading marketplace. Users deposit funds, a p
 
 ## Build Status (as of Apr 29, 2026)
 - `README.md` — written and pushed
-- `plan.md` — full build plan written and pushed (updated with KLineChart zone scanner)
-- `tasks.md` — full task list written and pushed (KLineChart section added, KC1–KC3 done)
+- `plan.md` — full build plan written and pushed (**updated: KLineChart MCP server approach**)
+- `tasks.md` — full task list written and pushed (**updated: KC8–KC42 KLineChart MCP tasks**)
 - `.env` — created with Helius RPC URL + Phantom wallet keys
 - `.env.example` — created with all variable names
 - `infra/klinechart/` — KLineChart v10 cloned ✅
-- `infra/klinechart-pro/` — KLineChart Pro cloned, architecture reviewed ✅
+- `infra/klinechart-pro/` — KLineChart Pro cloned, deps installed, build verified ✅ (KC1–KC7 done)
 - **No Python/Rust code written yet** — accounts/infra setup in progress
+
+### Zone Scanning Approach — DECIDED
+**KLineChart MCP server** (`infra/klinechart-mcp/`) — NOT Playwright-in-Python.
+Claude calls MCP tools directly (open_chart, screenshot, toggle_indicator etc) like a human.
+8 tools. One server. Reused by all strategies forever. No Python middleman.
+See `plan.md` Zone Scanning section for full details.
 
 ### Accounts & Keys Completed
 - **A1–A2** ✅ Helius account + project created. RPC URL saved to `.env`
@@ -53,25 +59,24 @@ TradeLikeMe is a verified-strategy trading marketplace. Users deposit funds, a p
 - **A5** ✅ Devnet keypair generated on EC2: `35Jt4Uz9NDXAZcwUaNHqr1TMtpdgvtHKHW3NnrRRi6p4`
 - **A6** ✅ 2.5 devnet SOL airdropped via faucet.solana.com
 - **A9–A10** ✅ Telegram bot created (@tradelikeme_alerts_bot), token + chat ID (6398964627) saved to `.env`
+- **A11–A12** ✅ AWS Bedrock IAM user `claude-code-bedrock` created, keys saved to `.env`
+- **A13** ✅ WEEX API key created
+- **A18** ✅ Colosseum registration done
 - **A19** ✅ tradelikeme.xyz domain verified, pointing to EC2 (54.179.141.76)
+- **A20** ✅ `.env` fully filled
 
-### Remaining Accounts (A7–A20)
+### Remaining Accounts
 - A7–A8: Twilio (WhatsApp) — ON HOLD (post-hackathon)
-- A11–A12: AWS Bedrock — model `anthropic.claude-opus-4-6-v1` confirmed ACTIVE in us-east-1. Need dedicated IAM user + keys.
-- A13–A17: CEX API keys (WEEX, Bybit, BingX, Binance, Bitget) — not started (Phase 2)
-- A18: Colosseum registration — **ACTION REQUIRED by May 4**
-- A20: `.env` fully filled — in progress
+- A14–A17: CEX API keys (Bybit, BingX, Binance, Bitget) — not started (Phase 2)
 
 ---
 
 ## What To Build Next Session
-1. **A18**: Register on Colosseum (deadline May 4 — do this first)
-2. **A11–A12**: AWS Bedrock IAM user + test Claude Opus 4.6 invoke
-3. **KC4–KC7**: Install KLineChart + Pro deps, fix peer dep, verify build
-4. **KC8–KC9**: Write `CryptoDatafeed.ts`, wire into KLineChart Pro
-5. **KC10–KC14**: Build headless chart server, test in browser
-6. **R1–R10**: Scaffold full folder structure
-7. **P1–P15**: Python environment + requirements.txt
+1. **KC8–KC13**: Scaffold `infra/klinechart-mcp/` — package.json, tsconfig, empty MCP server, confirm it runs
+2. **KC14–KC20**: Build chart page — index.html + datafeed.ts + data-ready signal, test in browser
+3. **KC21–KC25**: Playwright browser manager — launch, navigate, close
+4. **KC26–KC35**: Write all 8 MCP tools (open_chart, set_symbol, set_timeframe, screenshot, toggle_indicator, get_ohlcv, scroll_chart, get_price)
+5. **KC36–KC42**: Build, test via MCP Inspector, full 7-TF zone scan test with Claude
 
 ---
 

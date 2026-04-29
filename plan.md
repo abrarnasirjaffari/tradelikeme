@@ -113,7 +113,7 @@
 ## Build Order
 
 ### Phase 1 — Hackathon (NOW)
-1. KLineChart Pro setup — CryptoDatafeed, headless chart server
+1. KLineChart MCP server — combined KLineChart + Pro, 8 tools, Playwright headless
 2. Anchor vault program (on-chain profit split)
 3. Raydium Perps client
 4. Jupiter Perps client
@@ -137,41 +137,60 @@
 
 ## Zone Scanning
 
-KLineChart + KLineChart Pro is our **self-hosted TradingView replacement** — no API rate limits, no MCP dependency, fully under our control.
+We build a **KLineChart MCP server** — a self-hosted TradingView replacement that Claude controls directly like a human uses a chart.
 
-### Why KLineChart over TradingView MCP
-- TradingView MCP requires a running TradingView desktop app — fragile, not deployable on EC2
-- KLineChart is open source, runs headlessly via Playwright, no third-party API keys
-- We own the rendering pipeline end-to-end — can tune chart appearance for better Claude analysis
+### Why MCP over Playwright-in-Python
+- Claude calls MCP tools directly — no Python middleman needed
+- One MCP server works for all strategies, all agents, forever
+- Claude can scroll, zoom, switch timeframes, toggle indicators — full control
+- Screenshot tool returns PNG base64 — Claude analyzes inline
+- Reusable open-source tool (good for hackathon composability score)
 
-### Pipeline
+### How It Works
 ```
-fetch_ohlcv(symbol, tf)          ← exchange REST API / Pyth HTTP fallback
+Claude calls MCP tool
         ↓
-render_chart(symbol, tf)         ← Playwright opens infra/chart_server/index.html?symbol=X&tf=Y
-        ↓                           KLineChart Pro renders candles + all indicators
-wait for data-ready DOM signal   ← fires once candles are loaded
+KLineChart MCP server (Node.js)
         ↓
-screenshot_chart()               ← Playwright captures PNG (1400×700px, clean, no toolbar clutter)
+Playwright headless browser (internal)
         ↓
-analyze_zones(png, symbol, tf)   ← send to Claude Opus 4.6 via AWS Bedrock
+chart/index.html — KLineChart + KLineChart Pro combined, 1400×700px
         ↓
-[{type, top, bottom, tf, strength}]  ← structured zone list returned
+CryptoDatafeed.ts — fetches OHLCV from exchange REST / Pyth fallback
+        ↓
+screenshot() tool returns base64 PNG
+        ↓
+Claude Opus 4.6 analyzes for S/D zones
+        ↓
+[{type, top, bottom, tf, strength}]
 ```
+
+### MCP Tools Exposed
+- `open_chart(symbol, timeframe)` — load chart with candles
+- `set_symbol(symbol)` — change symbol
+- `set_timeframe(tf)` — change timeframe (15m / 1H / 4H / 1D etc)
+- `toggle_indicator(name)` — show/hide MA, RSI, MACD, BOLL, VOL etc
+- `screenshot()` — capture PNG, return base64
+- `get_ohlcv(symbol, tf, limit)` — return raw candle data as JSON
+- `scroll_chart(bars)` — scroll backward in time
+- `get_price(symbol)` — return current price
 
 ### Chart Stack
-- `infra/klinechart/` — KLineChart v10 (canvas engine, peer dep)
-- `infra/klinechart-pro/` — KLineChart Pro (full UI: candlesticks + all indicators)
-- `infra/klinechart-pro/src/CryptoDatafeed.ts` — our datafeed (replaces Polygon.io `DefaultDatafeed`)
-- `infra/chart_server/index.html` — minimal headless render page, fixed 1400×700px
+- `infra/klinechart/` — KLineChart v10 canvas engine (peer dep)
+- `infra/klinechart-pro/` — KLineChart Pro full UI (all indicators)
+- `infra/klinechart-mcp/` — MCP server (Node.js + Playwright + MCP SDK)
+  - `src/index.ts` — MCP server entry, registers all tools
+  - `src/browser.ts` — Playwright browser lifecycle manager
+  - `src/tools/` — one file per MCP tool
+  - `chart/index.html` — headless render page (KLineChart + Pro combined)
+  - `chart/datafeed.ts` — CryptoDatafeed (exchange REST + Pyth fallback)
 
-### Indicators (keep all for now — remove/tune later)
+### Indicators (keep all for now)
 All built-in KLineChart Pro indicators kept: MA, EMA, MACD, RSI, BOLL, VOL, KDJ, etc.
-Claude Opus 4.6 benefits from seeing volume and MA context when identifying S/D zones.
 
 ### Fallback
-- TradingView MCP remains available as fallback if KLineChart chart server is down
-- Fallback triggered in `scan_tf_stack()` on HTTP timeout or screenshot failure
+- TradingView MCP remains fallback if KLineChart MCP server is down
+- zones.py catches MCP timeout → falls back to TradingView MCP
 
 ---
 
@@ -373,10 +392,15 @@ tradelikeme/
 ├── infra/
 │   ├── klinechart/                # KLineChart v10 canvas engine (cloned)
 │   ├── klinechart-pro/            # KLineChart Pro UI (cloned + adapted)
-│   │   └── src/
-│   │       └── CryptoDatafeed.ts  # Our OHLCV datafeed (replaces DefaultDatafeed)
-│   ├── chart_server/
-│   │   └── index.html             # Headless render page for Playwright screenshots
+│   ├── klinechart-mcp/            # KLineChart MCP server (NEW — replaces chart_server)
+│   │   ├── src/
+│   │   │   ├── index.ts           # MCP server entry point, tool registration
+│   │   │   ├── browser.ts         # Playwright browser lifecycle
+│   │   │   └── tools/             # One file per MCP tool
+│   │   ├── chart/
+│   │   │   ├── index.html         # Headless chart page (KLineChart + Pro combined)
+│   │   │   └── datafeed.ts        # CryptoDatafeed (exchange REST + Pyth fallback)
+│   │   └── package.json
 │   └── docker-compose.yml
 └── .env.example
 ```
@@ -395,7 +419,7 @@ tradelikeme/
 | Wallet Auth | Phantom Connect + @solana/wallet-adapter |
 | Stablecoin | CASH + USDC |
 | CEX (Phase 2) | WEEX, Bybit, BingX, Binance, Bitget |
-| Zone Scanning | KLineChart Pro + Playwright (primary) → TradingView MCP (fallback) |
+| Zone Scanning | KLineChart MCP server (primary) → TradingView MCP (fallback) |
 | Zone Analysis | Claude Opus 4.6 via AWS Bedrock |
 | Auth | BetterAuth |
 | Backend | FastAPI |

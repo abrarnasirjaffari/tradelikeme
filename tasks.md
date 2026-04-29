@@ -146,11 +146,12 @@
 
 ---
 
-## KLINECHART SETUP (TradingView replacement — self-hosted zone scanner)
+## KLINECHART MCP SERVER (TradingView replacement — Claude controls chart directly)
 
-> KLineChart (canvas engine) + KLineChart Pro (full chart UI with indicators) replaces TradingView MCP.
-> Pipeline: fetch OHLCV → render chart → Playwright screenshot → Claude Opus 4.6 zone analysis.
-> Keep ALL indicators for now — remove/add later once zone analysis is tuned.
+> KLineChart + KLineChart Pro combined into a single MCP server.
+> Claude calls tools (open_chart, screenshot, toggle_indicator etc) like a human using a chart.
+> No Python middleman. One MCP server reused by all strategies forever.
+> Keep ALL indicators for now — remove/tune later once zone analysis is validated.
 
 - [x] KC1 — Clone KLineChart into `infra/klinechart/`
 - [x] KC2 — Clone KLineChart Pro into `infra/klinechart-pro/`
@@ -159,15 +160,55 @@
 - [x] KC5 — `cd infra/klinechart-pro && npm install` — installed 590 packages
 - [x] KC6 — Fix peer dep in `infra/klinechart-pro/package.json`: bumped `"klinecharts": ">=9.0.0"` → `">=10.0.0"`
 - [x] KC7 — `npm run build` in `infra/klinechart-pro/` — clean build, 331 modules, dist generated
-- [ ] KC8 — Create `infra/klinechart-pro/src/CryptoDatafeed.ts` — implement `Datafeed` interface, `getHistoryKLineData()` fetches our OHLCV (exchange REST, Pyth fallback)
-- [ ] KC9 — Wire `CryptoDatafeed` into `KLineChartPro` constructor — replace `DefaultDatafeed` reference
-- [ ] KC10 — Create `infra/chart_server/index.html` — minimal headless render page (1400×700px, no margins, no toolbar interaction needed)
-- [ ] KC11 — Add `data-ready="true"` attribute to chart container once candles finish loading — Playwright waits on this before screenshotting
-- [ ] KC12 — `npm run build` in `infra/klinechart-pro/` — confirm clean production build with CryptoDatafeed
-- [ ] KC13 — Serve `infra/chart_server/` via simple Node HTTP server (`npx serve` or `vite preview`)
-- [ ] KC14 — Manual test: open chart in browser, pass `?symbol=SOLUSDT&tf=4H` — confirm candles render correctly
-- [ ] KC15 — Upgrade Vite 4 → 6 in klinechart-pro + fix any breaking changes (separate step, after KC14 works)
-- [ ] KC16 — Upgrade TypeScript 4 → 5 in klinechart-pro + fix any type errors (separate step, after KC15)
+### Phase 2 — MCP Server Scaffold
+
+- [x] KC8 — Create `infra/klinechart-mcp/` folder
+- [x] KC9 — Create `infra/klinechart-mcp/package.json` — deps: `@modelcontextprotocol/sdk`, `playwright`, `typescript`
+- [x] KC10 — Run `npm install` in `infra/klinechart-mcp/`
+- [x] KC11 — Create `infra/klinechart-mcp/tsconfig.json` — target ES2022, module NodeNext
+- [x] KC12 — Create `infra/klinechart-mcp/src/index.ts` — empty MCP server skeleton (McpServer init, stdio transport, no tools yet)
+- [x] KC13 — Confirm `npx ts-node src/index.ts` runs without error
+
+### Phase 3 — Chart Page
+
+- [ ] KC14 — Create `infra/klinechart-mcp/chart/` folder
+- [ ] KC15 — Create `infra/klinechart-mcp/chart/index.html` — loads KLineChart + KLineChart Pro from local `infra/` paths, fixed 1400×700px, no toolbar
+- [ ] KC16 — Create `infra/klinechart-mcp/chart/datafeed.ts` — `getHistoryKLineData()` fetches OHLCV from exchange REST API
+- [ ] KC17 — Add Pyth HTTP fallback to `datafeed.ts` — if exchange REST fails, fetch from Pyth
+- [ ] KC18 — Wire `datafeed.ts` into the chart page — replace default Polygon.io datafeed
+- [ ] KC19 — Add `data-ready="true"` to chart DOM element once candles finish loading
+- [ ] KC20 — Manual test: open `chart/index.html?symbol=SOLUSDT&tf=4H` in browser — candles render
+
+### Phase 4 — Playwright Browser Manager
+
+- [ ] KC21 — Create `infra/klinechart-mcp/src/browser.ts`
+- [ ] KC22 — Write `launch()` — start Playwright Chromium headless, open chart page
+- [ ] KC23 — Write `navigate(symbol, tf)` — set URL params + wait for `data-ready`
+- [ ] KC24 — Write `close()` — graceful browser shutdown
+- [ ] KC25 — Test `launch()` + `navigate("SOLUSDT", "4H")` — confirm page loads
+
+### Phase 5 — MCP Tools (one task per tool)
+
+- [ ] KC26 — Create `src/tools/` folder
+- [ ] KC27 — Write tool `open_chart` — calls `browser.navigate(symbol, tf)`, returns "ok"
+- [ ] KC28 — Write tool `set_symbol` — changes symbol, waits for data-ready
+- [ ] KC29 — Write tool `set_timeframe` — changes tf, waits for data-ready
+- [ ] KC30 — Write tool `screenshot` — Playwright screenshot → base64 PNG string returned
+- [ ] KC31 — Write tool `toggle_indicator` — evaluate JS in page to show/hide indicator by name
+- [ ] KC32 — Write tool `get_ohlcv` — return raw candle JSON from datafeed cache
+- [ ] KC33 — Write tool `scroll_chart` — evaluate JS to scroll N bars back
+- [ ] KC34 — Write tool `get_price` — return latest close price from datafeed cache
+- [ ] KC35 — Register all 8 tools in `src/index.ts`
+
+### Phase 6 — Build + Test
+
+- [ ] KC36 — `npm run build` in `infra/klinechart-mcp/` — confirm clean TypeScript compile
+- [ ] KC37 — Test `open_chart` tool via MCP Inspector — chart loads
+- [ ] KC38 — Test `screenshot` tool — returns valid base64 PNG
+- [ ] KC39 — Test `set_timeframe` + `screenshot` — confirm different TF candles render
+- [ ] KC40 — Test `toggle_indicator` — RSI appears/disappears on chart
+- [ ] KC41 — Add MCP server to `claude_desktop_config.json` (or project MCP settings) for local use
+- [ ] KC42 — Full zone scan test: Claude calls open_chart + screenshot 7 times (7 TFs) for SOLUSDT, identifies zones
 
 ---
 
