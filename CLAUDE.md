@@ -3,8 +3,8 @@
 ## What Is This Project
 TradeLikeMe is a verified-strategy trading marketplace. Users deposit funds, a proven agent trades on their behalf using a human-cloned strategy with 89% win rate. Platform takes 20% profit share. Zero fees, zero subscriptions.
 
-**This repo** (`abrarnasirjaffari/tradelikeme`) = Python backend platform only.
-**Separate repo** (`abrarnasirjaffari/tradelikeme-website`) = Next.js website + dashboard. Already built. Will be linked to this platform later. Do NOT touch it from here.
+**This repo** (`abrarnasirjaffari/tradelikeme`) = Python backend platform only (for now).
+**`tradelikeme-website`** (separate GitHub repo) = Next.js website, waitlist live. Will be merged into this repo under `frontend/` **after the main platform is complete**. Do not touch it until then.
 
 ---
 
@@ -38,32 +38,40 @@ TradeLikeMe is a verified-strategy trading marketplace. Users deposit funds, a p
 
 ## Build Status (as of Apr 29, 2026)
 - `README.md` — written and pushed
-- `plan.md` — full build plan written and pushed
-- `tasks.md` — full task list written and pushed
+- `plan.md` — full build plan written and pushed (updated with KLineChart zone scanner)
+- `tasks.md` — full task list written and pushed (KLineChart section added, KC1–KC3 done)
 - `.env` — created with Helius RPC URL + Phantom wallet keys
 - `.env.example` — created with all variable names
-- **No code written yet** — accounts/infra setup in progress
+- `infra/klinechart/` — KLineChart v10 cloned ✅
+- `infra/klinechart-pro/` — KLineChart Pro cloned, architecture reviewed ✅
+- **No Python/Rust code written yet** — accounts/infra setup in progress
 
-### Accounts & Keys Completed (A1–A6)
+### Accounts & Keys Completed
 - **A1–A2** ✅ Helius account + project created. RPC URL saved to `.env`
 - **A3–A4** ✅ Phantom wallet created for agent sub-account. Private key + pubkey saved to `.env`
   - Pubkey: `HgcX7tJLhHTBUXmWskaohFcr4J1NR66FMwR7iAPawP7F`
 - **A5** ✅ Devnet keypair generated on EC2: `35Jt4Uz9NDXAZcwUaNHqr1TMtpdgvtHKHW3NnrRRi6p4`
 - **A6** ✅ 2.5 devnet SOL airdropped via faucet.solana.com
+- **A9–A10** ✅ Telegram bot created (@tradelikeme_alerts_bot), token + chat ID (6398964627) saved to `.env`
+- **A19** ✅ tradelikeme.xyz domain verified, pointing to EC2 (54.179.141.76)
 
 ### Remaining Accounts (A7–A20)
-- A7–A8: Twilio (WhatsApp) — not started
-- A9–A10: Telegram bot — not started
-- A11–A12: AWS Bedrock — model `anthropic.claude-opus-4-6-v1` confirmed ACTIVE in us-east-1. Need dedicated IAM user + keys next session.
-- A13–A17: CEX API keys (WEEX, Bybit, BingX, Binance, Bitget) — not started
-- A18: Colosseum registration — ACTION REQUIRED by May 4
-- A19: tradelikeme.xyz domain — not verified
+- A7–A8: Twilio (WhatsApp) — ON HOLD (post-hackathon)
+- A11–A12: AWS Bedrock — model `anthropic.claude-opus-4-6-v1` confirmed ACTIVE in us-east-1. Need dedicated IAM user + keys.
+- A13–A17: CEX API keys (WEEX, Bybit, BingX, Binance, Bitget) — not started (Phase 2)
+- A18: Colosseum registration — **ACTION REQUIRED by May 4**
 - A20: `.env` fully filled — in progress
 
 ---
 
 ## What To Build Next Session
-Start with accounts/API keys (tasks A1–A20 in tasks.md), then scaffold the folder structure (R1–R10), then Python environment (P1–P15), then begin the Anchor vault program (V1+).
+1. **A18**: Register on Colosseum (deadline May 4 — do this first)
+2. **A11–A12**: AWS Bedrock IAM user + test Claude Opus 4.6 invoke
+3. **KC4–KC7**: Install KLineChart + Pro deps, fix peer dep, verify build
+4. **KC8–KC9**: Write `CryptoDatafeed.ts`, wire into KLineChart Pro
+5. **KC10–KC14**: Build headless chart server, test in browser
+6. **R1–R10**: Scaffold full folder structure
+7. **P1–P15**: Python environment + requirements.txt
 
 ---
 
@@ -76,8 +84,8 @@ Start with accounts/API keys (tasks A1–A20 in tasks.md), then scaffold the fol
 - Multi-strategy isolation (each strategy = separate agent process + separate SQLite DB + separate Docker container)
 - Multi-channel notifications (Telegram + WhatsApp Phase 1, more later)
 
-### This Platform Does NOT Do
-- Frontend / UI (that's tradelikeme-website)
+### This Platform Does NOT Do (this phase)
+- Frontend / UI — merge is deferred until platform is complete
 - Forex (on hold — research needed)
 - CEX clients in Phase 1 (post-hackathon — focus is Solana first)
 
@@ -160,10 +168,23 @@ FastAPI routes requests by `strategy_id + user_id`. Zero cross-strategy access.
 - Max 2 concurrent positions. Min balance $35.
 
 ### Zone Scanning
-- **Primary**: KLineChart + Playwright → OHLCV from exchange → render chart → screenshot → Claude Opus 4.6 analysis
-- **Fallback**: TradingView MCP (if KLineChart unavailable)
-- Claude model: Opus 4.6 via **AWS Bedrock** (not Anthropic direct API)
-- AWS credentials: IAM user `claude-code-bedrock`, region `us-east-1`
+KLineChart Pro is our **self-hosted TradingView replacement** — no API keys, no desktop dependency, runs headlessly on EC2.
+
+**Pipeline**: `fetch_ohlcv(symbol, tf)` → Playwright opens `infra/chart_server/index.html?symbol=X&tf=Y` → KLineChart Pro renders candles + all indicators → wait for `data-ready` DOM signal → Playwright screenshots PNG → Claude Opus 4.6 analyzes for S/D zones
+
+- **Primary**: KLineChart Pro + Playwright (`infra/klinechart-pro/` + `infra/chart_server/`)
+- **Fallback**: TradingView MCP (triggered on chart server timeout or failure)
+- **Datafeed**: `CryptoDatafeed.ts` — replaces Pro's default Polygon.io datafeed with our exchange REST / Pyth HTTP fallback
+- **Indicators**: all kept for now (MA, EMA, MACD, RSI, BOLL, VOL, KDJ, etc.) — Claude benefits from volume context when identifying zones
+- **Claude model**: Opus 4.6 via **AWS Bedrock** (not Anthropic direct API)
+- **AWS credentials**: IAM user `claude-code-bedrock`, region `us-east-1`
+
+**KLineChart stack:**
+| Repo | Path | Version | Role |
+|------|------|---------|------|
+| KLineChart | `infra/klinechart/` | v10.0.0-beta1 | Canvas engine (peer dep) |
+| KLineChart Pro | `infra/klinechart-pro/` | v0.1.1 | Full chart UI |
+| Chart server | `infra/chart_server/index.html` | — | Headless render page for Playwright |
 
 ---
 
@@ -287,7 +308,19 @@ tradelikeme/
 │   ├── routes/
 │   └── models/
 └── infra/
+    ├── klinechart/                # KLineChart v10 canvas engine (cloned)
+    ├── klinechart-pro/            # KLineChart Pro UI (cloned + adapted)
+    │   └── src/
+    │       └── CryptoDatafeed.ts  # Our OHLCV datafeed (replaces DefaultDatafeed)
+    ├── chart_server/
+    │   └── index.html             # Headless render page for Playwright screenshots
     └── docker-compose.yml
+├── frontend/                      # Next.js app (merged from tradelikeme-website)
+│   ├── app/                       # Next.js app router pages
+│   ├── components/                # Shared UI components
+│   ├── public/                    # Static assets
+│   └── package.json
+└── .env.example
 ```
 
 ---
@@ -302,7 +335,7 @@ tradelikeme/
 | RPC | Helius (free tier) |
 | Wallet | Phantom Connect + @solana/wallet-adapter |
 | Stablecoin | CASH + USDC |
-| Zone Scanning | KLineChart + Playwright → TradingView MCP fallback |
+| Zone Scanning | KLineChart Pro + Playwright (primary) → TradingView MCP (fallback) |
 | Zone Analysis | Claude Opus 4.6 via AWS Bedrock |
 | Auth | BetterAuth |
 | Backend | FastAPI + SQLAlchemy |
@@ -310,7 +343,7 @@ tradelikeme/
 | Notifications | Telegram + WhatsApp (Twilio) |
 | Server | AWS EC2 t3.xlarge |
 | Deployment | Dokploy + Docker Compose + Traefik |
-| Frontend | tradelikeme-website (separate repo) |
+| Frontend | Next.js + Tailwind (merged into `frontend/`) |
 
 ---
 

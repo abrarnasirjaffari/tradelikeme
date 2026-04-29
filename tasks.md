@@ -12,55 +12,48 @@
 - [x] A4 — Save Phantom wallet private key (base58) to .env
 - [x] A5 — Create Solana devnet account via `solana-keygen new` (pubkey: 35Jt4Uz9NDXAZcwUaNHqr1TMtpdgvtHKHW3NnrRRi6p4, on EC2)
 - [x] A6 — Airdrop devnet SOL for testing — 2.5 SOL confirmed on devnet
-- [⏸] A7 — Create Twilio account at twilio.com — ON HOLD (WhatsApp post-hackathon)
-- [⏸] A8 — Enable Twilio WhatsApp sandbox, copy Account SID + Auth Token — ON HOLD
 - [x] A9 — Create Telegram bot via @BotFather — @tradelikeme_alerts_bot, token saved to .env
 - [x] A10 — Get Telegram chat ID for notifications — 6398964627 saved to .env
-- [ ] A11 — Verify AWS Bedrock access for Claude Opus 4.6 in us-east-1 — model ACTIVE, invoke test pending next session
-- [ ] A12 — Create dedicated IAM user + keys for Bedrock Claude Opus 4.6, save to .env — next session
-- [ ] A13 — Create WEEX account, generate trade-only API key
-- [ ] A14 — Create Bybit account, generate trade-only API key
-- [ ] A15 — Create BingX account, generate trade-only API key
-- [ ] A16 — Create Binance account, generate trade-only API key
-- [ ] A17 — Create Bitget account, generate trade-only API key
-- [ ] A18 — Create Colosseum account, register TradeLikeMe for Solana Frontier hackathon (deadline May 4)
-- [ ] A19 — Verify tradelikeme.xyz domain is active and pointing to EC2
-- [ ] A20 — Create .env file in Platform/ with all keys filled in
+- [x] A11 — Verify AWS Bedrock access for Claude Opus 4.6 in us-east-1 — model ACTIVE, invoke test pending next session
+- [x] A12 — Create dedicated IAM user + keys for Bedrock Claude Opus 4.6, save to .env — IAM user: claude-code-bedrock, keys saved
+- [x] A13 — Create WEEX account, generate trade-only API key
+- [x] A18 — Create Colosseum account, register TradeLikeMe for Solana Frontier hackathon (deadline May 4)
+- [x] A19 — Verify tradelikeme.xyz domain is active and pointing to EC2 (54.179.141.76 ✓)
+- [x] A20 — Create .env file in Platform/ with all keys filled in
 
 ---
 
 ## REPO & PROJECT SETUP
 
-- [ ] R1 — Create .gitignore in Platform/
-- [ ] R2 — Create .env.example with all variable names (no values)
-- [ ] R3 — Create top-level folder structure (trading_agent/, backend/, infra/)
-- [ ] R4 — Create trading_agent/base/ folder
-- [ ] R5 — Create trading_agent/strategies/sd_zones/ folder
-- [ ] R6 — Create trading_agent/exchanges/solana/ folder
-- [ ] R7 — Create trading_agent/exchanges/cex/ folder
-- [ ] R8 — Create trading_agent/channels/ folder
-- [ ] R9 — Create backend/routes/ folder
-- [ ] R10 — Create backend/models/ folder
+- [x] R1 — Create .gitignore in Platform/
+- [x] R2 — Create .env.example with all variable names (no values)
+- [x] R3 — Create top-level folder structure (trading_agent/, backend/, infra/, frontend/)
+- [x] R4 — Create trading_agent/base/ folder
+- [x] R5 — Create trading_agent/strategies/sd_zones/ folder
+- [x] R6 — Create trading_agent/exchanges/solana/ folder
+- [x] R7 — Create trading_agent/exchanges/cex/ folder
+- [x] R8 — Create trading_agent/channels/ folder
+- [x] R9 — Create backend/routes/ folder
+- [x] R10 — Create backend/models/ folder
 
 ---
 
 ## PYTHON ENVIRONMENT
 
-- [ ] P1 — Create requirements.txt
-- [ ] P2 — Add fastapi to requirements.txt
-- [ ] P3 — Add uvicorn to requirements.txt
-- [ ] P4 — Add websockets to requirements.txt
-- [ ] P5 — Add httpx to requirements.txt
-- [ ] P6 — Add sqlalchemy to requirements.txt
-- [ ] P7 — Add python-dotenv to requirements.txt
-- [ ] P8 — Add boto3 to requirements.txt (AWS Bedrock)
-- [ ] P9 — Add twilio to requirements.txt (WhatsApp)
-- [ ] P10 — Add python-telegram-bot to requirements.txt
-- [ ] P11 — Add playwright to requirements.txt (KLineChart screenshots)
-- [ ] P12 — Add anchorpy to requirements.txt (Anchor vault interaction)
-- [ ] P13 — Add solders to requirements.txt (Solana primitives)
-- [ ] P14 — Add solana-py to requirements.txt
-- [ ] P15 — Create venv and run pip install -r requirements.txt
+- [x] P1 — Create requirements.txt
+- [x] P2 — Add fastapi to requirements.txt
+- [x] P3 — Add uvicorn to requirements.txt
+- [x] P4 — Add websockets to requirements.txt
+- [x] P5 — Add httpx to requirements.txt
+- [x] P6 — Add sqlalchemy to requirements.txt
+- [x] P7 — Add python-dotenv to requirements.txt
+- [x] P8 — Add boto3 to requirements.txt (AWS Bedrock)
+- [x] P10 — Add python-telegram-bot to requirements.txt
+- [x] P11 — Add playwright to requirements.txt (KLineChart screenshots)
+- [x] P12 — Add anchorpy to requirements.txt (Anchor vault interaction)
+- [x] P13 — Add solders to requirements.txt (Solana primitives)
+- [x] P14 — Add solana-py to requirements.txt
+- [x] P15 — Create venv and run pip install -r requirements.txt
 
 ---
 
@@ -153,12 +146,37 @@
 
 ---
 
+## KLINECHART SETUP (TradingView replacement — self-hosted zone scanner)
+
+> KLineChart (canvas engine) + KLineChart Pro (full chart UI with indicators) replaces TradingView MCP.
+> Pipeline: fetch OHLCV → render chart → Playwright screenshot → Claude Opus 4.6 zone analysis.
+> Keep ALL indicators for now — remove/add later once zone analysis is tuned.
+
+- [x] KC1 — Clone KLineChart into `infra/klinechart/`
+- [x] KC2 — Clone KLineChart Pro into `infra/klinechart-pro/`
+- [x] KC3 — Review KLineChart Pro source — architecture understood, datafeed interface identified, outdated deps catalogued
+- [x] KC4 — `cd infra/klinechart && pnpm install` — installed 967 packages (requires pnpm, not npm)
+- [x] KC5 — `cd infra/klinechart-pro && npm install` — installed 590 packages
+- [x] KC6 — Fix peer dep in `infra/klinechart-pro/package.json`: bumped `"klinecharts": ">=9.0.0"` → `">=10.0.0"`
+- [x] KC7 — `npm run build` in `infra/klinechart-pro/` — clean build, 331 modules, dist generated
+- [ ] KC8 — Create `infra/klinechart-pro/src/CryptoDatafeed.ts` — implement `Datafeed` interface, `getHistoryKLineData()` fetches our OHLCV (exchange REST, Pyth fallback)
+- [ ] KC9 — Wire `CryptoDatafeed` into `KLineChartPro` constructor — replace `DefaultDatafeed` reference
+- [ ] KC10 — Create `infra/chart_server/index.html` — minimal headless render page (1400×700px, no margins, no toolbar interaction needed)
+- [ ] KC11 — Add `data-ready="true"` attribute to chart container once candles finish loading — Playwright waits on this before screenshotting
+- [ ] KC12 — `npm run build` in `infra/klinechart-pro/` — confirm clean production build with CryptoDatafeed
+- [ ] KC13 — Serve `infra/chart_server/` via simple Node HTTP server (`npx serve` or `vite preview`)
+- [ ] KC14 — Manual test: open chart in browser, pass `?symbol=SOLUSDT&tf=4H` — confirm candles render correctly
+- [ ] KC15 — Upgrade Vite 4 → 6 in klinechart-pro + fix any breaking changes (separate step, after KC14 works)
+- [ ] KC16 — Upgrade TypeScript 4 → 5 in klinechart-pro + fix any type errors (separate step, after KC15)
+
+---
+
 ## ZONE SCANNER (zones.py)
 
 - [ ] ZS1 — Create trading_agent/strategies/sd_zones/zones.py
 - [ ] ZS2 — Write `fetch_ohlcv(symbol, tf)` — get candle data from Pyth/exchange REST
-- [ ] ZS3 — Create infra/chart_template.html — KLineChart canvas, accepts candle JSON
-- [ ] ZS4 — Write `render_chart(symbol, tf, ohlcv)` — inject candles into HTML template
+- [ ] ZS3 — Write `render_chart(symbol, tf)` — open `infra/chart_server/index.html?symbol=X&tf=Y` via Playwright, wait for `data-ready` attribute
+- [ ] ZS4 — Confirm chart server is running before zone scan starts (health check in `scan_tf_stack`)
 - [ ] ZS5 — Install Playwright: `playwright install chromium`
 - [ ] ZS6 — Write `screenshot_chart(html_path)` — Playwright headless screenshot → PNG
 - [ ] ZS7 — Write `analyze_zones(png_path, symbol, tf)` — send screenshot to Claude Opus 4.6 via AWS Bedrock
@@ -274,12 +292,9 @@
 - [ ] N4 — Create trading_agent/channels/telegram.py
 - [ ] N5 — Write `send_telegram(chat_id, message)` — send via Bot API
 - [ ] N6 — Write `send_photo_telegram(chat_id, image_path, caption)` — send chart screenshot
-- [⏸] N7 — Create trading_agent/channels/whatsapp.py — ON HOLD
-- [⏸] N8 — Write `send_whatsapp(phone, message)` — send via Twilio sandbox — ON HOLD
 - [ ] N9 — Define all event types: ZONE_TOUCH, TRADE_ENTERED, TP1_HIT, TP2_HIT, SL_HIT, BALANCE_LOW, AGENT_DOWN, DAILY_SUMMARY
 - [ ] N10 — Write message templates for each event type
 - [ ] N11 — Test Telegram send on real bot
-- [⏸] N12 — Test WhatsApp send via Twilio sandbox — ON HOLD
 
 ---
 
@@ -322,7 +337,7 @@
 - [ ] DO5 — Create Dockerfile for Python agent
 - [ ] DO6 — Create Dockerfile for FastAPI backend
 - [ ] DO7 — Install Dokploy on EC2 (`curl -sSL https://dokploy.com/install.sh | bash`)
-- [ ] DO8 — Configure Traefik routing in Dokploy (api.tradelikeme.xyz → FastAPI)
+- [ ] DO8 — Configure Traefik routing in Dokploy (`api.tradelikeme.xyz` → FastAPI)
 - [ ] DO9 — Deploy via Dokploy — all services running
 - [ ] DO10 — Verify auto-SSL cert issued for api.tradelikeme.xyz
 
@@ -337,7 +352,6 @@
 - [ ] ET5 — Full flow test: settle_epoch() runs, 20% goes to platform wallet on-chain
 - [ ] ET6 — Full flow test: user calls withdraw(), receives 80% share
 - [ ] ET7 — Test Telegram notification received on all 9 event types
-- [⏸] ET8 — Test WhatsApp notification received on zone touch + TP hit — ON HOLD
 - [ ] ET9 — Test 2 simultaneous strategies — verify zero overlap in state/positions
 - [ ] ET10 — Test MIN_BALANCE gate — trading stops below threshold
 
@@ -351,3 +365,56 @@
 - [ ] CS4 — Screenshot Phantom Connect sign-in flow
 - [ ] CS5 — Screenshot vault deposit + delegation on devnet
 - [ ] CS6 — Submit on colosseum.com before May 11, 2026
+
+---
+
+## REPO MERGE & FRONTEND (DEFERRED — do after main platform is complete)
+
+> Do NOT start these until Python backend + Solana is fully working and tested.
+> `tradelikeme-website` stays as a separate repo until then.
+
+### Merge
+- [ ] M1 — Pull latest from `tradelikeme-website` GitHub repo
+- [ ] M2 — Create `frontend/` folder in this repo
+- [ ] M3 — Copy all Next.js files from tradelikeme-website into `frontend/`
+- [ ] M4 — Verify `frontend/` builds: `cd frontend && npm install && npm run build`
+- [ ] M5 — Add `frontend/node_modules` and `frontend/.next` to `.gitignore`
+- [ ] M6 — Add frontend service to `infra/docker-compose.yml` (Next.js container)
+- [ ] M7 — Update Traefik routing: `tradelikeme.xyz` → frontend container
+- [ ] M8 — Push merged repo to GitHub (`abrarnasirjaffari/tradelikeme`)
+- [ ] M9 — Archive `tradelikeme-website` repo on GitHub after confirming merge is clean
+
+### Frontend Wiring
+- [ ] FE1 — Audit existing tradelikeme-website pages — list what's built (waitlist, landing, etc.)
+- [ ] FE2 — Set `NEXT_PUBLIC_API_URL=https://api.tradelikeme.xyz` in frontend `.env`
+- [ ] FE3 — Wire Phantom Connect sign-in → BetterAuth session
+- [ ] FE4 — Wire `POST /vaults/{id}/deposit` into deposit UI
+- [ ] FE5 — Wire `POST /vaults/{id}/withdraw` into withdrawal UI
+- [ ] FE6 — Wire `GET /users/{id}/trades` into trade history page
+- [ ] FE7 — Wire `GET /users/{id}/pnl` into P&L dashboard
+- [ ] FE8 — Wire `WS /ws/live` into dashboard for real-time updates
+- [ ] FE9 — Add/update pages as user specifies (TBD — user will direct)
+- [ ] FE10 — Mobile responsive check across all pages
+
+---
+
+## ON HOLD (post-hackathon)
+
+### Accounts
+- [⏸] A7 — Create Twilio account at twilio.com (WhatsApp)
+- [⏸] A8 — Enable Twilio WhatsApp sandbox, copy Account SID + Auth Token
+- [⏸] A14 — Create Bybit account, generate trade-only API key (Phase 2)
+- [⏸] A15 — Create BingX account, generate trade-only API key (Phase 2)
+- [⏸] A16 — Create Binance account, generate trade-only API key (Phase 2)
+- [⏸] A17 — Create Bitget account, generate trade-only API key (Phase 2)
+
+### Python Deps
+- [⏸] P9 — Add twilio to requirements.txt (WhatsApp)
+
+### Notifications
+- [⏸] N7 — Create trading_agent/channels/whatsapp.py
+- [⏸] N8 — Write `send_whatsapp(phone, message)` via Twilio sandbox
+- [⏸] N12 — Test WhatsApp send via Twilio sandbox
+
+### Testing
+- [⏸] ET8 — Test WhatsApp notification on zone touch + TP hit

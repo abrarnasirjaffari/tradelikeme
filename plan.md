@@ -7,8 +7,9 @@
 ## Scope
 
 - **This repo** (`tradelikeme`): Python trading platform — agent, sentinel, zone scanner, exchange clients, FastAPI backend, notifications, profit tracker
-- **Separate repo** (`tradelikeme-website`): Next.js website + dashboard — already built, will be linked to this platform later
-- Frontend is NOT part of this project
+- **Separate repo** (`tradelikeme-website`): Next.js website + dashboard — already built, waitlist live
+- **Merge is planned but deferred** — `tradelikeme-website` will be merged into this repo under `frontend/` once the main platform (Python backend + Solana) is complete
+- Frontend is NOT touched until merge happens
 
 ---
 
@@ -112,29 +113,65 @@
 ## Build Order
 
 ### Phase 1 — Hackathon (NOW)
-1. Anchor vault program (on-chain profit split)
-2. Raydium Perps client
-3. Jupiter Perps client
-4. Pyth price feed WebSocket
-5. Agent brain wired to Solana protocols
-6. Phantom Connect auth
-7. Telegram + WhatsApp notifications
-8. Demo + submit
+1. KLineChart Pro setup — CryptoDatafeed, headless chart server
+2. Anchor vault program (on-chain profit split)
+3. Raydium Perps client
+4. Jupiter Perps client
+5. Pyth price feed WebSocket
+6. Agent brain wired to Solana protocols
+7. Phantom Connect auth
+8. Telegram notifications
+9. Demo + submit
 
 ### Phase 2 — Post Hackathon
+- **Merge `tradelikeme-website` into this repo** under `frontend/` (deferred until platform is complete)
+- Wire frontend to FastAPI backend (deposit, withdraw, trades, P&L, WS)
 - CEX clients (WEEX, Bybit, BingX, Binance, Bitget)
 - CEX profit settlement system
 - Third Solana protocol (research needed)
 - Forex (research needed)
 - More notification channels
-- Link tradelikeme-website to this platform
+- WhatsApp notifications (Twilio)
 
 ---
 
 ## Zone Scanning
-- **Primary**: KLineChart + Playwright — fetch OHLCV → render chart → screenshot → Claude analysis
-- **Fallback**: TradingView MCP (if KLineChart unavailable)
-- **AI model**: Claude Opus 4.6 for zone identification on all screenshots
+
+KLineChart + KLineChart Pro is our **self-hosted TradingView replacement** — no API rate limits, no MCP dependency, fully under our control.
+
+### Why KLineChart over TradingView MCP
+- TradingView MCP requires a running TradingView desktop app — fragile, not deployable on EC2
+- KLineChart is open source, runs headlessly via Playwright, no third-party API keys
+- We own the rendering pipeline end-to-end — can tune chart appearance for better Claude analysis
+
+### Pipeline
+```
+fetch_ohlcv(symbol, tf)          ← exchange REST API / Pyth HTTP fallback
+        ↓
+render_chart(symbol, tf)         ← Playwright opens infra/chart_server/index.html?symbol=X&tf=Y
+        ↓                           KLineChart Pro renders candles + all indicators
+wait for data-ready DOM signal   ← fires once candles are loaded
+        ↓
+screenshot_chart()               ← Playwright captures PNG (1400×700px, clean, no toolbar clutter)
+        ↓
+analyze_zones(png, symbol, tf)   ← send to Claude Opus 4.6 via AWS Bedrock
+        ↓
+[{type, top, bottom, tf, strength}]  ← structured zone list returned
+```
+
+### Chart Stack
+- `infra/klinechart/` — KLineChart v10 (canvas engine, peer dep)
+- `infra/klinechart-pro/` — KLineChart Pro (full UI: candlesticks + all indicators)
+- `infra/klinechart-pro/src/CryptoDatafeed.ts` — our datafeed (replaces Polygon.io `DefaultDatafeed`)
+- `infra/chart_server/index.html` — minimal headless render page, fixed 1400×700px
+
+### Indicators (keep all for now — remove/tune later)
+All built-in KLineChart Pro indicators kept: MA, EMA, MACD, RSI, BOLL, VOL, KDJ, etc.
+Claude Opus 4.6 benefits from seeing volume and MA context when identifying S/D zones.
+
+### Fallback
+- TradingView MCP remains available as fallback if KLineChart chart server is down
+- Fallback triggered in `scan_tf_stack()` on HTTP timeout or screenshot failure
 
 ---
 
@@ -303,7 +340,7 @@ tradelikeme/
 │   │       ├── loop.py            # Orchestrator
 │   │       ├── trade_agent.py     # Per-trade monitor
 │   │       ├── sentinel.py        # WS price watcher
-│   │       ├── zones.py           # Zone scanner (KLineChart + TV MCP fallback)
+│   │       ├── zones.py           # Zone scanner (KLineChart Pro + TV MCP fallback)
 │   │       ├── journal.py         # SQLite persistence
 │   │       ├── state.py           # Runtime state
 │   │       └── config.py          # Strategy-specific params
@@ -328,7 +365,18 @@ tradelikeme/
 │   ├── routes/                    # All API routes
 │   ├── models/                    # SQLAlchemy models
 │   └── platform.db                # Shared DB (users, auth, strategy registry)
+├── frontend/                      # Next.js app (merged from tradelikeme-website)
+│   ├── app/                       # Next.js app router pages
+│   ├── components/                # Shared UI components
+│   ├── public/                    # Static assets
+│   └── package.json
 ├── infra/
+│   ├── klinechart/                # KLineChart v10 canvas engine (cloned)
+│   ├── klinechart-pro/            # KLineChart Pro UI (cloned + adapted)
+│   │   └── src/
+│   │       └── CryptoDatafeed.ts  # Our OHLCV datafeed (replaces DefaultDatafeed)
+│   ├── chart_server/
+│   │   └── index.html             # Headless render page for Playwright screenshots
 │   └── docker-compose.yml
 └── .env.example
 ```
@@ -347,7 +395,7 @@ tradelikeme/
 | Wallet Auth | Phantom Connect + @solana/wallet-adapter |
 | Stablecoin | CASH + USDC |
 | CEX (Phase 2) | WEEX, Bybit, BingX, Binance, Bitget |
-| Zone Scanning | KLineChart + Playwright (primary) → TradingView MCP (fallback) |
+| Zone Scanning | KLineChart Pro + Playwright (primary) → TradingView MCP (fallback) |
 | Zone Analysis | Claude Opus 4.6 via AWS Bedrock |
 | Auth | BetterAuth |
 | Backend | FastAPI |
@@ -355,13 +403,13 @@ tradelikeme/
 | Notifications | Telegram + WhatsApp (Phase 1) |
 | Server | AWS EC2 t3.xlarge |
 | Deployment | Dokploy + Docker Compose + Traefik |
-| Frontend | tradelikeme-website (separate repo, linked later) |
+| Frontend | Next.js + Tailwind (merged into this repo under `frontend/`) |
 
 ---
 
-## What We Are NOT Building Here
-- Next.js frontend / website (separate repo: tradelikeme-website)
+## What We Are NOT Building (this phase)
 - Forex integration (on hold — research needed)
-- Manual CEX profit settlement UI (later)
+- Manual CEX profit settlement UI (post-hackathon)
 - Third Solana protocol beyond Raydium + Jupiter (research needed)
+- New frontend pages beyond what user specifies — wait for direction before adding
 
