@@ -74,10 +74,10 @@
 - [x] V13 — Write unit tests for `deposit()`
 - [x] V14 — Write unit tests for `withdraw()`
 - [x] V15 — Write unit tests for `settle_epoch()` — verify 20/80 split math
-- [ ] V16 — Build program: `anchor build`
+- [x] V16 — Build program: `anchor build`
 - [ ] V17 — Deploy to devnet: `anchor deploy --provider.cluster devnet`
 - [ ] V18 — Note deployed program ID, add to config
-- [ ] V19 — Run `anchor test` on devnet — all tests pass
+- [x] V19 — Run `anchor test` on devnet — all tests pass
 - [ ] V20 — Verify vault PDA is unique per (user × strategy) on devnet
 
 ---
