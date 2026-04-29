@@ -1,0 +1,561 @@
+{
+  "1M": {
+    "tf": "1M",
+    "symbol": "SOLUSDT",
+    "trend": "downtrend",
+    "zones": [
+      {
+        "type": "supply",
+        "top": 295.6,
+        "bottom": 260,
+        "strength": "strong",
+        "notes": "All-time high rejection with long upper wick, high volume"
+      },
+      {
+        "type": "supply",
+        "top": 260,
+        "bottom": 220,
+        "strength": "strong",
+        "notes": "Double top area, multiple rejections with strong bearish follow-through"
+      },
+      {
+        "type": "supply",
+        "top": 210,
+        "bottom": 180,
+        "strength": "moderate",
+        "notes": "Prior swing high resistance, multiple rejections"
+      },
+      {
+        "type": "supply",
+        "top": 150,
+        "bottom": 135,
+        "strength": "moderate",
+        "notes": "Recent breakdown zone, MA30 confluence"
+      },
+      {
+        "type": "demand",
+        "top": 95,
+        "bottom": 75,
+        "strength": "moderate",
+        "notes": "Current price reaction zone, prior consolidation base"
+      },
+      {
+        "type": "demand",
+        "top": 40,
+        "bottom": 20,
+        "strength": "strong",
+        "notes": "Major bear market low base with explosive rally origin, high volume"
+      },
+      {
+        "type": "demand",
+        "top": 10,
+        "bottom": 1.07,
+        "strength": "strong",
+        "notes": "Historical accumulation base, origin of macro uptrend"
+      }
+    ],
+    "fvg": [
+      {
+        "top": 180,
+        "bottom": 155,
+        "direction": "bearish"
+      },
+      {
+        "top": 130,
+        "bottom": 110,
+        "direction": "bearish"
+      }
+    ],
+    "liquidity_levels": [
+      {
+        "price": 260,
+        "type": "equal_highs"
+      },
+      {
+        "price": 76.63,
+        "type": "equal_lows"
+      }
+    ]
+  },
+  "1W": {
+    "tf": "1W",
+    "symbol": "SOLUSDT",
+    "trend": "downtrend",
+    "zones": [
+      {
+        "type": "supply",
+        "top": 295,
+        "bottom": 260,
+        "strength": "strong",
+        "notes": "All-time high rejection wick with high volume, clear swing top"
+      },
+      {
+        "type": "supply",
+        "top": 250,
+        "bottom": 220,
+        "strength": "strong",
+        "notes": "Double top region, multiple rejections with strong bearish follow-through"
+      },
+      {
+        "type": "supply",
+        "top": 200,
+        "bottom": 180,
+        "strength": "moderate",
+        "notes": "Lower high supply, bearish engulfing origin"
+      },
+      {
+        "type": "supply",
+        "top": 150,
+        "bottom": 130,
+        "strength": "moderate",
+        "notes": "Recent breakdown zone, MA60 resistance confluence"
+      },
+      {
+        "type": "demand",
+        "top": 100,
+        "bottom": 85,
+        "strength": "moderate",
+        "notes": "Current consolidation base, price holding with small bodies"
+      },
+      {
+        "type": "demand",
+        "top": 85,
+        "bottom": 75,
+        "strength": "strong",
+        "notes": "Recent swing low, multiple wicks defending level, high volume bounce"
+      },
+      {
+        "type": "demand",
+        "top": 30,
+        "bottom": 15,
+        "strength": "strong",
+        "notes": "2023 accumulation base before major rally, high volume origin"
+      },
+      {
+        "type": "demand",
+        "top": 12,
+        "bottom": 7.78,
+        "strength": "strong",
+        "notes": "Historical cycle low, strong reversal origin candle"
+      }
+    ],
+    "fvg": [
+      {
+        "top": 180,
+        "bottom": 160,
+        "direction": "bearish",
+        "notes": "Gap left during breakdown from highs"
+      },
+      {
+        "top": 130,
+        "bottom": 110,
+        "direction": "bearish",
+        "notes": "Recent weekly bearish gap unfilled"
+      }
+    ],
+    "liquidity_levels": [
+      {
+        "price": 260,
+        "type": "equal_highs"
+      },
+      {
+        "price": 205,
+        "type": "equal_highs"
+      },
+      {
+        "price": 82,
+        "type": "equal_lows"
+      },
+      {
+        "price": 8,
+        "type": "equal_lows"
+      }
+    ]
+  },
+  "1D": {
+    "tf": "1D",
+    "symbol": "SOLUSDT",
+    "trend": "downtrend",
+    "zones": [
+      {
+        "type": "supply",
+        "top": 240,
+        "bottom": 225,
+        "strength": "strong",
+        "notes": "Major origin of downtrend, high volume rejection at highs"
+      },
+      {
+        "type": "supply",
+        "top": 210,
+        "bottom": 195,
+        "strength": "moderate",
+        "notes": "Consolidation base before sharp drop"
+      },
+      {
+        "type": "supply",
+        "top": 155,
+        "bottom": 145,
+        "strength": "strong",
+        "notes": "Lower high swing area with strong bearish follow-through"
+      },
+      {
+        "type": "supply",
+        "top": 95,
+        "bottom": 90,
+        "strength": "moderate",
+        "notes": "Recent rejection level acting as resistance, near current MA cluster"
+      },
+      {
+        "type": "demand",
+        "top": 75,
+        "bottom": 67,
+        "strength": "strong",
+        "notes": "Major swing low with high volume capitulation wick at 67.29"
+      },
+      {
+        "type": "demand",
+        "top": 82,
+        "bottom": 78,
+        "strength": "moderate",
+        "notes": "Recent consolidation base holding current price"
+      }
+    ],
+    "fvg": [
+      {
+        "top": 145,
+        "bottom": 130,
+        "direction": "bearish"
+      },
+      {
+        "top": 110,
+        "bottom": 100,
+        "direction": "bearish"
+      }
+    ],
+    "liquidity_levels": [
+      {
+        "price": 85,
+        "type": "equal_highs"
+      },
+      {
+        "price": 78,
+        "type": "equal_lows"
+      },
+      {
+        "price": 145,
+        "type": "equal_highs"
+      }
+    ]
+  },
+  "4H": {
+    "tf": "4H",
+    "symbol": "SOLUSDT",
+    "trend": "sideways",
+    "zones": [
+      {
+        "type": "supply",
+        "top": 93.46,
+        "bottom": 91.5,
+        "strength": "strong",
+        "notes": "Origin of major downtrend, high volume rejection"
+      },
+      {
+        "type": "supply",
+        "top": 90,
+        "bottom": 88.5,
+        "strength": "moderate",
+        "notes": "Swing high rejection mid-April with strong bearish follow-through"
+      },
+      {
+        "type": "supply",
+        "top": 87.5,
+        "bottom": 86.5,
+        "strength": "moderate",
+        "notes": "Recent lower high, multiple rejections"
+      },
+      {
+        "type": "demand",
+        "top": 78,
+        "bottom": 76.63,
+        "strength": "strong",
+        "notes": "Major swing low with high volume reversal candle"
+      },
+      {
+        "type": "demand",
+        "top": 82,
+        "bottom": 81,
+        "strength": "moderate",
+        "notes": "Consolidation base support tested multiple times"
+      },
+      {
+        "type": "demand",
+        "top": 84.5,
+        "bottom": 83,
+        "strength": "weak",
+        "notes": "Current price area, minor demand at EMA confluence"
+      }
+    ],
+    "fvg": [
+      {
+        "top": 86.5,
+        "bottom": 85.2,
+        "direction": "bearish"
+      },
+      {
+        "top": 81.5,
+        "bottom": 80,
+        "direction": "bullish"
+      }
+    ],
+    "liquidity_levels": [
+      {
+        "price": 87.5,
+        "type": "equal_highs"
+      },
+      {
+        "price": 81,
+        "type": "equal_lows"
+      },
+      {
+        "price": 90,
+        "type": "equal_highs"
+      }
+    ]
+  },
+  "1H": {
+    "tf": "1H",
+    "symbol": "SOLUSDT",
+    "trend": "downtrend",
+    "zones": [
+      {
+        "type": "supply",
+        "top": 89.3,
+        "bottom": 88.5,
+        "strength": "strong",
+        "notes": "Major swing high with sharp rejection and high volume on 04-22"
+      },
+      {
+        "type": "supply",
+        "top": 88,
+        "bottom": 87.4,
+        "strength": "moderate",
+        "notes": "Secondary lower high on 04-26 with rejection and volume spike"
+      },
+      {
+        "type": "supply",
+        "top": 85.6,
+        "bottom": 85.1,
+        "strength": "moderate",
+        "notes": "Recent lower high on 04-29, fresh supply zone after bearish break"
+      },
+      {
+        "type": "supply",
+        "top": 84.8,
+        "bottom": 84.3,
+        "strength": "weak",
+        "notes": "Intraday base where MA60 aligns, minor resistance"
+      },
+      {
+        "type": "demand",
+        "top": 83.2,
+        "bottom": 82.9,
+        "strength": "moderate",
+        "notes": "Current swing low at 82.91 with volume spike, potential reaction zone"
+      },
+      {
+        "type": "demand",
+        "top": 84,
+        "bottom": 83.6,
+        "strength": "weak",
+        "notes": "Minor demand base from 04-27 consolidation, already tested"
+      },
+      {
+        "type": "demand",
+        "top": 85.9,
+        "bottom": 85.4,
+        "strength": "weak",
+        "notes": "Origin of earlier rally on 04-21, broken to upside"
+      }
+    ],
+    "fvg": [
+      {
+        "top": 85.2,
+        "bottom": 84.7,
+        "direction": "bearish",
+        "notes": "Gap left during drop on 04-29"
+      },
+      {
+        "top": 87.6,
+        "bottom": 87,
+        "direction": "bearish",
+        "notes": "Imbalance from 04-26 sharp decline"
+      }
+    ],
+    "liquidity_levels": [
+      {
+        "price": 89.3,
+        "type": "equal_highs"
+      },
+      {
+        "price": 87.8,
+        "type": "equal_highs"
+      },
+      {
+        "price": 82.95,
+        "type": "equal_lows"
+      },
+      {
+        "price": 83.8,
+        "type": "equal_lows"
+      }
+    ]
+  },
+  "30M": {
+    "tf": "30M",
+    "symbol": "SOLUSDT",
+    "trend": "downtrend",
+    "zones": [
+      {
+        "type": "supply",
+        "top": 88.08,
+        "bottom": 87.4,
+        "strength": "strong",
+        "notes": "Swing high with sharp rejection and high volume spike, clear lower highs since"
+      },
+      {
+        "type": "supply",
+        "top": 85.8,
+        "bottom": 85.4,
+        "strength": "moderate",
+        "notes": "Recent lower high with strong bearish rejection on elevated volume"
+      },
+      {
+        "type": "supply",
+        "top": 84.8,
+        "bottom": 84.5,
+        "strength": "moderate",
+        "notes": "Intraday consolidation resistance, MA confluence acting as supply"
+      },
+      {
+        "type": "demand",
+        "top": 83.2,
+        "bottom": 82.91,
+        "strength": "moderate",
+        "notes": "Prior swing low with wick rejection, currently being retested"
+      },
+      {
+        "type": "demand",
+        "top": 84,
+        "bottom": 83.7,
+        "strength": "weak",
+        "notes": "Minor consolidation base before breakdown, likely to flip"
+      },
+      {
+        "type": "demand",
+        "top": 86.4,
+        "bottom": 86,
+        "strength": "weak",
+        "notes": "Earlier accumulation base prior to rally to 88.08"
+      }
+    ],
+    "fvg": [
+      {
+        "top": 86.8,
+        "bottom": 86.2,
+        "direction": "bearish"
+      },
+      {
+        "top": 85.2,
+        "bottom": 84.8,
+        "direction": "bearish"
+      },
+      {
+        "top": 84.4,
+        "bottom": 84,
+        "direction": "bearish"
+      }
+    ],
+    "liquidity_levels": [
+      {
+        "price": 82.91,
+        "type": "equal_lows"
+      },
+      {
+        "price": 85.75,
+        "type": "equal_highs"
+      },
+      {
+        "price": 84.8,
+        "type": "equal_highs"
+      }
+    ]
+  },
+  "15M": {
+    "tf": "15M",
+    "symbol": "SOLUSDT",
+    "trend": "sideways",
+    "zones": [
+      {
+        "type": "supply",
+        "top": 85.81,
+        "bottom": 85.4,
+        "strength": "strong",
+        "notes": "Major swing high with high volume rejection, origin of downtrend"
+      },
+      {
+        "type": "supply",
+        "top": 85.4,
+        "bottom": 85.1,
+        "strength": "moderate",
+        "notes": "Recent lower high rejection with bearish engulfing"
+      },
+      {
+        "type": "supply",
+        "top": 84.8,
+        "bottom": 84.5,
+        "strength": "moderate",
+        "notes": "Intraday resistance with multiple rejections"
+      },
+      {
+        "type": "demand",
+        "top": 83.1,
+        "bottom": 82.91,
+        "strength": "moderate",
+        "notes": "Prior swing low with wick rejection, current test zone"
+      },
+      {
+        "type": "demand",
+        "top": 83.6,
+        "bottom": 83.3,
+        "strength": "weak",
+        "notes": "Consolidation base before the rally up"
+      }
+    ],
+    "fvg": [
+      {
+        "top": 84.9,
+        "bottom": 84.6,
+        "direction": "bearish"
+      },
+      {
+        "top": 83.8,
+        "bottom": 83.5,
+        "direction": "bearish"
+      }
+    ],
+    "liquidity_levels": [
+      {
+        "price": 82.91,
+        "type": "equal_lows"
+      },
+      {
+        "price": 85.4,
+        "type": "equal_highs"
+      },
+      {
+        "price": 83.3,
+        "type": "equal_lows"
+      }
+    ]
+  }
+}
