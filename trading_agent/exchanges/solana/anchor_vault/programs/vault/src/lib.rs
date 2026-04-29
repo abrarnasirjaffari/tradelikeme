@@ -90,6 +90,65 @@ pub mod vault {
         Ok(())
     }
 
+    /// Settle the current epoch: calculate profit, send 20% to platform wallet.
+    /// Called by the agent monthly. If no profit, resets opening_balance and returns.
+    /// After settlement vault.balance reflects the user's 80% share only.
+    pub fn settle_epoch(ctx: Context<SettleEpoch>) -> Result<()> {
+        let vault = &mut ctx.accounts.vault;
+
+        // No profit this epoch — just roll the opening balance forward
+        if vault.balance <= vault.opening_balance {
+            vault.epoch_profit = 0;
+            vault.opening_balance = vault.balance;
+            msg!("Epoch settled with no profit");
+            return Ok(());
+        }
+
+        let profit = vault.balance
+            .checked_sub(vault.opening_balance)
+            .ok_or(VaultError::Overflow)?;
+
+        // 20% to platform, rounded down (user always gets at least 80%)
+        let platform_fee = profit
+            .checked_mul(20)
+            .and_then(|n| n.checked_div(100))
+            .ok_or(VaultError::Overflow)?;
+
+        if platform_fee > 0 {
+            let user_key = vault.user_pubkey;
+            let strategy_id = vault.strategy_id;
+            let bump = vault.bump;
+            let seeds: &[&[u8]] = &[b"vault", user_key.as_ref(), &strategy_id, &[bump]];
+            let signer_seeds = &[seeds];
+
+            let cpi_ctx = CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                Transfer {
+                    from: ctx.accounts.vault_token_account.to_account_info(),
+                    to: ctx.accounts.platform_token_account.to_account_info(),
+                    authority: ctx.accounts.vault.to_account_info(),
+                },
+                signer_seeds,
+            );
+            token::transfer(cpi_ctx, platform_fee)?;
+        }
+
+        // Snapshot state after fee deduction
+        vault.balance = vault.balance
+            .checked_sub(platform_fee)
+            .ok_or(VaultError::Overflow)?;
+        vault.epoch_profit = profit;
+        vault.opening_balance = vault.balance;
+
+        msg!(
+            "Epoch settled: profit={}, platform_fee={}, user_balance={}",
+            profit,
+            platform_fee,
+            vault.balance
+        );
+        Ok(())
+    }
+
     /// Withdraw USDC from the vault back to the user.
     /// Only the vault owner can call this. Transfers `amount` from the vault's
     /// token account to the user's token account using the PDA as signer.
@@ -147,6 +206,30 @@ pub struct InitializeVault<'info> {
     pub user: Signer<'info>,
 
     pub system_program: Program<'info, System>,
+}
+
+/// Settle the epoch: transfer 20% profit to platform wallet.
+/// Agent must be Signer; V11 adds the require! check against vault.agent_pubkey.
+#[derive(Accounts)]
+pub struct SettleEpoch<'info> {
+    #[account(
+        mut,
+        seeds = [b"vault", vault.user_pubkey.as_ref(), &vault.strategy_id],
+        bump = vault.bump,
+    )]
+    pub vault: Account<'info, Vault>,
+
+    #[account(mut)]
+    pub vault_token_account: Account<'info, TokenAccount>,
+
+    /// Platform wallet's token account — receives 20% profit share
+    #[account(mut)]
+    pub platform_token_account: Account<'info, TokenAccount>,
+
+    /// The agent calling this instruction
+    pub agent: Signer<'info>,
+
+    pub token_program: Program<'info, Token>,
 }
 
 /// Approve the agent as delegate on the vault token account.
