@@ -415,18 +415,18 @@
 > `tradelikeme-website` stays as a separate repo until then.
 
 ### Merge
-- [ ] M1 — Pull latest from `tradelikeme-website` GitHub repo
-- [ ] M2 — Create `frontend/` folder in this repo
-- [ ] M3 — Copy all Next.js files from tradelikeme-website into `frontend/`
+- [x] M1 — Pull latest from `tradelikeme-website` GitHub repo
+- [x] M2 — Create `frontend/` folder in this repo
+- [x] M3 — Copy all files from tradelikeme-website into `frontend/` (React/Vite, not Next.js)
 - [ ] M4 — Verify `frontend/` builds: `cd frontend && npm install && npm run build`
-- [ ] M5 — Add `frontend/node_modules` and `frontend/.next` to `.gitignore`
-- [ ] M6 — Add frontend service to `infra/docker-compose.yml` (Next.js container)
+- [x] M5 — `frontend/node_modules` + `dist/` covered by root `.gitignore` (`node_modules/`, `dist/`)
+- [ ] M6 — Add frontend service to `infra/docker-compose.yml` (Vite/React container)
 - [ ] M7 — Update Traefik routing: `tradelikeme.xyz` → frontend container
-- [ ] M8 — Push merged repo to GitHub (`abrarnasirjaffari/tradelikeme`)
+- [x] M8 — Push merged repo to GitHub (`abrarnasirjaffari/tradelikeme`)
 - [ ] M9 — Archive `tradelikeme-website` repo on GitHub after confirming merge is clean
 
 ### Frontend Wiring
-- [ ] FE1 — Audit existing tradelikeme-website pages — list what's built (waitlist, landing, etc.)
+- [x] FE1 — Audit existing tradelikeme-website pages — React/Vite app: landing page, waitlist, trader/investor/contributor forms, pricing, how-it-works, open-source, privacy, terms, deposit slider, mode picker
 - [ ] FE2 — Set `NEXT_PUBLIC_API_URL=https://api.tradelikeme.xyz` in frontend `.env`
 - [ ] FE3 — Wire Phantom Connect sign-in → BetterAuth session
 - [ ] FE4 — Wire `POST /vaults/{id}/deposit` into deposit UI
