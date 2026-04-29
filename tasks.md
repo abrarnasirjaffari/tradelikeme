@@ -185,15 +185,15 @@
 - [x] KC22 — Write `launch()` — start Playwright Chromium headless, open chart page
 - [x] KC23 — Write `navigate(symbol, tf)` — set URL params + wait for `data-ready`
 - [x] KC24 — Write `close()` — graceful browser shutdown
-- [ ] KC25 — Test `launch()` + `navigate("SOLUSDT", "4H")` — confirm page loads
+- [x] KC25 — Test `launch()` + `navigate("SOLUSDT", "4H")` — confirm page loads
 
 ### Phase 5 — MCP Tools (one task per tool)
 
-- [ ] KC26 — Create `src/tools/` folder
-- [ ] KC27 — Write tool `open_chart` — calls `browser.navigate(symbol, tf)`, returns "ok"
-- [ ] KC28 — Write tool `set_symbol` — changes symbol, waits for data-ready
-- [ ] KC29 — Write tool `set_timeframe` — changes tf, waits for data-ready
-- [ ] KC30 — Write tool `screenshot` — Playwright screenshot → base64 PNG string returned
+- [x] KC26 — Create `src/tools/` folder
+- [x] KC27 — Write tool `open_chart` — calls `browser.navigate(symbol, tf)`, returns "ok"
+- [x] KC28 — Write tool `set_symbol` — changes symbol, waits for data-ready
+- [x] KC29 — Write tool `set_timeframe` — changes tf, waits for data-ready
+- [x] KC30 — Write tool `screenshot` — Playwright screenshot → base64 PNG string returned
 - [ ] KC31 — Write tool `toggle_indicator` — evaluate JS in page to show/hide indicator by name
 - [ ] KC32 — Write tool `get_ohlcv` — return raw candle JSON from datafeed cache
 - [ ] KC33 — Write tool `scroll_chart` — evaluate JS to scroll N bars back

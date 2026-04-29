@@ -9,6 +9,11 @@ const DATA_READY_TIMEOUT = 15_000;
 
 let browser: Browser | null = null;
 let page: Page | null = null;
+let currentSymbol: string = "SOLUSDT";
+let currentTf: string = "4H";
+
+export function getCurrentSymbol(): string { return currentSymbol; }
+export function getCurrentTf(): string { return currentTf; }
 
 export async function launch(): Promise<void> {
   if (browser) return;
@@ -21,6 +26,8 @@ export async function launch(): Promise<void> {
 
 export async function navigate(symbol: string, tf: string): Promise<void> {
   if (!browser || !page) await launch();
+  currentSymbol = symbol;
+  currentTf = tf;
   const url = `${CHART_URL}?symbol=${encodeURIComponent(symbol)}&tf=${encodeURIComponent(tf)}`;
   await page!.goto(url);
   await page!.waitForSelector("#chart[data-ready='true']", {
