@@ -7,6 +7,7 @@ const PYTH_BASE = 'https://benchmarks.pyth.network/v1/shims/tradingview'
 
 // window-level cache: { "SOLUSDT_4h": KLineData[] }
 window.__ohlcvCache = {}
+let __dataReadyFired = false
 
 function toBinanceInterval(period) {
   const { multiplier, timespan } = period
@@ -67,6 +68,11 @@ class CryptoDatafeed {
   }
 
   async getHistoryKLineData(symbol, period, from, to) {
+    const markDataReady = () => {
+      if (__dataReadyFired) return
+      __dataReadyFired = true
+      document.getElementById('chart').setAttribute('data-ready', 'true')
+    }
     const interval = toBinanceInterval(period)
     const cacheKey = `${symbol.ticker}_${interval}`
 
@@ -86,6 +92,7 @@ class CryptoDatafeed {
           turnover: parseFloat(k[7])
         }))
         window.__ohlcvCache[cacheKey] = bars
+        markDataReady()
         return bars
       }
     } catch (_) {}
@@ -95,6 +102,7 @@ class CryptoDatafeed {
       const bars = await fetchFromPyth(symbol, period)
       if (bars && bars.length > 0) {
         window.__ohlcvCache[cacheKey] = bars
+        markDataReady()
         return bars
       }
     } catch (_) {}

@@ -176,8 +176,8 @@
 - [x] KC16 — Create `infra/klinechart-mcp/chart/datafeed.ts` — `getHistoryKLineData()` fetches OHLCV from exchange REST API
 - [x] KC17 — Add Pyth HTTP fallback to `datafeed.ts` — if exchange REST fails, fetch from Pyth
 - [x] KC18 — Wire `datafeed.ts` into the chart page — replace default Polygon.io datafeed
-- [ ] KC19 — Add `data-ready="true"` to chart DOM element once candles finish loading
-- [ ] KC20 — Manual test: open `chart/index.html?symbol=SOLUSDT&tf=4H` in browser — candles render
+- [x] KC19 — Add `data-ready="true"` to chart DOM element once candles finish loading
+- [x] KC20 — Manual test: open `chart/index.html?symbol=SOLUSDT&tf=4H` in browser — candles render
 
 ### Phase 4 — Playwright Browser Manager
 
