@@ -65,7 +65,7 @@
 - [x] V4 — Run `anchor init vault` to scaffold the program
 - [x] V5 — Define `Vault` account struct (user_pubkey, strategy_id, balance, opening_balance, epoch_profit, platform_wallet)
 - [x] V6 — Define PDA seeds: `[b"vault", user_pubkey, strategy_id]`
-- [ ] V7 — Write `deposit()` instruction — user sends USDC/CASH to vault PDA
+- [x] V7 — Write `deposit()` instruction — user sends USDC/CASH to vault PDA
 - [ ] V8 — Write `withdraw()` instruction — user pulls their balance from vault
 - [ ] V9 — Write `delegate_to_protocol()` instruction — vault authorizes agent to trade
 - [ ] V10 — Write `settle_epoch()` instruction — calculate profit, split 20/80, send 20% to platform wallet
