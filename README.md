@@ -1,7 +1,8 @@
 # TradeLikeMe
 
-**Verified-strategy trading marketplace for crypto and forex.**  
-Users deposit, our proven agent trades. 20% profit share, zero fees. Platform open source. Strategies private.
+**Verified-strategy trading vaults on Solana. Users deposit, our proven agent trades. 20% profit share, zero fees.**
+
+[tradelikeme.xyz](https://tradelikeme.xyz) · Built for Solana Frontier Hackathon 2026
 
 ---
 
@@ -9,32 +10,86 @@ Users deposit, our proven agent trades. 20% profit share, zero fees. Platform op
 
 43+ "AI trading" projects in Solana hackathons — zero have proven results.  
 Every platform says "AI picks trades" but none show win rates, backtests, or live P&L.  
-Users deposit money into black-box AI with no accountability.
+Users deposit money into black-box AI with no accountability. Copy trading exposes the strategy and requires manual work from traders.
 
 ## The Solution
 
-TradeLikeMe is a verified-strategy trading marketplace. Not black-box AI — a real profitable trader's exact rules, cloned and automated.
+TradeLikeMe is a verified-strategy trading marketplace. Strategies are human-cloned, TradingView-verified, and run 24/7 by an autonomous agent — without exposing the rules to users or competitors.
 
-**Three execution modes:**
+**Two execution modes:**
 
 | Mode | How | Markets |
 |------|-----|---------|
-| **A — Solana Vault** | Deposit USDC/CASH, delegate to agent via Drift | Drift + Jupiter Perps + Raydium Perps |
-| **B — Multi-CEX** | Paste trade-only API key | WEEX + Bybit + Binance (600+ pairs) |
-| **C — Forex MT4/MT5** | Connect broker API | XAUUSD, EURUSD, GBPUSD + more |
+| **Solana Vault** | Deposit USDC/CASH, delegate trade authority via Phantom | Raydium Perps + Jupiter Perps (70+ coins, up to 250x) |
+| **Multi-CEX** | Paste trade-only API key | WEEX + Bybit + Binance (600+ pairs) |
 
 Same verified strategy. Same agent brain. Different execution layer.
 
 ---
 
-## Our Edge
+## Why It Works
 
-- **89% win rate** — verified on TradingView charts (ongoing, growing sample)
-- **50% monthly return** — documented on real-money trades
+- **89% win rate** — verified on TradingView charts across real trades (ongoing, growing sample)
 - **Human-cloned strategy** — exact rules from a real profitable trader, not AI guessing
-- **Body-close stop loss** — wicks past SL are ignored (70% wick survival rate, saved +2192% on one trade)
+- **Trustless on Solana** — custom Anchor vault: agent can trade but can never withdraw user funds
+- **Sentinel architecture** — WebSocket price watcher burns zero AI tokens, wakes agent only on events
+- **Body-close stop loss** — wicks past SL are treated as stop hunts and ignored (70% wick survival rate)
 - **7-timeframe analysis** — 1M → 1W → 1D → 4H → 1H → 30M → 15M
-- **Structural risk management** — zone-based TP, 0.5% margin, max 2 concurrent positions
+
+---
+
+## For Users
+
+Deposit once. The agent trades 24/7. You earn 80% of all profit. We take 20% — only when you profit.
+
+| Deposit | Monthly Return | Your Share (80%) | Platform Fee (20%) |
+|---------|---------------|------------------|--------------------|
+| $1,000 | 8% | $80 | $20 |
+| $10,000 | 8% | $800 | $200 |
+| $100,000 | 8% | $8,000 | $2,000 |
+
+**No subscriptions. No flat fees. Zero if you don't profit.**
+
+**Risk modes** — you choose one preset, the agent handles the rest:
+
+| Mode | Who It's For |
+|------|-------------|
+| Conservative | New users, large deposits — low margin, 20+ trade buffer before liquidation |
+| Medium | Experienced users — balanced risk/reward |
+| Aggressive | Risk-tolerant, small deposits — higher margin, higher upside |
+
+**Withdrawals** available anytime (Solana vault: smart contract enforced, no human approval needed).
+
+---
+
+## For Traders
+
+Submit your verified strategy to the marketplace. We build and run the agent. You earn from every user deposit — without risking your own capital or trading manually.
+
+**To qualify:**
+- 50+ verified trades on TradingView
+- 55%+ win rate minimum
+- Clear written rules (entry, exit, SL, TP)
+- 30-minute strategy interview
+- 2-week paper test on devnet
+
+**Quality-based fee tiers** — better strategy = higher fee = more for everyone:
+
+| Tier | Win Rate | Total Fee | You Earn (70%) | User Keeps |
+|------|---------|-----------|----------------|-----------|
+| S-tier | 85%+ | 15% | 10.5% | 85% |
+| A-tier | 75–84% | 12% | 8.4% | 88% |
+| B-tier | 65–74% | 10% | 7.0% | 90% |
+| C-tier | 55–64% | 8% | 5.6% | 92% |
+| Below 55% | — | REJECTED | — | — |
+
+**Example earnings** (B-tier strategy, $500k user deposits): **$3,500/month** for zero work.  
+At $2M deposits: **$14,000/month** — your strategy runs 24/7 on all user capital, not just yours.
+
+Traders control: coins traded, max concurrent positions, trading hours, risk mode parameters.  
+Users control: risk mode selection and deposit amount only.
+
+**Withdrawal window**: minimum 3 days, maximum 30 days (set by trader per strategy).
 
 ---
 
@@ -42,24 +97,22 @@ Same verified strategy. Same agent brain. Different execution layer.
 
 ```
 User
- ├── Mode A: Phantom Connect → Deposit CASH/USDC → Drift Vault Delegation
- ├── Mode B: Paste CEX API Key → WEEX / Bybit / Binance
- └── Mode C: Forex Broker MT4/MT5 → OANDA / IC Markets / Pepperstone
-                        │
-              Exchange Abstraction Layer (exchange_base.py)
-                        │
-                Agent Brain (loop.py)
-                ├── Zone Scanner (zones.py) → TradingView MCP + Claude Opus 4.6
-                ├── Sentinel (sentinel.py)  → Zero-token WebSocket price watcher
-                └── Trade Agent (trade_agent.py)
-                        │
-              ┌─────────┴─────────┐
-         SQLite Journal      Profit Tracker
-              └─────────┬─────────┘
-               Strategy Dashboard
-                        │
-            Multi-channel Notifications
-         Telegram · Slack · WhatsApp · Email · Dialect
+ ├── Mode A: Phantom Connect → Deposit CASH/USDC → Anchor Vault (trustless)
+ └── Mode B: Paste CEX API Key → WEEX / Bybit / Binance
+                    │
+          Exchange Abstraction Layer (exchange_base.py)
+                    │
+              Agent Brain (loop.py)
+              ├── Zone Scanner (zones.py) → KLineChart Pro + Claude Opus 4.6
+              ├── Sentinel (sentinel.py)  → Zero-token WebSocket price watcher
+              └── Trade Agent (trade_agent.py)
+                    │
+          ┌─────────┴─────────┐
+     SQLite Journal      Profit Tracker
+          └─────────┬─────────┘
+            Strategy Dashboard (FastAPI + Next.js)
+                    │
+        Multi-channel Notifications (Telegram + WhatsApp)
 ```
 
 ### Sentinel — Zero-AI Price Watcher
@@ -70,30 +123,19 @@ Sentinel watches prices 24/7 via WebSocket, burns zero AI tokens. Three watches:
 2. **TP1 hit** → Telegram alert → wake agent → move SL to break-even
 3. **30m body-close SL** → Telegram alert → wake agent → close position
 
-Wick past SL = stop hunt = **ignore**. Body close only. This is the core edge.
+Wick past SL = stop hunt = **ignore**. Body close only.
 
----
+### Anchor Vault — Trustless Profit Split
 
-## Business Model
+Custom Solana smart contract. Agent can open/close positions but can **never withdraw user funds**.
 
-### Our Strategy — 20% profit share
-User keeps 80%. We earn only when they earn. No subscriptions, no fees.
+4 instructions:
+- `deposit()` — user sends USDC/CASH to vault PDA
+- `delegate_to_protocol()` — vault authorizes agent to trade
+- `settle_epoch()` — called monthly, auto-splits 20% profit to platform on-chain
+- `withdraw()` — user pulls their balance anytime
 
-### Marketplace — Quality-based tiers
-External verified traders submit strategies. Platform takes 30% of the fee, trader keeps 70%.
-
-| Tier | Win Rate | Fee | Trader Gets | User Keeps |
-|------|---------|-----|-------------|-----------|
-| S | 85%+ | 15% | 10.5% | 85% |
-| A | 75–84% | 12% | 8.4% | 88% |
-| B | 65–74% | 10% | 7.0% | 90% |
-| C | 55–64% | 8% | 5.6% | 92% |
-| Below 55% | — | REJECTED | — | — |
-
-### Revenue Projections
-- **Year 1**: 500 users × $2k avg deposit compounding at 40% net/month → **$8.9M ARR**
-- **Year 2**: 3,500 users → $100M AUM → **$120M ARR**
-- **Year 3**: 9,000 users (crypto + forex + marketplace) → **$1B ARR**
+Vault PDA seeds: `[b"vault", user_pubkey, strategy_id]` — one vault per (user × strategy).
 
 ---
 
@@ -102,49 +144,36 @@ External verified traders submit strategies. Platform takes 30% of the fee, trad
 | Layer | Tool |
 |-------|------|
 | Runtime | Python 3.11 asyncio |
-| Solana wallet | Phantom Connect |
+| Solana wallet | Phantom Connect + @solana/wallet-adapter |
 | Stablecoin | CASH + USDC |
-| Perps (Solana) | Drift Protocol + Jupiter Perps + Raydium Perps |
-| Price oracle | Pyth Network |
+| Solana vault | Custom Anchor program (Rust) |
+| Perps (Solana) | Raydium Perps + Jupiter Perps |
+| Price oracle | Pyth Network WebSocket |
 | RPC | Helius (free tier) |
 | CEX | WEEX + Bybit + Binance |
-| Zone scanning | TradingView MCP + OHLCV fallback |
-| Zone analysis | Claude Opus 4.6 |
-| Auth | BetterAuth + @solana/wallet-adapter + @phantom/connect |
+| Chart rendering | KLineChart Pro (self-hosted, headless) |
+| Zone analysis | Claude Opus 4.6 via AWS Bedrock |
+| Auth | BetterAuth |
 | Frontend | Next.js + Tailwind |
 | Backend | FastAPI |
-| Database | SQLite |
-| Server | AWS EC2 t3.xlarge |
-| Deployment | Dokploy (self-hosted PaaS) |
-| Notifications | Telegram + Slack + WhatsApp + Email + Dialect |
-| Support | Chatwoot (self-hosted) |
-| Status | OpenStatus (self-hosted) |
+| Database | SQLite (platform.db + per-strategy DBs) |
+| Server | AWS EC2 t3.xlarge (Singapore) |
+| Deployment | Dokploy + Docker Compose + Traefik |
+| Notifications | Telegram + WhatsApp |
 
 ---
 
-## Strategy
+## Competitive Edge
 
-Supply/Demand zone trading cloned from a verified profitable trader. 200-agent deep analysis validated every rule. 89% win rate across 36+ TradingView-verified trades and growing.
-
-**Core rules:**
-1. S/D zone identification on 4H timeframe
-2. Entry on 15M execution timeframe
-3. Full TF stack required: 1M → 1W → 1D → 4H → 1H → 30M → 15M
-4. BTC 1D gate — no alt entries against BTC direction
-5. 4H zone gate — lower-TF zones alone are invalid
-6. Body-close SL — wicks ignored (exchange hard SL at structural +3% as disaster backup)
-7. TP1: 50% at zone 1. TP2: 50% at zone 2. Never zone 3–4.
-8. FVG + S/D overlap = highest-confidence entry
-9. Equal highs/lows = liquidity sweep = fresh zone
-
----
-
-## Hackathon
-
-**Solana Frontier Hackathon** — Colosseum / Solana Foundation  
-Period: Apr 6 – May 11, 2026 | Prize target: Grand Champion $30k
-
-Sponsored tools used: Phantom Connect · CASH stablecoin · Helius RPC · Colosseum Copilot
+| Feature | TradeLikeMe | Everyone Else |
+|---------|------------|---------------|
+| Proven results | 89% win rate, TradingView-verified | None |
+| Real money tested | Live P&L documented | Demos only |
+| Trustless custody | Anchor vault — agent can't withdraw | Custodial or manual |
+| Dual execution | Solana vault + CEX API | One or the other |
+| Marketplace | Quality-gated, verified traders | Single strategy |
+| Business model | 20% profit share, $0 fees | Subscriptions |
+| Stop loss method | Body-close — wicks ignored | Exchange SL only |
 
 ---
 
@@ -153,36 +182,53 @@ Sponsored tools used: Phantom Connect · CASH stablecoin · Helius RPC · Coloss
 ```
 tradelikeme/
 ├── trading_agent/
-│   └── agent/
-│       ├── loop.py              # Orchestrator
-│       ├── trade_agent.py       # Per-trade monitor
-│       ├── sentinel.py          # Zero-token WS price watcher
-│       ├── zones.py             # Multi-TF zone scanner
-│       ├── exchange_base.py     # Unified exchange interface
-│       ├── drift_client.py      # Drift Protocol (Solana)
-│       ├── jupiter_client.py    # Jupiter Perps (Solana)
-│       ├── raydium_client.py    # Raydium Perps (Solana)
-│       ├── drift_ws.py          # Pyth oracle WebSocket
-│       ├── weex.py              # WEEX REST client (built)
-│       ├── bybit.py             # Bybit REST client
-│       ├── binance.py           # Binance REST client
-│       ├── notifier.py          # Multi-channel notification dispatcher
-│       ├── channels/
-│       │   ├── telegram.py
-│       │   ├── slack.py
-│       │   ├── whatsapp.py
-│       │   ├── email.py
-│       │   └── dialect.py       # Solana wallet push (Dialect SDK)
-│       ├── profit_tracker.py    # Per-user P&L + splits
-│       ├── journal.py           # SQLite persistence
-│       ├── state.py             # Runtime state
-│       └── config.py            # Constants + env vars
+│   ├── base/
+│   │   ├── base_strategy.py     # Abstract strategy class
+│   │   ├── exchange_base.py     # Unified exchange interface
+│   │   ├── notifier.py          # Notification dispatcher
+│   │   └── config.py            # Platform-wide constants
+│   ├── strategies/
+│   │   └── sd_zones/
+│   │       ├── loop.py          # Orchestrator
+│   │       ├── trade_agent.py   # Per-trade monitor
+│   │       ├── sentinel.py      # Zero-token WS price watcher
+│   │       ├── zones.py         # Multi-TF zone scanner
+│   │       ├── journal.py       # SQLite persistence
+│   │       ├── state.py         # Runtime state
+│   │       └── config.py        # Strategy params
+│   ├── exchanges/
+│   │   ├── solana/
+│   │   │   ├── raydium_client.py
+│   │   │   ├── jupiter_client.py
+│   │   │   ├── pyth_ws.py
+│   │   │   └── anchor_vault/    # Rust Anchor program
+│   │   └── cex/
+│   │       ├── weex.py
+│   │       ├── bybit.py
+│   │       └── binance.py
+│   └── channels/
+│       ├── telegram.py
+│       └── whatsapp.py
 ├── backend/
-│   └── fastapi_app.py           # REST API
-├── frontend/                    # Next.js app
-└── infra/
-    └── docker-compose.yml       # Dokploy deployment
+│   ├── main.py                  # FastAPI app
+│   └── routes/
+├── infra/
+│   ├── klinechart-mcp/          # KLineChart MCP server (zone scanning)
+│   │   ├── src/index.ts         # MCP server entry point
+│   │   └── chart/               # Headless chart page (Playwright)
+│   ├── klinechart-pro/          # KLineChart Pro UI (self-hosted)
+│   └── docker-compose.yml
+└── frontend/                    # Next.js app (merged post-hackathon)
 ```
+
+---
+
+## Hackathon
+
+**Solana Frontier Hackathon** — Colosseum / Solana Foundation  
+Period: Apr 6 – May 11, 2026 | Prize target: Grand Champion $30k
+
+Sponsored tools: Phantom Connect · CASH stablecoin · Helius RPC · Colosseum Copilot
 
 ---
 
