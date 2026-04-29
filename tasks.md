@@ -71,9 +71,9 @@
 - [x] V10 — Write `settle_epoch()` instruction — calculate profit, split 20/80, send 20% to platform wallet
 - [x] V11 — Add access control to `settle_epoch()` — only agent keypair can call it
 - [x] V12 — Add access control to `delegate_to_protocol()` — only vault owner can call it
-- [ ] V13 — Write unit tests for `deposit()`
-- [ ] V14 — Write unit tests for `withdraw()`
-- [ ] V15 — Write unit tests for `settle_epoch()` — verify 20/80 split math
+- [x] V13 — Write unit tests for `deposit()`
+- [x] V14 — Write unit tests for `withdraw()`
+- [x] V15 — Write unit tests for `settle_epoch()` — verify 20/80 split math
 - [ ] V16 — Build program: `anchor build`
 - [ ] V17 — Deploy to devnet: `anchor deploy --provider.cluster devnet`
 - [ ] V18 — Note deployed program ID, add to config
