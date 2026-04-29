@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount, Transfer};
+use anchor_spl::token::{self, Approve, Token, TokenAccount, Transfer};
 
 declare_id!("CfBkwkkgaXAhMBWSiBTXet9uSE3biCQAiWAtjYRFZrSv");
 
@@ -21,6 +21,7 @@ pub mod vault {
         vault.opening_balance = 0;
         vault.epoch_profit = 0;
         vault.platform_wallet = platform_wallet;
+        vault.agent_pubkey = Pubkey::default();
         vault.bump = ctx.bumps.vault;
         Ok(())
     }
@@ -48,6 +49,44 @@ pub mod vault {
             .ok_or(VaultError::Overflow)?;
 
         msg!("Deposited {} USDC into vault", amount);
+        Ok(())
+    }
+
+    /// Delegate trade authority to the agent keypair.
+    /// Calls SPL token `approve` so the agent can move funds for trading.
+    /// The agent can NEVER call `withdraw()` — that requires the user as Signer.
+    /// Stores `agent_pubkey` on the vault for use by `settle_epoch()` access control.
+    pub fn delegate_to_protocol(
+        ctx: Context<DelegateToProtocol>,
+        amount: u64,
+    ) -> Result<()> {
+        require!(amount > 0, VaultError::ZeroAmount);
+
+        // Record the agent so settle_epoch can verify the caller
+        ctx.accounts.vault.agent_pubkey = ctx.accounts.agent.key();
+
+        let user_key = ctx.accounts.vault.user_pubkey;
+        let strategy_id = ctx.accounts.vault.strategy_id;
+        let bump = ctx.accounts.vault.bump;
+        let seeds: &[&[u8]] = &[b"vault", user_key.as_ref(), &strategy_id, &[bump]];
+        let signer_seeds = &[seeds];
+
+        let cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            Approve {
+                to: ctx.accounts.vault_token_account.to_account_info(),
+                delegate: ctx.accounts.agent.to_account_info(),
+                authority: ctx.accounts.vault.to_account_info(),
+            },
+            signer_seeds,
+        );
+        token::approve(cpi_ctx, amount)?;
+
+        msg!(
+            "Delegated {} USDC trading authority to agent {}",
+            amount,
+            ctx.accounts.agent.key()
+        );
         Ok(())
     }
 
@@ -108,6 +147,34 @@ pub struct InitializeVault<'info> {
     pub user: Signer<'info>,
 
     pub system_program: Program<'info, System>,
+}
+
+/// Approve the agent as delegate on the vault token account.
+/// Only the vault owner (user) can call this.
+#[derive(Accounts)]
+pub struct DelegateToProtocol<'info> {
+    #[account(
+        mut,
+        seeds = [b"vault", user.key().as_ref(), &vault.strategy_id],
+        bump = vault.bump,
+        has_one = user_pubkey @ VaultError::Unauthorized,
+    )]
+    pub vault: Account<'info, Vault>,
+
+    #[account(mut)]
+    pub vault_token_account: Account<'info, TokenAccount>,
+
+    /// The agent keypair that receives trading delegation
+    /// CHECK: stored in vault.agent_pubkey; no other constraint needed
+    pub agent: AccountInfo<'info>,
+
+    #[account(mut)]
+    pub user: Signer<'info>,
+
+    /// CHECK: must match vault.user_pubkey
+    pub user_pubkey: AccountInfo<'info>,
+
+    pub token_program: Program<'info, Token>,
 }
 
 /// Withdraw USDC from an existing vault back to the user.
@@ -182,12 +249,14 @@ pub struct Vault {
     pub epoch_profit: u64,
     /// Receives 20% profit share on settle_epoch
     pub platform_wallet: Pubkey,
+    /// Set by delegate_to_protocol(); verified by settle_epoch() access control
+    pub agent_pubkey: Pubkey,
     pub bump: u8,
 }
 
 impl Vault {
-    // 8 discriminator + 32 + 32 + 8 + 8 + 8 + 32 + 1
-    pub const LEN: usize = 8 + 32 + 32 + 8 + 8 + 8 + 32 + 1;
+    // 8 discriminator + 32 + 32 + 8 + 8 + 8 + 32 + 32 + 1
+    pub const LEN: usize = 8 + 32 + 32 + 8 + 8 + 8 + 32 + 32 + 1;
 }
 
 // ── Errors ─────────────────────────────────────────────────────────────────
