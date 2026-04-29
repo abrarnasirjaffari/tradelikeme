@@ -66,11 +66,11 @@
 - [x] V5 — Define `Vault` account struct (user_pubkey, strategy_id, balance, opening_balance, epoch_profit, platform_wallet)
 - [x] V6 — Define PDA seeds: `[b"vault", user_pubkey, strategy_id]`
 - [x] V7 — Write `deposit()` instruction — user sends USDC/CASH to vault PDA
-- [ ] V8 — Write `withdraw()` instruction — user pulls their balance from vault
-- [ ] V9 — Write `delegate_to_protocol()` instruction — vault authorizes agent to trade
-- [ ] V10 — Write `settle_epoch()` instruction — calculate profit, split 20/80, send 20% to platform wallet
-- [ ] V11 — Add access control to `settle_epoch()` — only agent keypair can call it
-- [ ] V12 — Add access control to `delegate_to_protocol()` — only vault owner can call it
+- [x] V8 — Write `withdraw()` instruction — user pulls their balance from vault
+- [x] V9 — Write `delegate_to_protocol()` instruction — vault authorizes agent to trade
+- [x] V10 — Write `settle_epoch()` instruction — calculate profit, split 20/80, send 20% to platform wallet
+- [x] V11 — Add access control to `settle_epoch()` — only agent keypair can call it
+- [x] V12 — Add access control to `delegate_to_protocol()` — only vault owner can call it
 - [ ] V13 — Write unit tests for `deposit()`
 - [ ] V14 — Write unit tests for `withdraw()`
 - [ ] V15 — Write unit tests for `settle_epoch()` — verify 20/80 split math
