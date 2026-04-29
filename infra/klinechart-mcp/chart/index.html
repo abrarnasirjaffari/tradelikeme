@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KLineChart Zone Scanner</title>
+  <link rel="stylesheet" href="../../klinechart-pro/dist/klinecharts-pro.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 1400px; height: 700px; overflow: hidden; background: #111; }
+    #chart { width: 1400px; height: 700px; }
+  </style>
+</head>
+<body>
+  <div id="chart"></div>
+
+  <script src="../../klinechart-pro/node_modules/klinecharts/dist/klinecharts.min.js"></script>
+  <script src="../../klinechart-pro/dist/klinecharts-pro.umd.js"></script>
+  <script type="module">
+    import './datafeed.js'
+
+    const params = new URLSearchParams(window.location.search)
+    const symbol = params.get('symbol') ?? 'SOLUSDT'
+    const tf = params.get('tf') ?? '4H'
+
+    // Map URL tf param to KLineChart Pro period object
+    const PERIODS = {
+      '1M':  { multiplier: 1,  timespan: 'month',  text: '1M' },
+      '1W':  { multiplier: 1,  timespan: 'week',   text: '1W' },
+      '1D':  { multiplier: 1,  timespan: 'day',    text: '1D' },
+      '4H':  { multiplier: 4,  timespan: 'hour',   text: '4H' },
+      '1H':  { multiplier: 1,  timespan: 'hour',   text: '1H' },
+      '30M': { multiplier: 30, timespan: 'minute', text: '30M' },
+      '15M': { multiplier: 15, timespan: 'minute', text: '15M' },
+      '5M':  { multiplier: 5,  timespan: 'minute', text: '5M' },
+    }
+    const period = PERIODS[tf] ?? PERIODS['4H']
+
+    window.__chart = new window.klinechartspro.KLineChartPro({
+      container: 'chart',
+      theme: 'dark',
+      drawingBarVisible: false,
+      symbol: {
+        ticker: symbol,
+        name: symbol,
+        shortName: symbol,
+        market: 'crypto',
+        exchange: 'Binance Futures',
+        priceCurrency: 'USDT',
+        type: 'perpetual'
+      },
+      period,
+      periods: Object.values(PERIODS),
+      datafeed: window.__cryptoDatafeed,
+      mainIndicators: ['MA', 'EMA', 'VOL'],
+      subIndicators: ['RSI', 'MACD']
+    })
+  </script>
+</body>
+</html>

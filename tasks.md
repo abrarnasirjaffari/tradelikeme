@@ -171,11 +171,11 @@
 
 ### Phase 3 — Chart Page
 
-- [ ] KC14 — Create `infra/klinechart-mcp/chart/` folder
-- [ ] KC15 — Create `infra/klinechart-mcp/chart/index.html` — loads KLineChart + KLineChart Pro from local `infra/` paths, fixed 1400×700px, no toolbar
-- [ ] KC16 — Create `infra/klinechart-mcp/chart/datafeed.ts` — `getHistoryKLineData()` fetches OHLCV from exchange REST API
-- [ ] KC17 — Add Pyth HTTP fallback to `datafeed.ts` — if exchange REST fails, fetch from Pyth
-- [ ] KC18 — Wire `datafeed.ts` into the chart page — replace default Polygon.io datafeed
+- [x] KC14 — Create `infra/klinechart-mcp/chart/` folder
+- [x] KC15 — Create `infra/klinechart-mcp/chart/index.html` — loads KLineChart + KLineChart Pro from local `infra/` paths, fixed 1400×700px, no toolbar
+- [x] KC16 — Create `infra/klinechart-mcp/chart/datafeed.ts` — `getHistoryKLineData()` fetches OHLCV from exchange REST API
+- [x] KC17 — Add Pyth HTTP fallback to `datafeed.ts` — if exchange REST fails, fetch from Pyth
+- [x] KC18 — Wire `datafeed.ts` into the chart page — replace default Polygon.io datafeed
 - [ ] KC19 — Add `data-ready="true"` to chart DOM element once candles finish loading
 - [ ] KC20 — Manual test: open `chart/index.html?symbol=SOLUSDT&tf=4H` in browser — candles render
 
