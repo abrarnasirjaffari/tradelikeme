@@ -94,6 +94,12 @@ pub mod vault {
     /// Called by the agent monthly. If no profit, resets opening_balance and returns.
     /// After settlement vault.balance reflects the user's 80% share only.
     pub fn settle_epoch(ctx: Context<SettleEpoch>) -> Result<()> {
+        // V11: only the registered agent keypair may call this
+        require!(
+            ctx.accounts.agent.key() == ctx.accounts.vault.agent_pubkey,
+            VaultError::AgentMismatch
+        );
+
         let vault = &mut ctx.accounts.vault;
 
         // No profit this epoch — just roll the opening balance forward
@@ -354,4 +360,6 @@ pub enum VaultError {
     Unauthorized,
     #[msg("Insufficient vault balance")]
     InsufficientFunds,
+    #[msg("Signer is not the registered agent for this vault")]
+    AgentMismatch,
 }
