@@ -62,6 +62,12 @@ pub mod vault {
     ) -> Result<()> {
         require!(amount > 0, VaultError::ZeroAmount);
 
+        // V12: only the vault owner may delegate trading authority
+        require!(
+            ctx.accounts.user.key() == ctx.accounts.vault.user_pubkey,
+            VaultError::Unauthorized
+        );
+
         // Record the agent so settle_epoch can verify the caller
         ctx.accounts.vault.agent_pubkey = ctx.accounts.agent.key();
 
@@ -100,18 +106,24 @@ pub mod vault {
             VaultError::AgentMismatch
         );
 
-        let vault = &mut ctx.accounts.vault;
+        // Extract all read values before any mutable borrow (borrow-checker requirement)
+        let balance = ctx.accounts.vault.balance;
+        let opening_balance = ctx.accounts.vault.opening_balance;
+        let user_key = ctx.accounts.vault.user_pubkey;
+        let strategy_id = ctx.accounts.vault.strategy_id;
+        let bump = ctx.accounts.vault.bump;
 
         // No profit this epoch — just roll the opening balance forward
-        if vault.balance <= vault.opening_balance {
+        if balance <= opening_balance {
+            let vault = &mut ctx.accounts.vault;
             vault.epoch_profit = 0;
-            vault.opening_balance = vault.balance;
+            vault.opening_balance = balance;
             msg!("Epoch settled with no profit");
             return Ok(());
         }
 
-        let profit = vault.balance
-            .checked_sub(vault.opening_balance)
+        let profit = balance
+            .checked_sub(opening_balance)
             .ok_or(VaultError::Overflow)?;
 
         // 20% to platform, rounded down (user always gets at least 80%)
@@ -121,9 +133,6 @@ pub mod vault {
             .ok_or(VaultError::Overflow)?;
 
         if platform_fee > 0 {
-            let user_key = vault.user_pubkey;
-            let strategy_id = vault.strategy_id;
-            let bump = vault.bump;
             let seeds: &[&[u8]] = &[b"vault", user_key.as_ref(), &strategy_id, &[bump]];
             let signer_seeds = &[seeds];
 
@@ -139,18 +148,20 @@ pub mod vault {
             token::transfer(cpi_ctx, platform_fee)?;
         }
 
-        // Snapshot state after fee deduction
-        vault.balance = vault.balance
+        // Mutable update after CPI is complete
+        let new_balance = balance
             .checked_sub(platform_fee)
             .ok_or(VaultError::Overflow)?;
+        let vault = &mut ctx.accounts.vault;
+        vault.balance = new_balance;
         vault.epoch_profit = profit;
-        vault.opening_balance = vault.balance;
+        vault.opening_balance = new_balance;
 
         msg!(
             "Epoch settled: profit={}, platform_fee={}, user_balance={}",
             profit,
             platform_fee,
-            vault.balance
+            new_balance
         );
         Ok(())
     }
