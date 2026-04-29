@@ -15,6 +15,27 @@ pub mod vault {
 #[derive(Accounts)]
 pub struct Initialize {}
 
+/// Accounts context for creating a new vault PDA.
+/// PDA seeds: ["vault", user_pubkey, strategy_id]
+/// One unique vault per (user × strategy).
+#[derive(Accounts)]
+#[instruction(strategy_id: [u8; 32])]
+pub struct InitializeVault<'info> {
+    #[account(
+        init,
+        payer = user,
+        space = Vault::LEN,
+        seeds = [b"vault", user.key().as_ref(), &strategy_id],
+        bump
+    )]
+    pub vault: Account<'info, Vault>,
+
+    #[account(mut)]
+    pub user: Signer<'info>,
+
+    pub system_program: Program<'info, System>,
+}
+
 #[account]
 pub struct Vault {
     /// Owner of this vault
