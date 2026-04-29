@@ -59,10 +59,10 @@
 
 ## ANCHOR VAULT PROGRAM (Rust — Solana smart contract)
 
-- [ ] V1 — Install Rust via rustup
-- [ ] V2 — Install Solana CLI tools
-- [ ] V3 — Install Anchor CLI via avm
-- [ ] V4 — Run `anchor init vault` to scaffold the program
+- [x] V1 — Install Rust via rustup
+- [x] V2 — Install Solana CLI tools
+- [x] V3 — Install Anchor CLI via avm
+- [x] V4 — Run `anchor init vault` to scaffold the program
 - [ ] V5 — Define `Vault` account struct (user_pubkey, strategy_id, balance, opening_balance, epoch_profit, platform_wallet)
 - [ ] V6 — Define PDA seeds: `[b"vault", user_pubkey, strategy_id]`
 - [ ] V7 — Write `deposit()` instruction — user sends USDC/CASH to vault PDA
