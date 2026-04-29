@@ -6,12 +6,12 @@
 
 ## ACCOUNTS & API KEYS
 
-- [ ] A1 — Create Helius account at helius.dev
-- [ ] A2 — Create new Helius project, copy RPC URL
-- [ ] A3 — Create Phantom wallet (fresh — for agent sub-account)
-- [ ] A4 — Save Phantom wallet private key (base58) to .env
-- [ ] A5 — Create Solana devnet account via `solana-keygen new`
-- [ ] A6 — Airdrop devnet SOL for testing (`solana airdrop 2`)
+- [x] A1 — Create Helius account at helius.dev
+- [x] A2 — Create new Helius project, copy RPC URL
+- [x] A3 — Create Phantom wallet (fresh — for agent sub-account)
+- [x] A4 — Save Phantom wallet private key (base58) to .env
+- [x] A5 — Create Solana devnet account via `solana-keygen new` (pubkey: 35Jt4Uz9NDXAZcwUaNHqr1TMtpdgvtHKHW3NnrRRi6p4, on EC2)
+- [x] A6 — Airdrop devnet SOL for testing — 2.5 SOL confirmed on devnet
 - [ ] A7 — Create Twilio account at twilio.com
 - [ ] A8 — Enable Twilio WhatsApp sandbox, copy Account SID + Auth Token
 - [ ] A9 — Create Telegram bot via @BotFather, copy bot token

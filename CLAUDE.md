@@ -17,6 +17,19 @@ TradeLikeMe is a verified-strategy trading marketplace. Users deposit funds, a p
 
 ---
 
+## EC2 Server
+- **Instance**: `i-0cf0e5a7a3021b840` — `tradelikeme-prod`, Singapore (ap-southeast-1)
+- **IP**: `54.179.141.76`
+- **Type**: t3.large, Ubuntu 22.04
+- **Disk**: 50GB (resized Apr 29 from 30GB)
+- **SSH key**: `F:/AgentTeam/hackathon/Platform/telegram-windows-key.pem`
+- **SSH command**: `ssh -i "F:/AgentTeam/hackathon/Platform/telegram-windows-key.pem" ubuntu@54.179.141.76`
+- **Installed**: Rust 1.95.0, Solana CLI 3.1.14, Anchor CLI 0.32.1, Node.js v24.10.0, Yarn 1.22.22
+- **Devnet keypair**: `~/.config/solana/devnet-agent.json` (pubkey: `35Jt4Uz9NDXAZcwUaNHqr1TMtpdgvtHKHW3NnrRRi6p4`)
+- **PATH on EC2**: add `~/.cargo/bin` and `~/.local/share/solana/install/active_release/bin` to every SSH command
+
+---
+
 ## Related Projects (read-only context — do not modify)
 - `F:/AgentTeam/trading_agent/agent/` — old AgentTeam agent code (WEEX-only, single strategy). Context only — we are NOT copying from it.
 - `abrarnasirjaffari/AgentTeam` — private GitHub repo for the old project. Do not push anything there.
@@ -27,7 +40,25 @@ TradeLikeMe is a verified-strategy trading marketplace. Users deposit funds, a p
 - `README.md` — written and pushed
 - `plan.md` — full build plan written and pushed
 - `tasks.md` — full task list written and pushed
-- **No code written yet** — next session starts building
+- `.env` — created with Helius RPC URL + Phantom wallet keys
+- `.env.example` — created with all variable names
+- **No code written yet** — accounts/infra setup in progress
+
+### Accounts & Keys Completed (A1–A6)
+- **A1–A2** ✅ Helius account + project created. RPC URL saved to `.env`
+- **A3–A4** ✅ Phantom wallet created for agent sub-account. Private key + pubkey saved to `.env`
+  - Pubkey: `HgcX7tJLhHTBUXmWskaohFcr4J1NR66FMwR7iAPawP7F`
+- **A5** ✅ Devnet keypair generated on EC2: `35Jt4Uz9NDXAZcwUaNHqr1TMtpdgvtHKHW3NnrRRi6p4`
+- **A6** ✅ 2.5 devnet SOL airdropped via faucet.solana.com
+
+### Remaining Accounts (A7–A20)
+- A7–A8: Twilio (WhatsApp) — not started
+- A9–A10: Telegram bot — not started
+- A11–A12: AWS Bedrock Claude Opus 4.6 — not verified
+- A13–A17: CEX API keys (WEEX, Bybit, BingX, Binance, Bitget) — not started
+- A18: Colosseum registration — ACTION REQUIRED by May 4
+- A19: tradelikeme.xyz domain — not verified
+- A20: `.env` fully filled — in progress
 
 ---
 
