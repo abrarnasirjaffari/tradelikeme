@@ -207,8 +207,8 @@
 - [x] KC38 — Test `screenshot` tool — returns valid base64 PNG
 - [x] KC39 — Test `set_timeframe` + `screenshot` — confirm different TF candles render
 - [x] KC40 — Test `toggle_indicator` — RSI appears/disappears on chart
-- [ ] KC41 — Add MCP server to `claude_desktop_config.json` (or project MCP settings) for local use
-- [ ] KC42 — Full zone scan test: Claude calls open_chart + screenshot 7 times (7 TFs) for SOLUSDT, identifies zones
+- [x] KC41 — Add MCP server to `claude_desktop_config.json` (or project MCP settings) for local use
+- [x] KC42 — Full zone scan test: Claude calls open_chart + screenshot 7 times (7 TFs) for SOLUSDT, identifies zones
 
 ---
 
