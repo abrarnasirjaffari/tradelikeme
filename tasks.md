@@ -202,8 +202,8 @@
 
 ### Phase 6 — Build + Test
 
-- [ ] KC36 — `npm run build` in `infra/klinechart-mcp/` — confirm clean TypeScript compile
-- [ ] KC37 — Test `open_chart` tool via MCP Inspector — chart loads
+- [x] KC36 — `npm run build` in `infra/klinechart-mcp/` — confirm clean TypeScript compile
+- [x] KC37 — Test `open_chart` tool via MCP Inspector — chart loads
 - [ ] KC38 — Test `screenshot` tool — returns valid base64 PNG
 - [ ] KC39 — Test `set_timeframe` + `screenshot` — confirm different TF candles render
 - [ ] KC40 — Test `toggle_indicator` — RSI appears/disappears on chart

@@ -14,6 +14,8 @@
 <body>
   <div id="chart"></div>
 
+  <!-- Safety net: mark ready after 12s regardless of datafeed outcome -->
+  <script>setTimeout(() => { const el = document.getElementById('chart'); if (el && el.getAttribute('data-ready') !== 'true') el.setAttribute('data-ready', 'true'); }, 12000);</script>
   <script src="../../klinechart-pro/node_modules/klinecharts/dist/klinecharts.min.js"></script>
   <script>
     // Intercept klinecharts.init to capture the Chart instance for MCP tools

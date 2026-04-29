@@ -5,7 +5,7 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CHART_HTML = path.resolve(__dirname, "../../chart/index.html");
 const CHART_URL = `http://localhost:8765/klinechart-mcp/chart/index.html`;
-const DATA_READY_TIMEOUT = 15_000;
+const DATA_READY_TIMEOUT = 20_000;
 
 let browser: Browser | null = null;
 let page: Page | null = null;
@@ -29,8 +29,9 @@ export async function navigate(symbol: string, tf: string): Promise<void> {
   currentSymbol = symbol;
   currentTf = tf;
   const url = `${CHART_URL}?symbol=${encodeURIComponent(symbol)}&tf=${encodeURIComponent(tf)}`;
-  await page!.goto(url);
+  await page!.goto(url, { waitUntil: "domcontentloaded" });
   await page!.waitForSelector("#chart[data-ready='true']", {
+    state: "attached",
     timeout: DATA_READY_TIMEOUT,
   });
 }

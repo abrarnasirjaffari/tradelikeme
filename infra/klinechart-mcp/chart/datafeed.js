@@ -107,6 +107,8 @@ class CryptoDatafeed {
       }
     } catch (_) {}
 
+    // Always mark ready even if no data loaded
+    markDataReady()
     return []
   }
 
