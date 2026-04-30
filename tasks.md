@@ -149,18 +149,18 @@
 
 ## EXCHANGE ABSTRACTION (exchange_base.py)
 
-- [ ] EB1 — Create trading_agent/base/exchange_base.py
-- [ ] EB2 — Define abstract base class `ExchangeBase`
-- [ ] EB3 — Define abstract method `get_balance()`
-- [ ] EB4 — Define abstract method `get_price(symbol)`
-- [ ] EB5 — Define abstract method `open_position(symbol, side, size, leverage)`
-- [ ] EB6 — Define abstract method `close_position(symbol)`
-- [ ] EB7 — Define abstract method `set_sl(symbol, price)`
-- [ ] EB8 — Define abstract method `set_tp(symbol, price, qty)`
-- [ ] EB9 — Define abstract method `get_position(symbol)`
-- [ ] EB10 — Make ZetaClient inherit ExchangeBase
-- [ ] EB11 — Make JupiterClient inherit ExchangeBase
-- [ ] EB12 — Write router logic: try Zeta → fallback Jupiter if symbol not available or Zeta down
+- [x] EB1 — Create trading_agent/base/exchange_base.py
+- [x] EB2 — Define abstract base class `ExchangeBase`
+- [x] EB3 — Define abstract method `get_balance()`
+- [x] EB4 — Define abstract method `get_price(symbol)`
+- [x] EB5 — Define abstract method `open_position(symbol, side, size, leverage)`
+- [x] EB6 — Define abstract method `close_position(symbol)`
+- [x] EB7 — Define abstract method `set_sl(symbol, price)`
+- [x] EB8 — Define abstract method `set_tp(symbol, price, qty)`
+- [x] EB9 — Define abstract method `get_position(symbol)`
+- [x] EB10 — Make ZetaClient inherit ExchangeBase
+- [x] EB11 — Make JupiterClient inherit ExchangeBase
+- [x] EB12 — Write router logic: try Zeta → fallback Jupiter if symbol not available or Zeta down
 
 ---
 

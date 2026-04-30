@@ -8,6 +8,7 @@ from solana.rpc.async_api import AsyncClient
 from solders.keypair import Keypair
 from solders.pubkey import Pubkey
 
+from trading_agent.base.exchange_base import ExchangeBase
 from trading_agent.exchanges.solana.pyth_ws import PythPriceFeed
 
 logger = logging.getLogger(__name__)
@@ -98,7 +99,7 @@ def _load_keypair() -> Keypair:
     )
 
 
-class JupiterClient:
+class JupiterClient(ExchangeBase):
     """
     Async client for Jupiter Perpetuals (fallback Solana perps protocol).
     Program ID: PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu (mainnet only)
@@ -194,6 +195,21 @@ class JupiterClient:
         except Exception:
             # Token account doesn't exist yet — wallet has no USDC
             return 0.0
+
+    async def get_price(self, symbol: str) -> float:
+        """Return latest mid price for symbol via Pyth oracle."""
+        self._assert_supported(symbol)
+        feed_key = _SYMBOL_TO_FEED[symbol]
+
+        price = self._pyth.get_price(feed_key)
+        if price is not None:
+            return price
+
+        price = await self._pyth.get_price_rest(feed_key)
+        if price is not None:
+            return price
+
+        raise RuntimeError(f"Could not fetch price for {symbol} — Pyth WS and REST both unavailable.")
 
     async def open_position(
         self,

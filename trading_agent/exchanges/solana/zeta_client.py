@@ -25,6 +25,7 @@ from zetamarkets_py.zeta_client.types.trigger_direction import (
     GreaterThanOrEqual,
 )
 
+from trading_agent.base.exchange_base import ExchangeBase
 from trading_agent.exchanges.solana.pyth_ws import PythPriceFeed
 
 logger = logging.getLogger(__name__)
@@ -106,7 +107,7 @@ def _network_enum(network: str) -> Network:
     return n
 
 
-class ZetaClient:
+class ZetaClient(ExchangeBase):
     """
     Async client for Zeta Markets perpetuals (primary Solana perps protocol).
     Program ID: ZETAxsqBRek56DhiGXrn75yj2NHU3aYUnxvHXpkf3aD (mainnet)
