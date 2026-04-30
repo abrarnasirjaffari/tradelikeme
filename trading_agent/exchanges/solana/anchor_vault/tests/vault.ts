@@ -506,6 +506,140 @@ describe("vault — withdraw()", () => {
   });
 });
 
+// ── V20: vault PDA is unique per (user × strategy) ───────────────────────────
+
+describe("vault — V20: PDA uniqueness per (user × strategy)", () => {
+  const provider = anchor.AnchorProvider.env();
+  anchor.setProvider(provider);
+  const program = anchor.workspace.Vault as Program<Vault>;
+
+  let mint: PublicKey;
+  let mintAuthority: Keypair;
+  let platformWallet: Keypair;
+
+  before(async () => {
+    mintAuthority = Keypair.generate();
+    platformWallet = Keypair.generate();
+    mint = await createMint(
+      provider.connection,
+      (provider.wallet as anchor.Wallet).payer,
+      mintAuthority.publicKey,
+      null,
+      6
+    );
+  });
+
+  async function airdrop(pubkey: PublicKey): Promise<void> {
+    const sig = await provider.connection.requestAirdrop(pubkey, 2e9);
+    await provider.connection.confirmTransaction(sig);
+  }
+
+  it("V20-1: same user + different strategy_id → different PDA addresses", async () => {
+    const user = Keypair.generate();
+    await airdrop(user.publicKey);
+
+    const sid1 = strategyId(20);
+    const sid2 = strategyId(21);
+
+    const [pda1] = await deriveVaultPda(program.programId, user.publicKey, sid1);
+    const [pda2] = await deriveVaultPda(program.programId, user.publicKey, sid2);
+
+    assert.notEqual(
+      pda1.toBase58(),
+      pda2.toBase58(),
+      "different strategy_id must produce a different PDA for the same user"
+    );
+
+    // Both can be created without conflict
+    await program.methods
+      .createVault(sid1, platformWallet.publicKey)
+      .accounts({ vault: pda1, user: user.publicKey, systemProgram: SystemProgram.programId })
+      .signers([user])
+      .rpc();
+
+    await program.methods
+      .createVault(sid2, platformWallet.publicKey)
+      .accounts({ vault: pda2, user: user.publicKey, systemProgram: SystemProgram.programId })
+      .signers([user])
+      .rpc();
+
+    const state1 = await program.account.vault.fetch(pda1);
+    const state2 = await program.account.vault.fetch(pda2);
+
+    assert.equal(state1.userPubkey.toBase58(), user.publicKey.toBase58());
+    assert.equal(state2.userPubkey.toBase58(), user.publicKey.toBase58());
+    assert.deepEqual(Array.from(state1.strategyId), sid1, "vault 1 stores strategy 20");
+    assert.deepEqual(Array.from(state2.strategyId), sid2, "vault 2 stores strategy 21");
+  });
+
+  it("V20-2: different users + same strategy_id → different PDA addresses", async () => {
+    const userA = Keypair.generate();
+    const userB = Keypair.generate();
+    await airdrop(userA.publicKey);
+    await airdrop(userB.publicKey);
+
+    const sid = strategyId(30);
+
+    const [pdaA] = await deriveVaultPda(program.programId, userA.publicKey, sid);
+    const [pdaB] = await deriveVaultPda(program.programId, userB.publicKey, sid);
+
+    assert.notEqual(
+      pdaA.toBase58(),
+      pdaB.toBase58(),
+      "same strategy_id with different users must produce different PDAs"
+    );
+
+    // Both can be created without conflict
+    await program.methods
+      .createVault(sid, platformWallet.publicKey)
+      .accounts({ vault: pdaA, user: userA.publicKey, systemProgram: SystemProgram.programId })
+      .signers([userA])
+      .rpc();
+
+    await program.methods
+      .createVault(sid, platformWallet.publicKey)
+      .accounts({ vault: pdaB, user: userB.publicKey, systemProgram: SystemProgram.programId })
+      .signers([userB])
+      .rpc();
+
+    const stateA = await program.account.vault.fetch(pdaA);
+    const stateB = await program.account.vault.fetch(pdaB);
+
+    assert.equal(stateA.userPubkey.toBase58(), userA.publicKey.toBase58());
+    assert.equal(stateB.userPubkey.toBase58(), userB.publicKey.toBase58());
+    assert.deepEqual(Array.from(stateA.strategyId), sid);
+    assert.deepEqual(Array.from(stateB.strategyId), sid);
+  });
+
+  it("V20-3: same user + same strategy_id → second create_vault fails (no duplicates)", async () => {
+    const user = Keypair.generate();
+    await airdrop(user.publicKey);
+
+    const sid = strategyId(40);
+    const [pda] = await deriveVaultPda(program.programId, user.publicKey, sid);
+
+    // First creation succeeds
+    await program.methods
+      .createVault(sid, platformWallet.publicKey)
+      .accounts({ vault: pda, user: user.publicKey, systemProgram: SystemProgram.programId })
+      .signers([user])
+      .rpc();
+
+    // Second creation with identical seeds must fail
+    let threw = false;
+    try {
+      await program.methods
+        .createVault(sid, platformWallet.publicKey)
+        .accounts({ vault: pda, user: user.publicKey, systemProgram: SystemProgram.programId })
+        .signers([user])
+        .rpc();
+    } catch {
+      threw = true;
+    }
+    assert.isTrue(threw, "creating a vault with duplicate (user × strategy) seeds must fail");
+  });
+});
+
 // ── V15: settle_epoch() tests — 20/80 split math ─────────────────────────────
 
 describe("vault — settle_epoch()", () => {
