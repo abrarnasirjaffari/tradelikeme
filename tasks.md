@@ -78,7 +78,7 @@
 - [x] V17 — Deploy to devnet: `anchor deploy --provider.cluster devnet`
 - [x] V18 — Note deployed program ID, add to config — Program ID: `rGMTq8sS5GUJ7q1ei9x75dnZ3kM2QCn5YRKYGHbwdSd` (devnet, slot 459047601)
 - [x] V19 — Run `anchor test` on devnet — all tests pass
-- [ ] V20 — Verify vault PDA is unique per (user × strategy) on devnet
+- [~] V20 — Verify vault PDA is unique per (user × strategy) on devnet — tests written + V20-1 passes, V20-2/V20-3 blocked: devnet wallet drained (0.016 SOL). Faucet rate-limited 8h. Re-run with `anchor test --skip-build --skip-deploy` after next airdrop.
 
 ---
 
