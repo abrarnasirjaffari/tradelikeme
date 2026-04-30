@@ -75,8 +75,8 @@
 - [x] V14 — Write unit tests for `withdraw()`
 - [x] V15 — Write unit tests for `settle_epoch()` — verify 20/80 split math
 - [x] V16 — Build program: `anchor build`
-- [ ] V17 — Deploy to devnet: `anchor deploy --provider.cluster devnet`
-- [ ] V18 — Note deployed program ID, add to config
+- [x] V17 — Deploy to devnet: `anchor deploy --provider.cluster devnet`
+- [x] V18 — Note deployed program ID, add to config — Program ID: `rGMTq8sS5GUJ7q1ei9x75dnZ3kM2QCn5YRKYGHbwdSd` (devnet, slot 459047601)
 - [x] V19 — Run `anchor test` on devnet — all tests pass
 - [ ] V20 — Verify vault PDA is unique per (user × strategy) on devnet
 
