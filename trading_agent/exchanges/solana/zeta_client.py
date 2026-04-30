@@ -248,7 +248,9 @@ class ZetaClient:
             order_opts=OrderOptions(order_type=OrderType.ImmediateOrCancel),
         )
 
-        tx_sig = await zeta.place_orders_for_market(asset=asset, orders=[order])
+        # _send_versioned_transaction returns list[Signature]; take first element
+        sigs = await zeta.place_orders_for_market(asset=asset, orders=[order])
+        tx_sig = str(sigs[0])
 
         logger.info(
             "open_position %s %s size=%.4f price=%.4f tx=%s",
@@ -288,7 +290,8 @@ class ZetaClient:
             order_opts=OrderOptions(order_type=OrderType.ImmediateOrCancel),
         )
 
-        tx_sig = await zeta.place_orders_for_market(asset=asset, orders=[order])
+        sigs = await zeta.place_orders_for_market(asset=asset, orders=[order])
+        tx_sig = str(sigs[0])
 
         logger.info(
             "close_position %s size=%.4f price=%.4f tx=%s",
@@ -368,13 +371,14 @@ class ZetaClient:
         }
 
         ix = place_trigger_order(args, accounts, program_id)
-        tx_sig = await zeta._send_versioned_transaction([ix])
+        sigs = await zeta._send_versioned_transaction([ix])
+        tx_sig = str(sigs[0])
 
         logger.info(
             "set_sl %s side=%s price=%.4f size=%.4f tx=%s",
             symbol, position["side"], price, size, tx_sig,
         )
-        return str(tx_sig)
+        return tx_sig
 
     async def cancel_sl(self, symbol: str) -> str:
         """Cancel the stop-loss trigger order for symbol. Returns tx signature.
@@ -397,9 +401,10 @@ class ZetaClient:
         }
 
         ix = cancel_trigger_order_v2(args, accounts, program_id)
-        tx_sig = await zeta._send_versioned_transaction([ix])
+        sigs = await zeta._send_versioned_transaction([ix])
+        tx_sig = str(sigs[0])
         logger.info("cancel_sl %s tx=%s", symbol, tx_sig)
-        return str(tx_sig)
+        return tx_sig
 
     async def set_tp(self, symbol: str, price: float, qty: float) -> str:
         """Place take-profit trigger order for qty. Returns order ID. (ZC10)"""
