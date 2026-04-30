@@ -246,8 +246,7 @@
 - [x] ZS12 — Write `apply_btc_gate(direction)` — check BTC 1D structure, block entries against it
 - [x] ZS13 — Write `find_tp_levels(entry, direction, zones)` — return TP1 (zone 1) and TP2 (zone 2)
 - [x] ZS14 — Write `find_sl_level(entry, direction, zones)` — structural SL below/above entry
-- [ ] ZS15 — Add TradingView MCP as fallback in `scan_tf_stack()` if KLineChart fails
-- [ ] ZS16 — Test zone scan on SOL devnet — verify zones returned correctly
+- [x] ZS16 — Test zone scan on SOL devnet — verify zones returned correctly
 
 ---
 
@@ -477,3 +476,6 @@
 
 ### Testing
 - [⏸] ET8 — Test WhatsApp notification on zone touch + TP hit
+
+### Zone Scanner
+- [⏸] ZS15 — Add TradingView MCP as fallback in `scan_tf_stack()` if KLineChart fails
