@@ -142,8 +142,8 @@
 - [x] JC6 — Write `close_position(symbol)` — decreasePosition instruction (full)
 - [x] JC7 — Write `set_sl(symbol, price)` — place stop loss
 - [x] JC8 — Write `set_tp(symbol, price, qty)` — place take profit
-- [ ] JC9 — Write `get_position(symbol)` — fetch position from on-chain state
-- [ ] JC10 — Test all methods on mainnet with minimal real funds (Jupiter Perps has no devnet deployment)
+- [x] JC9 — Write `get_position(symbol)` — fetch position from on-chain state
+- [x] JC10 — Test all methods on mainnet with minimal real funds (Jupiter Perps has no devnet deployment)
 
 ---
 

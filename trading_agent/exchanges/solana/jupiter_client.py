@@ -325,6 +325,46 @@ class JupiterClient:
         )
         return tx_sig
 
+    async def get_position(self, symbol: str) -> Optional[dict]:
+        """Return current position for symbol, or None if no open position. (JC9)
+
+        Returns:
+            {
+                "symbol": str,
+                "side": "long" | "short",
+                "size_usd": float,       # USD notional
+                "collateral_usd": float, # margin in USD
+                "entry_price": float,    # average entry price
+            }
+            or None if no position.
+        """
+        program = self._require_init()
+        self._assert_supported(symbol)
+
+        pool = _get_pool_pubkey()
+        custody = _get_custody_pubkey(symbol)
+        owner = program.provider.wallet.public_key
+
+        for side_byte, side_label in [(b"\x00", "long"), (b"\x01", "short")]:
+            pda, _ = Pubkey.find_program_address(
+                [b"position", bytes(owner), bytes(pool), bytes(custody), side_byte],
+                JUPITER_PERPS_PROGRAM_ID,
+            )
+            try:
+                acct = await program.account["Position"].fetch(pda)
+                if acct.size_usd > 0:
+                    return {
+                        "symbol": symbol,
+                        "side": side_label,
+                        "size_usd": acct.size_usd / 1_000_000,
+                        "collateral_usd": acct.collateral_usd / 1_000_000,
+                        "entry_price": acct.price / 1_000_000,
+                    }
+            except Exception:
+                continue
+
+        return None
+
     async def set_sl(self, symbol: str, price: float) -> str:
         """Place a stop-loss trigger request for the full open position. Returns tx signature. (JC7)
 
