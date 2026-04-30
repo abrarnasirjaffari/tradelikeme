@@ -123,8 +123,10 @@ class ZetaClient:
     # ------------------------------------------------------------------
 
     async def get_balance(self) -> float:
-        """Return USDC margin balance. (ZC5)"""
-        raise NotImplementedError
+        """Return USDC margin balance from the cross-margin account."""
+        zeta = self._require_init()
+        balance, _ = await zeta.fetch_margin_state()
+        return float(balance)
 
     # ------------------------------------------------------------------
     # Price

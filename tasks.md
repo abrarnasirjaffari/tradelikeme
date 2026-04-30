@@ -107,7 +107,7 @@
 - [x] ZC2 — Add `zetamarkets-py` to requirements.txt, run `pip install` — added to requirements.txt; local Windows install blocked (MSVC required for zstandard wheel). Installs cleanly on EC2 Ubuntu.
 - [x] ZC3 — Create trading_agent/exchanges/solana/zeta_client.py
 - [x] ZC4 — Write `__init__()` — load keypair, connect to Helius RPC, init Zeta client
-- [ ] ZC5 — Write `get_balance()` — return USDC margin balance
+- [x] ZC5 — Write `get_balance()` — return USDC margin balance
 - [ ] ZC6 — Write `get_price(symbol)` — fetch from Pyth feed via zeta or pyth_ws
 - [ ] ZC7 — Write `open_position(symbol, side, size, leverage)` — place market order
 - [ ] ZC8 — Write `close_position(symbol)` — full close
