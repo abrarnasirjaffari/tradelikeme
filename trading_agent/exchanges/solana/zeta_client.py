@@ -9,6 +9,8 @@ from solders.keypair import Keypair
 from zetamarkets_py.client import Client
 from zetamarkets_py.types import Asset, Network
 
+from trading_agent.exchanges.solana.pyth_ws import PythPriceFeed
+
 logger = logging.getLogger(__name__)
 
 # Symbols supported by Zeta Markets and their Asset enum mapping
@@ -19,6 +21,15 @@ _SYMBOL_TO_ASSET: dict[str, Asset] = {
     "ETH": Asset.ETH,
     "APT": Asset.APT,
     "ARB": Asset.ARB,
+}
+
+# Map base symbol → Pyth feed key
+_SYMBOL_TO_FEED: dict[str, str] = {
+    "SOL": "SOL/USD",
+    "BTC": "BTC/USD",
+    "ETH": "ETH/USD",
+    "APT": "APT/USD",
+    "ARB": "ARB/USD",
 }
 
 # Maximum leverage offered by Zeta Markets
@@ -77,6 +88,7 @@ class ZetaClient:
         self._network: Network = _network_enum(network)
         self._rpc_url: str = os.getenv("HELIUS_RPC_URL", "")
         self._zeta: Optional[Client] = None  # zetamarkets_py.Client
+        self._pyth = PythPriceFeed(network)
 
     # ------------------------------------------------------------------
     # Lifecycle
@@ -105,12 +117,19 @@ class ZetaClient:
             keypair.pubkey(),
         )
 
+        # Connect Pyth and subscribe to all supported symbols
+        await self._pyth.connect()
+        for feed_key in _SYMBOL_TO_FEED.values():
+            await self._pyth.subscribe(feed_key)
+        logger.info("Pyth price feed connected — subscribed to %d symbols", len(_SYMBOL_TO_FEED))
+
     async def close(self) -> None:
         """Close the underlying RPC connection gracefully."""
         if self._zeta is not None:
             await self._zeta.connection.close()
             self._zeta = None
-            logger.info("ZetaClient closed")
+        await self._pyth.disconnect()
+        logger.info("ZetaClient closed")
 
     def _require_init(self) -> Client:
         """Return the inner Client, raising if initialise() was not called."""
@@ -133,8 +152,23 @@ class ZetaClient:
     # ------------------------------------------------------------------
 
     async def get_price(self, symbol: str) -> float:
-        """Return latest mid price for symbol via Pyth oracle. (ZC6)"""
-        raise NotImplementedError
+        """Return latest mid price for symbol via Pyth oracle. (ZC6)
+
+        Uses cached WebSocket price if available; falls back to Pyth REST if not.
+        """
+        self._assert_supported(symbol)
+        feed_key = _SYMBOL_TO_FEED[symbol]
+
+        price = self._pyth.get_price(feed_key)
+        if price is not None:
+            return price
+
+        # WS price not yet received — hit REST fallback
+        price = await self._pyth.get_price_rest(feed_key)
+        if price is not None:
+            return price
+
+        raise RuntimeError(f"Could not fetch price for {symbol} — Pyth WS and REST both unavailable.")
 
     # ------------------------------------------------------------------
     # Positions

@@ -16,6 +16,8 @@ FEED_IDS: dict[str, str] = {
     "SOL/USD":  os.getenv("PYTH_FEED_SOL_USD",  "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d"),
     "BTC/USD":  os.getenv("PYTH_FEED_BTC_USD",  "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"),
     "ETH/USD":  os.getenv("PYTH_FEED_ETH_USD",  "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"),
+    "APT/USD":  os.getenv("PYTH_FEED_APT_USD",  "0x03ae4db29ed4ae33d323568895aa00337e658e348b37509f5372ae51f0af00d5"),
+    "ARB/USD":  os.getenv("PYTH_FEED_ARB_USD",  "0x3fa4252848f9f0a1480be62745a4629d9eb1322aebab8a791e344b3b9c1adcf5"),
     "USDC/USD": os.getenv("PYTH_FEED_USDC_USD", "0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a"),
     "USDT/USD": os.getenv("PYTH_FEED_USDT_USD", "0x2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688d2e53b"),
 }
