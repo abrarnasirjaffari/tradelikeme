@@ -85,14 +85,14 @@
 ## PYTH PRICE FEED (pyth_ws.py)
 
 - [x] PY1 — Research Pyth WebSocket endpoint for devnet — Hermes WS: wss://hermes-beta.pyth.network/ws (devnet), wss://hermes.pyth.network/ws (mainnet). Same feed IDs both networks.
-- [ ] PY2 — Create trading_agent/exchanges/solana/pyth_ws.py
-- [ ] PY3 — Write `connect()` — open WebSocket to Pyth
-- [ ] PY4 — Write `subscribe(symbol)` — subscribe to a price feed
-- [ ] PY5 — Write `get_price(symbol)` — return latest mid price
-- [ ] PY6 — Write `disconnect()` — clean WebSocket close
-- [ ] PY7 — Write auto-reconnect with exponential backoff on disconnect
+- [x] PY2 — Create trading_agent/exchanges/solana/pyth_ws.py
+- [x] PY3 — Write `connect()` — open WebSocket to Pyth
+- [x] PY4 — Write `subscribe(symbol)` — subscribe to a price feed
+- [x] PY5 — Write `get_price(symbol)` — return latest mid price
+- [x] PY6 — Write `disconnect()` — clean WebSocket close
+- [x] PY7 — Write auto-reconnect with exponential backoff on disconnect
 - [ ] PY8 — Test pyth_ws.py on devnet — confirm prices streaming for SOL/BTC/ETH
-- [ ] PY9 — Add REST fallback `get_price_rest(symbol)` — poll Pyth HTTP API if WS down
+- [x] PY9 — Add REST fallback `get_price_rest(symbol)` — poll Pyth HTTP API if WS down
 
 ---
 
