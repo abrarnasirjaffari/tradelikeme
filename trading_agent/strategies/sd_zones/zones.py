@@ -432,3 +432,370 @@ async def assert_chart_server() -> None:
             "KLineChart chart server is not running on localhost:8765. "
             "Start it with: cd infra/klinechart-mcp && node dist/index.js"
         )
+
+
+# ---------------------------------------------------------------------------
+# Full TF stack scan (ZS10)
+# ---------------------------------------------------------------------------
+
+# Strategy TF stack — ordered from highest to lowest timeframe
+TF_STACK = ["1M", "1W", "1D", "4H", "1H", "30M", "15M"]
+
+
+async def scan_tf_stack(symbol: str) -> list[Zone]:
+    """
+    Scan all 7 timeframes for *symbol* and return every S/D zone found.
+
+    Pipeline per TF:
+        render_chart → screenshot_chart → analyze_zones (Claude Opus via Bedrock)
+
+    A failure on a single TF is logged and skipped — the scan continues.
+    The chart server health check runs first; raises RuntimeError if not up.
+
+    Args:
+        symbol: e.g. "SOLUSDT", "BTCUSDT"
+
+    Returns:
+        All Zone objects found across all TFs, ordered TF-stack top → bottom.
+    """
+    import os
+
+    await assert_chart_server()
+
+    all_zones: list[Zone] = []
+
+    for tf in TF_STACK:
+        logger.info("scan_tf_stack: %s %s — rendering chart", symbol, tf)
+        png_path: str | None = None
+        try:
+            page = await render_chart(symbol, tf)
+            png_path = await screenshot_chart(page, symbol, tf)
+            zones = await analyze_zones(png_path, symbol, tf)
+            logger.info(
+                "scan_tf_stack: %s %s — %d zone(s) found", symbol, tf, len(zones)
+            )
+            all_zones.extend(zones)
+        except TimeoutError as exc:
+            logger.warning("scan_tf_stack: %s %s — chart timeout, skipping: %s", symbol, tf, exc)
+        except Exception as exc:
+            logger.error("scan_tf_stack: %s %s — unexpected error, skipping: %s", symbol, tf, exc)
+        finally:
+            if png_path and os.path.exists(png_path):
+                try:
+                    os.remove(png_path)
+                except OSError:
+                    pass
+
+    logger.info(
+        "scan_tf_stack: %s complete — %d total zone(s) across %d TFs",
+        symbol,
+        len(all_zones),
+        len(TF_STACK),
+    )
+    return all_zones
+
+
+# ---------------------------------------------------------------------------
+# 4H zone gate (ZS11)
+# ---------------------------------------------------------------------------
+
+ZONE_GATE_PCT = 0.05  # lower-TF zone must have a 4H zone within ±5%
+
+# TFs considered "lower" than 4H — these require a 4H zone nearby to be valid
+_LOWER_TFS = {"1H", "30M", "15M", "5M"}
+
+
+def _zones_overlap(a: Zone, b: Zone, pct: float) -> bool:
+    """
+    Return True if zone *a* and zone *b* are within *pct* of each other.
+    Uses midpoint distance relative to the 4H zone midpoint.
+    """
+    mid_a = (a.top + a.bottom) / 2
+    mid_b = (b.top + b.bottom) / 2
+    return abs(mid_a - mid_b) / mid_b <= pct
+
+
+def apply_4h_gate(zones: list[Zone]) -> list[Zone]:
+    """
+    Filter out lower-TF zones (1H / 30M / 15M / 5M) that have no 4H zone
+    within ±ZONE_GATE_PCT (5%) of their midpoint.
+
+    Higher-TF zones (1M / 1W / 1D / 4H) are always kept.
+
+    Args:
+        zones: full list returned by scan_tf_stack()
+
+    Returns:
+        Filtered list — only zones that pass the 4H gate.
+    """
+    four_h_zones = [z for z in zones if z.tf == "4H"]
+
+    passed: list[Zone] = []
+    for zone in zones:
+        if zone.tf not in _LOWER_TFS:
+            passed.append(zone)
+            continue
+
+        has_nearby_4h = any(_zones_overlap(zone, z4h, ZONE_GATE_PCT) for z4h in four_h_zones)
+        if has_nearby_4h:
+            passed.append(zone)
+        else:
+            logger.debug(
+                "apply_4h_gate: dropped %s %s zone %.4f–%.4f (no 4H zone within %.0f%%)",
+                zone.symbol, zone.tf, zone.bottom, zone.top, ZONE_GATE_PCT * 100,
+            )
+
+    logger.info(
+        "apply_4h_gate: %d → %d zones (dropped %d lower-TF orphans)",
+        len(zones), len(passed), len(zones) - len(passed),
+    )
+    return passed
+
+
+# ---------------------------------------------------------------------------
+# BTC 1D macro gate (ZS12)
+# ---------------------------------------------------------------------------
+
+# How many recent 1D candles to inspect for BTC structure
+_BTC_LOOKBACK = 10
+# Minimum consecutive higher closes to call BTC bullish
+_BULL_STREAK = 3
+
+
+def _btc_direction(candles: list[Candle]) -> Literal["bullish", "bearish", "neutral"]:
+    """
+    Classify recent BTC 1D structure from raw candles.
+
+    Bullish  : last N closes are making higher lows AND 3+ consecutive green closes
+    Bearish  : last N closes are making lower highs AND 3+ consecutive red closes
+    Neutral  : mixed / unclear
+    """
+    if len(candles) < _BTC_LOOKBACK:
+        return "neutral"
+
+    recent = candles[-_BTC_LOOKBACK:]
+    closes = [c.close for c in recent]
+    highs  = [c.high  for c in recent]
+    lows   = [c.low   for c in recent]
+
+    # Count consecutive green / red closes from the most recent candle backwards
+    green_streak = 0
+    for i in range(len(closes) - 1, 0, -1):
+        if closes[i] > closes[i - 1]:
+            green_streak += 1
+        else:
+            break
+
+    red_streak = 0
+    for i in range(len(closes) - 1, 0, -1):
+        if closes[i] < closes[i - 1]:
+            red_streak += 1
+        else:
+            break
+
+    # Higher highs + higher lows over the lookback window
+    higher_highs = highs[-1] > highs[0]
+    higher_lows  = lows[-1]  > lows[0]
+    lower_highs  = highs[-1] < highs[0]
+    lower_lows   = lows[-1]  < lows[0]
+
+    if higher_highs and higher_lows and green_streak >= _BULL_STREAK:
+        return "bullish"
+    if lower_highs and lower_lows and red_streak >= _BULL_STREAK:
+        return "bearish"
+    return "neutral"
+
+
+async def apply_btc_gate(direction: Literal["long", "short"]) -> bool:
+    """
+    Check BTC 1D macro structure and return whether a trade in *direction*
+    is allowed.
+
+    Rule (from strategy lesson 9 + Rule A):
+    - LONG  entries blocked when BTC is bearish (lower highs + lower lows + 3 red closes)
+    - SHORT entries blocked when BTC is bullish (higher highs + higher lows + 3 green closes)
+    - Neutral BTC → both directions allowed
+
+    Args:
+        direction: "long" or "short" — the intended trade direction
+
+    Returns:
+        True  → gate passes, entry allowed
+        False → gate blocks, skip this setup
+    """
+    try:
+        candles = await fetch_ohlcv("BTCUSDT", "1D", limit=_BTC_LOOKBACK + 5)
+    except Exception as exc:
+        # If BTC data is unavailable, fail open with a warning rather than
+        # blocking all trades indefinitely.
+        logger.warning("apply_btc_gate: BTC 1D fetch failed (%s) — gate passing by default", exc)
+        return True
+
+    btc_bias = _btc_direction(candles)
+    logger.info("apply_btc_gate: BTC 1D structure = %s, requested direction = %s", btc_bias, direction)
+
+    if direction == "long" and btc_bias == "bearish":
+        logger.info("apply_btc_gate: BLOCKED long — BTC 1D is bearish")
+        return False
+    if direction == "short" and btc_bias == "bullish":
+        logger.info("apply_btc_gate: BLOCKED short — BTC 1D is bullish")
+        return False
+
+    return True
+
+
+# ---------------------------------------------------------------------------
+# TP level finder (ZS13)
+# ---------------------------------------------------------------------------
+
+def find_tp_levels(
+    entry: float,
+    direction: Literal["long", "short"],
+    zones: list[Zone],
+) -> tuple[Zone | None, Zone | None]:
+    """
+    Find TP1 (nearest zone) and TP2 (second zone) in the trade direction.
+
+    Rules (from strategy):
+    - For LONG: look for supply zones ABOVE entry, ordered nearest → furthest
+    - For SHORT: look for demand zones BELOW entry, ordered nearest → furthest
+    - TP1 = zone 1 (closest), TP2 = zone 2 (next closest)
+    - NEVER use zone 3-4 for TP2 (verified: misses on 2/3 trades)
+    - FVG zones count as valid TP targets
+
+    Args:
+        entry:     entry price
+        direction: "long" or "short"
+        zones:     filtered zone list (post apply_4h_gate)
+
+    Returns:
+        (tp1_zone, tp2_zone) — either may be None if fewer than 2 zones found
+    """
+    if direction == "long":
+        # Supply zones (resistance) above entry — price targets them on the way up
+        # FVGs above entry also act as TP magnets
+        candidates = [
+            z for z in zones
+            if z.bottom > entry and z.type in ("supply", "fvg")
+        ]
+        # Sort nearest first (lowest bottom)
+        candidates.sort(key=lambda z: z.bottom)
+    else:
+        # Demand zones (support) below entry — price targets them on the way down
+        # FVGs below entry also act as TP magnets
+        candidates = [
+            z for z in zones
+            if z.top < entry and z.type in ("demand", "fvg")
+        ]
+        # Sort nearest first (highest top)
+        candidates.sort(key=lambda z: z.top, reverse=True)
+
+    tp1 = candidates[0] if len(candidates) >= 1 else None
+    tp2 = candidates[1] if len(candidates) >= 2 else None
+
+    if tp1:
+        logger.info(
+            "find_tp_levels: %s TP1 = %.4f–%.4f (%s %s)",
+            direction, tp1.bottom, tp1.top, tp1.tf, tp1.type,
+        )
+    else:
+        logger.warning("find_tp_levels: no TP1 found for %s entry %.4f", direction, entry)
+
+    if tp2:
+        logger.info(
+            "find_tp_levels: %s TP2 = %.4f–%.4f (%s %s)",
+            direction, tp2.bottom, tp2.top, tp2.tf, tp2.type,
+        )
+    else:
+        logger.info("find_tp_levels: no TP2 found for %s entry %.4f", direction, entry)
+
+    return tp1, tp2
+
+
+# ---------------------------------------------------------------------------
+# SL level finder (ZS14)
+# ---------------------------------------------------------------------------
+
+def find_sl_level(
+    entry: float,
+    direction: Literal["long", "short"],
+    zones: list[Zone],
+) -> float | None:
+    """
+    Find the structural stop-loss price for a trade.
+
+    Rules (from strategy):
+    - For LONG:  SL goes just below the demand zone the trade is entering FROM.
+                 Use zone.bottom — that is the structural low of the demand zone.
+    - For SHORT: SL goes just above the supply zone the trade is entering FROM.
+                 Use zone.top — that is the structural high of the supply zone.
+    - "Structural" means body-close only — wicks past SL are stop hunts and ignored.
+      The exchange disaster SL (structural + 3% buffer) is set separately by trade_agent.
+    - If no entry zone is found, fall back to the nearest opposing zone beyond entry.
+
+    Args:
+        entry:     entry price
+        direction: "long" or "short"
+        zones:     filtered zone list (post apply_4h_gate)
+
+    Returns:
+        SL price, or None if no structural level can be identified.
+    """
+    if direction == "long":
+        # Entry zone = the demand zone we are buying into (price is inside or just above it)
+        # Candidates: demand zones whose range overlaps or is just below entry
+        entry_zones = [
+            z for z in zones
+            if z.type == "demand" and z.bottom <= entry <= z.top * 1.02
+        ]
+        if entry_zones:
+            # Use the one whose top is closest to entry (most relevant zone)
+            entry_zones.sort(key=lambda z: abs(z.top - entry))
+            sl_price = entry_zones[0].bottom
+            logger.info(
+                "find_sl_level: LONG SL = %.4f (demand zone bottom %s %s)",
+                sl_price, entry_zones[0].tf, entry_zones[0].strength,
+            )
+            return sl_price
+
+        # Fallback: nearest demand zone below entry
+        below = [z for z in zones if z.type == "demand" and z.top < entry]
+        if below:
+            below.sort(key=lambda z: z.top, reverse=True)
+            sl_price = below[0].bottom
+            logger.info(
+                "find_sl_level: LONG SL = %.4f (nearest demand zone below, fallback)",
+                sl_price,
+            )
+            return sl_price
+
+    else:  # short
+        # Entry zone = the supply zone we are selling into
+        entry_zones = [
+            z for z in zones
+            if z.type == "supply" and z.bottom * 0.98 <= entry <= z.top
+        ]
+        if entry_zones:
+            entry_zones.sort(key=lambda z: abs(z.bottom - entry))
+            sl_price = entry_zones[0].top
+            logger.info(
+                "find_sl_level: SHORT SL = %.4f (supply zone top %s %s)",
+                sl_price, entry_zones[0].tf, entry_zones[0].strength,
+            )
+            return sl_price
+
+        # Fallback: nearest supply zone above entry
+        above = [z for z in zones if z.type == "supply" and z.bottom > entry]
+        if above:
+            above.sort(key=lambda z: z.bottom)
+            sl_price = above[0].top
+            logger.info(
+                "find_sl_level: SHORT SL = %.4f (nearest supply zone above, fallback)",
+                sl_price,
+            )
+            return sl_price
+
+    logger.warning(
+        "find_sl_level: no structural SL found for %s entry %.4f", direction, entry
+    )
+    return None

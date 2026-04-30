@@ -26,6 +26,7 @@ export default function WaitlistNavbar() {
             { label: 'Home',         path: '/' },
             { label: 'How It Works', path: '/how-it-works' },
             { label: 'Pricing',      path: '/pricing' },
+            { label: 'Blog',         path: '/blog' },
             { label: 'Open Source',  path: '/open-source' },
           ].map(({ label, path }) => (
             <button key={label} onClick={() => navigate(path)}
@@ -62,6 +63,7 @@ export default function WaitlistNavbar() {
             { label: 'Home',         path: '/' },
             { label: 'How It Works', path: '/how-it-works' },
             { label: 'Pricing',      path: '/pricing' },
+            { label: 'Blog',         path: '/blog' },
             { label: 'Open Source',  path: '/open-source' },
           ].map(({ label, path }) => (
             <button key={label} onClick={() => { navigate(path); setOpen(false) }}

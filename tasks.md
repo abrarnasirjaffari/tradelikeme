@@ -241,11 +241,11 @@
 - [x] ZS7 — Write `analyze_zones(png_path, symbol, tf)` — send screenshot to Claude Opus 4.6 via AWS Bedrock
 - [x] ZS8 — Write Claude prompt for zone identification (S/D zones, FVG, structure)
 - [x] ZS9 — Parse Claude response → structured zone list `[{type, top, bottom, tf, strength}]`
-- [ ] ZS10 — Write `scan_tf_stack(symbol)` — loop all 7 TFs, collect zones
-- [ ] ZS11 — Write `apply_4h_gate(zones)` — filter out lower-TF zones with no 4H zone within ±5%
-- [ ] ZS12 — Write `apply_btc_gate(direction)` — check BTC 1D structure, block entries against it
-- [ ] ZS13 — Write `find_tp_levels(entry, direction, zones)` — return TP1 (zone 1) and TP2 (zone 2)
-- [ ] ZS14 — Write `find_sl_level(entry, direction, zones)` — structural SL below/above entry
+- [x] ZS10 — Write `scan_tf_stack(symbol)` — loop all 7 TFs, collect zones
+- [x] ZS11 — Write `apply_4h_gate(zones)` — filter out lower-TF zones with no 4H zone within ±5%
+- [x] ZS12 — Write `apply_btc_gate(direction)` — check BTC 1D structure, block entries against it
+- [x] ZS13 — Write `find_tp_levels(entry, direction, zones)` — return TP1 (zone 1) and TP2 (zone 2)
+- [x] ZS14 — Write `find_sl_level(entry, direction, zones)` — structural SL below/above entry
 - [ ] ZS15 — Add TradingView MCP as fallback in `scan_tf_stack()` if KLineChart fails
 - [ ] ZS16 — Test zone scan on SOL devnet — verify zones returned correctly
 

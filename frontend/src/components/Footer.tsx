@@ -22,7 +22,7 @@ const COLS: { heading: string; links: FooterItem[] }[] = [
   {
     heading: 'Resources',
     links: [
-      { label: 'Blog',           soon: true },
+      { label: 'Blog',           path: '/blog' },
       { label: 'Docs',           path: '/docs' },
       { label: 'Strategy Proof', soon: true },
     ],

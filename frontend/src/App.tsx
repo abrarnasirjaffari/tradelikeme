@@ -23,6 +23,8 @@ import JoinWaitlist from './pages/JoinWaitlist'
 import PrivacyPage from './pages/PrivacyPage'
 import TermsPage from './pages/TermsPage'
 import DocsPage from './pages/docs/DocsPage'
+import BlogPage from './pages/blog/BlogPage'
+import BlogPostPage from './pages/blog/BlogPostPage'
 
 const HR = <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.07)', margin: '0 10rem' }} />
 
@@ -47,6 +49,8 @@ export default function App() {
   if (page === '/privacy')       return <PrivacyPage />
   if (page === '/terms')         return <TermsPage />
   if (page.startsWith('/docs'))  return <DocsPage />
+  if (page === '/blog')         return <BlogPage />
+  if (page.startsWith('/blog/')) return <BlogPostPage slug={page.replace('/blog/', '')} />
 
   return (
     <div style={{ background: '#000' }}>
