@@ -334,6 +334,8 @@ class ZetaClient:
 
         program_id = zeta.exchange.program_id
         margin_account_addr = zeta._margin_account_address
+        if zeta._open_orders_addresses is None or asset not in zeta._open_orders_addresses:
+            raise RuntimeError(f"Open orders account not initialised for {symbol}.")
         open_orders_addr = zeta._open_orders_addresses[asset]
         trigger_order_addr = _get_trigger_order_address(program_id, margin_account_addr, _SL_BIT)
         dex_program_id = MATCHING_ENGINE_PID[self._network]
@@ -346,11 +348,13 @@ class ZetaClient:
             "trigger_direction": trigger_direction,
             "trigger_ts": None,
             "size": int(size),
-            "side": close_side,
+            # Instruction builder calls .to_encodable() — needs zeta_client dataclass types,
+            # not the zetamarkets_py.types enum types. Use .to_program_type() to convert.
+            "side": close_side.to_program_type(),
             "order_type": LimitOrderType(),
             "reduce_only": True,
             "tag": "sl",
-            "asset": asset,
+            "asset": asset.to_program_type(),
         }
         accounts: PlaceTriggerOrderAccounts = {
             "state": zeta.exchange._state_address,
