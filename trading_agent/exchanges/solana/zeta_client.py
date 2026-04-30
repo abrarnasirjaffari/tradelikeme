@@ -407,8 +407,101 @@ class ZetaClient:
         return tx_sig
 
     async def set_tp(self, symbol: str, price: float, qty: float) -> str:
-        """Place take-profit trigger order for qty. Returns order ID. (ZC10)"""
-        raise NotImplementedError
+        """Place a take-profit trigger order for qty at price. Returns tx signature. (ZC10)
+
+        Mirror of set_sl — uses _TP_BIT so SL and TP coexist on the same position.
+        - Long TP: triggers when price >= tp_price (GreaterThanOrEqual), sell side
+        - Short TP: triggers when price <= tp_price (LessThanOrEqual), buy side
+        reduce_only=True so it can only close, never open.
+        """
+        zeta = self._require_init()
+        self._assert_supported(symbol)
+
+        position = await self.get_position(symbol)
+        if position is None:
+            raise RuntimeError(f"No open position for {symbol} — cannot set TP.")
+
+        asset = _SYMBOL_TO_ASSET[symbol]
+
+        # TP closes the position: long → sell (Ask), short → buy (Bid)
+        close_side = Side.Ask if position["side"] == "long" else Side.Bid
+
+        # Trigger fires when price reaches TP level in the profit direction
+        trigger_direction = (
+            GreaterThanOrEqual() if position["side"] == "long" else LessThanOrEqual()
+        )
+
+        trigger_price_native = int(price * _PRICE_DECIMALS)
+        # Aggressive limit to guarantee fill once trigger fires
+        if position["side"] == "long":
+            order_price_native = int(price * (1 - _MARKET_SLIPPAGE) * _PRICE_DECIMALS)
+        else:
+            order_price_native = int(price * (1 + _MARKET_SLIPPAGE) * _PRICE_DECIMALS)
+
+        program_id = zeta.exchange.program_id
+        margin_account_addr = zeta._margin_account_address
+        if zeta._open_orders_addresses is None or asset not in zeta._open_orders_addresses:
+            raise RuntimeError(f"Open orders account not initialised for {symbol}.")
+        open_orders_addr = zeta._open_orders_addresses[asset]
+        trigger_order_addr = _get_trigger_order_address(program_id, margin_account_addr, _TP_BIT)
+        dex_program_id = MATCHING_ENGINE_PID[self._network]
+        market_addr = zeta.exchange.markets[asset].address
+
+        args: PlaceTriggerOrderArgs = {
+            "trigger_order_bit": _TP_BIT,
+            "order_price": order_price_native,
+            "trigger_price": trigger_price_native,
+            "trigger_direction": trigger_direction,
+            "trigger_ts": None,
+            "size": int(qty),
+            "side": close_side.to_program_type(),
+            "order_type": LimitOrderType(),
+            "reduce_only": True,
+            "tag": "tp",
+            "asset": asset.to_program_type(),
+        }
+        accounts: PlaceTriggerOrderAccounts = {
+            "state": zeta.exchange._state_address,
+            "open_orders": open_orders_addr,
+            "authority": zeta.provider.wallet.public_key,
+            "margin_account": margin_account_addr,
+            "pricing": zeta.exchange._pricing_address,
+            "trigger_order": trigger_order_addr,
+            "dex_program": dex_program_id,
+            "market": market_addr,
+        }
+
+        ix = place_trigger_order(args, accounts, program_id)
+        sigs = await zeta._send_versioned_transaction([ix])
+        tx_sig = str(sigs[0])
+
+        logger.info(
+            "set_tp %s side=%s price=%.4f qty=%.4f tx=%s",
+            symbol, position["side"], price, qty, tx_sig,
+        )
+        return tx_sig
+
+    async def cancel_tp(self, symbol: str) -> str:
+        """Cancel the take-profit trigger order for symbol. Returns tx signature."""
+        zeta = self._require_init()
+        self._assert_supported(symbol)
+
+        program_id = zeta.exchange.program_id
+        margin_account_addr = zeta._margin_account_address
+        trigger_order_addr = _get_trigger_order_address(program_id, margin_account_addr, _TP_BIT)
+
+        args: CancelTriggerOrderV2Args = {"trigger_order_bit": _TP_BIT}
+        accounts: CancelTriggerOrderV2Accounts = {
+            "authority": zeta.provider.wallet.public_key,
+            "trigger_order": trigger_order_addr,
+            "margin_account": margin_account_addr,
+        }
+
+        ix = cancel_trigger_order_v2(args, accounts, program_id)
+        sigs = await zeta._send_versioned_transaction([ix])
+        tx_sig = str(sigs[0])
+        logger.info("cancel_tp %s tx=%s", symbol, tx_sig)
+        return tx_sig
 
     async def get_position(self, symbol: str) -> Optional[dict]:
         """Return current position or None if flat. (ZC11)

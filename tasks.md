@@ -112,11 +112,11 @@
 - [x] ZC7 — Write `open_position(symbol, side, size, leverage)` — place market order
 - [x] ZC8 — Write `close_position(symbol)` — full close
 - [x] ZC9 — Write `set_sl(symbol, price)` — place stop loss order
-- [ ] ZC10 — Write `set_tp(symbol, price, qty)` — place take profit order
+- [x] ZC10 — Write `set_tp(symbol, price, qty)` — place take profit order
 - [x] ZC11 — Write `get_position(symbol)` — return current position size + entry price
-- [ ] ZC12 — Test open_position on devnet
-- [ ] ZC13 — Test close_position on devnet
-- [ ] ZC14 — Test set_sl + set_tp on devnet
+- [x] ZC12 — Test open_position on devnet
+- [x] ZC13 — Test close_position on devnet
+- [x] ZC14 — Test set_sl + set_tp on devnet
 
 ## RAYDIUM PERPS — REMOVED
 
