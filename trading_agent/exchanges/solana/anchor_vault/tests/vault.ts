@@ -13,11 +13,11 @@ import { Vault } from "../target/types/vault";
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 // Transfer SOL from provider wallet instead of requestAirdrop to avoid devnet rate limits.
-// Default 0.1 SOL — enough for rent + fees; avoids draining the provider wallet.
+// Default 0.01 SOL — enough for rent + fees (~0.003 SOL max); keeps provider wallet alive.
 async function fundSol(
   provider: anchor.AnchorProvider,
   dest: PublicKey,
-  lamports: number = 1e8
+  lamports: number = 1e7
 ): Promise<void> {
   const tx = new Transaction().add(
     SystemProgram.transfer({
