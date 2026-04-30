@@ -96,35 +96,53 @@
 
 ---
 
-## RAYDIUM PERPS CLIENT (raydium_client.py)
+## ZETA MARKETS CLIENT (zeta_client.py) — PRIMARY SOLANA PERPS
 
-- [ ] RC1 — Research Raydium Perps SDK / API docs
-- [ ] RC2 — Create trading_agent/exchanges/solana/raydium_client.py
-- [ ] RC3 — Write `__init__()` — load keypair, connect to Helius RPC
-- [ ] RC4 — Write `get_balance()` — return USDC balance from vault
-- [ ] RC5 — Write `get_price(symbol)` — fetch from Pyth feed
-- [ ] RC6 — Write `open_position(symbol, side, size, leverage)` — place market order
-- [ ] RC7 — Write `close_position(symbol)` — full close
-- [ ] RC8 — Write `set_sl(symbol, price)` — place stop loss order
-- [ ] RC9 — Write `set_tp(symbol, price, qty)` — place take profit order
-- [ ] RC10 — Write `get_position(symbol)` — return current position size + entry
-- [ ] RC11 — Test open_position on devnet
-- [ ] RC12 — Test close_position on devnet
-- [ ] RC13 — Test set_sl + set_tp on devnet
+> Zeta Markets is the primary Solana perps protocol.
+> Official Python SDK: `zetamarkets-py` (PyPI). REST API + WebSocket. Anchor IDL published.
+> Program ID: ZETAxsqBRPpep611126PjPNs6pCgB28B47v1vX61X6
+> Pairs: SOL, BTC, ETH, APT, ARB. Max leverage: 50x.
+
+- [x] ZC1 — Research Zeta Markets Python SDK (`zetamarkets-py`) — docs, GitHub, examples
+- [ ] ZC2 — Add `zetamarkets-py` to requirements.txt, run `pip install`
+- [ ] ZC3 — Create trading_agent/exchanges/solana/zeta_client.py
+- [ ] ZC4 — Write `__init__()` — load keypair, connect to Helius RPC, init Zeta client
+- [ ] ZC5 — Write `get_balance()` — return USDC margin balance
+- [ ] ZC6 — Write `get_price(symbol)` — fetch from Pyth feed via zeta or pyth_ws
+- [ ] ZC7 — Write `open_position(symbol, side, size, leverage)` — place market order
+- [ ] ZC8 — Write `close_position(symbol)` — full close
+- [ ] ZC9 — Write `set_sl(symbol, price)` — place stop loss order
+- [ ] ZC10 — Write `set_tp(symbol, price, qty)` — place take profit order
+- [ ] ZC11 — Write `get_position(symbol)` — return current position size + entry price
+- [ ] ZC12 — Test open_position on devnet
+- [ ] ZC13 — Test close_position on devnet
+- [ ] ZC14 — Test set_sl + set_tp on devnet
+
+## RAYDIUM PERPS — REMOVED
+
+> Raydium does NOT have its own on-chain perps engine.
+> perps.raydium.io routes to other protocols. No program ID, no IDL, no Python path.
+> Removed from build plan. Revisit post-hackathon if they publish an IDL.
 
 ---
 
-## JUPITER PERPS CLIENT (jupiter_client.py)
+## JUPITER PERPS CLIENT (jupiter_client.py) — FALLBACK SOLANA PERPS
 
-- [ ] JC1 — Research Jupiter Perps SDK (`@jup-ag/perps-sdk`) Python bindings or REST API
+> Jupiter Perps is the fallback protocol (higher leverage: 100x vs Zeta's 50x).
+> No official Python SDK — uses anchorpy + on-chain IDL directly.
+> Program ID: PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu
+> Pairs: SOL, BTC, ETH only. REST API available via Jupiter station.
+> Python reference: github.com/lukatavcer/jupiter_perpetuals
+
+- [ ] JC1 — Research Jupiter Perps anchorpy integration — study lukatavcer/jupiter_perpetuals repo
 - [ ] JC2 — Create trading_agent/exchanges/solana/jupiter_client.py
-- [ ] JC3 — Write `__init__()` — load keypair, connect to Helius RPC
-- [ ] JC4 — Write `get_balance()` — return USDC balance
-- [ ] JC5 — Write `open_position(symbol, side, size, leverage)`
-- [ ] JC6 — Write `close_position(symbol)`
-- [ ] JC7 — Write `set_sl(symbol, price)`
-- [ ] JC8 — Write `set_tp(symbol, price, qty)`
-- [ ] JC9 — Write `get_position(symbol)`
+- [ ] JC3 — Write `__init__()` — load keypair, connect to Helius RPC, load IDL
+- [ ] JC4 — Write `get_balance()` — return USDC balance from custody pool
+- [ ] JC5 — Write `open_position(symbol, side, size, leverage)` — increasePosition instruction
+- [ ] JC6 — Write `close_position(symbol)` — decreasePosition instruction (full)
+- [ ] JC7 — Write `set_sl(symbol, price)` — place stop loss
+- [ ] JC8 — Write `set_tp(symbol, price, qty)` — place take profit
+- [ ] JC9 — Write `get_position(symbol)` — fetch position from on-chain state
 - [ ] JC10 — Test all methods on devnet
 
 ---
@@ -140,9 +158,9 @@
 - [ ] EB7 — Define abstract method `set_sl(symbol, price)`
 - [ ] EB8 — Define abstract method `set_tp(symbol, price, qty)`
 - [ ] EB9 — Define abstract method `get_position(symbol)`
-- [ ] EB10 — Make RaydiumClient inherit ExchangeBase
+- [ ] EB10 — Make ZetaClient inherit ExchangeBase
 - [ ] EB11 — Make JupiterClient inherit ExchangeBase
-- [ ] EB12 — Write router logic: try Raydium → fallback Jupiter if symbol not available
+- [ ] EB12 — Write router logic: try Zeta → fallback Jupiter if symbol not available or Zeta down
 
 ---
 
@@ -387,7 +405,7 @@
 ## END-TO-END TESTING (devnet)
 
 - [ ] ET1 — Full flow test: deposit USDC into vault on devnet
-- [ ] ET2 — Full flow test: agent detects zone, enters trade on Raydium devnet
+- [ ] ET2 — Full flow test: agent detects zone, enters trade on Zeta Markets devnet
 - [ ] ET3 — Full flow test: sentinel fires TP1 hit, agent moves SL to entry
 - [ ] ET4 — Full flow test: sentinel fires 30m body-close SL, agent closes position
 - [ ] ET5 — Full flow test: settle_epoch() runs, 20% goes to platform wallet on-chain

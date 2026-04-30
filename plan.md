@@ -55,9 +55,12 @@
 ## Decentralized / Solana Stack
 
 ### Protocols (auto-routed in priority order)
-1. **Raydium Perps** (`raydium-sdk`) — first choice, 70+ coins, 50x, gasless CLOB
-2. **Jupiter Perps** (`@jup-ag/perps-sdk`) — fallback, BTC/SOL/ETH only, 250x
-3. **Third protocol** — TBD (Drift removed — recently hacked, inactive. Candidates: Flash Trade, Zeta Markets, Mango Markets. Decide after research.)
+1. **Zeta Markets** (`zetamarkets-py`) — first choice. Official Python SDK on PyPI, REST API + WebSocket, Anchor IDL published, SOL/BTC/ETH/APT/ARB, 50x. Program ID: `ZETAxsqBRPpep611126PjPNs6pCgB28B47v1vX61X6`
+2. **Jupiter Perps** (anchorpy + on-chain IDL) — fallback, BTC/SOL/ETH only, 100x. Program ID: `PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu`
+
+**Removed:**
+- ~~Raydium Perps~~ — confirmed does NOT have its own on-chain perps engine. perps.raydium.io routes to other protocols. No program ID, no IDL, no SDK.
+- ~~Drift Protocol~~ — hacked Apr 1 2026 ($285M exploit), vaults drained, protocol paused. Unlikely to recover within hackathon window.
 
 ### Anchor Vault Program (custom — core of hackathon)
 - User deposits USDC/CASH into our **vault PDA** (on-chain)
@@ -115,8 +118,8 @@
 ### Phase 1 — Hackathon (NOW)
 1. KLineChart MCP server — combined KLineChart + Pro, 8 tools, Playwright headless
 2. Anchor vault program (on-chain profit split)
-3. Raydium Perps client
-4. Jupiter Perps client
+3. Zeta Markets client (primary Solana perps)
+4. Jupiter Perps client (fallback, higher leverage)
 5. Pyth price feed WebSocket
 6. Agent brain wired to Solana protocols
 7. Phantom Connect auth
@@ -128,10 +131,11 @@
 - Wire frontend to FastAPI backend (deposit, withdraw, trades, P&L, WS)
 - CEX clients (WEEX, Bybit, BingX, Binance, Bitget)
 - CEX profit settlement system
-- Third Solana protocol (research needed)
+- Third Solana protocol: Mango Markets (50x, Python via AgentiPy) — research when ready
 - Forex (research needed)
 - More notification channels
 - WhatsApp notifications (Twilio)
+- Raydium Perps — revisit once they publish IDL/SDK (protocol is live but no Python path yet)
 
 ---
 
@@ -365,8 +369,8 @@ tradelikeme/
 │   │       └── config.py          # Strategy-specific params
 │   ├── exchanges/
 │   │   ├── solana/
-│   │   │   ├── raydium_client.py  # Raydium Perps
-│   │   │   ├── jupiter_client.py  # Jupiter Perps (fallback)
+│   │   │   ├── zeta_client.py     # Zeta Markets Perps (primary)
+│   │   │   ├── jupiter_client.py  # Jupiter Perps (fallback, higher leverage)
 │   │   │   ├── pyth_ws.py         # Pyth oracle WebSocket
 │   │   │   └── anchor_vault/      # Custom Anchor program (Rust)
 │   │   └── cex/
@@ -412,7 +416,7 @@ tradelikeme/
 | Layer | Tool |
 |-------|------|
 | Language | Python 3.11 asyncio |
-| Solana Perps | Raydium Perps + Jupiter Perps |
+| Solana Perps | Zeta Markets (primary) + Jupiter Perps (fallback) |
 | Solana Vault | Custom Anchor program (Rust) |
 | Price Oracle | Pyth Network WebSocket |
 | RPC | Helius (free tier) |
@@ -434,6 +438,8 @@ tradelikeme/
 ## What We Are NOT Building (this phase)
 - Forex integration (on hold — research needed)
 - Manual CEX profit settlement UI (post-hackathon)
-- Third Solana protocol beyond Raydium + Jupiter (research needed)
+- Raydium Perps — no IDL/SDK published yet, revisit post-hackathon
+- Drift Protocol — hacked Apr 2026, not recovering within hackathon window
+- Third Solana protocol beyond Zeta + Jupiter (Mango = Phase 2)
 - New frontend pages beyond what user specifies — wait for direction before adding
 
