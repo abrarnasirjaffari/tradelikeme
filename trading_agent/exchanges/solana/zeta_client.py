@@ -7,7 +7,7 @@ import based58
 from anchorpy import Wallet
 from solders.keypair import Keypair
 from zetamarkets_py.client import Client
-from zetamarkets_py.types import Asset, Network, OrderType, Side
+from zetamarkets_py.types import Asset, Network, OrderArgs, OrderOptions, OrderType, Side
 
 from trading_agent.exchanges.solana.pyth_ws import PythPriceFeed
 
@@ -199,24 +199,24 @@ class ZetaClient:
             raise ValueError(f"side must be 'long' or 'short', got '{side}'")
 
         asset = _SYMBOL_TO_ASSET[symbol]
-        zeta_side = Side.BID if side == "long" else Side.ASK
+        zeta_side = Side.Bid if side == "long" else Side.Ask
 
-        # Fetch current price to compute aggressive IOC limit
+        # Fetch current price to compute aggressive IOC limit.
+        # Zeta has no native MARKET order — IOC + aggressive price = guaranteed fill.
         current_price = await self.get_price(symbol)
         if side == "long":
-            # Buy above market to guarantee crossing the spread
             limit_price = current_price * (1 + _MARKET_SLIPPAGE)
         else:
-            # Sell below market
             limit_price = current_price * (1 - _MARKET_SLIPPAGE)
 
-        tx_sig = await zeta.place_order(
-            asset=asset,
+        order = OrderArgs(
             price=limit_price,
             size=size,
             side=zeta_side,
-            order_type=OrderType.IMMEDIATE_OR_CANCEL,
+            order_opts=OrderOptions(order_type=OrderType.ImmediateOrCancel),
         )
+
+        tx_sig = await zeta.place_orders_for_market(asset=asset, orders=[order])
 
         logger.info(
             "open_position %s %s size=%.4f price=%.4f tx=%s",
