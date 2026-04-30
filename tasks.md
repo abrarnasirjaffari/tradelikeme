@@ -84,7 +84,7 @@
 
 ## PYTH PRICE FEED (pyth_ws.py)
 
-- [ ] PY1 — Research Pyth WebSocket endpoint for devnet
+- [x] PY1 — Research Pyth WebSocket endpoint for devnet — Hermes WS: wss://hermes-beta.pyth.network/ws (devnet), wss://hermes.pyth.network/ws (mainnet). Same feed IDs both networks.
 - [ ] PY2 — Create trading_agent/exchanges/solana/pyth_ws.py
 - [ ] PY3 — Write `connect()` — open WebSocket to Pyth
 - [ ] PY4 — Write `subscribe(symbol)` — subscribe to a price feed
