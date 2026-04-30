@@ -1,54 +1,129 @@
+import json
 import logging
 import os
 from typing import Optional
 
+import based58
+from anchorpy import Wallet
 from solders.keypair import Keypair
-from solana.rpc.async_api import AsyncClient
+from zetamarkets_py.client import Client
+from zetamarkets_py.types import Asset, Network
 
 logger = logging.getLogger(__name__)
 
-# Symbols supported by Zeta Markets
+# Symbols supported by Zeta Markets and their Asset enum mapping
 SUPPORTED_SYMBOLS = {"SOL", "BTC", "ETH", "APT", "ARB"}
+_SYMBOL_TO_ASSET: dict[str, Asset] = {
+    "SOL": Asset.SOL,
+    "BTC": Asset.BTC,
+    "ETH": Asset.ETH,
+    "APT": Asset.APT,
+    "ARB": Asset.ARB,
+}
 
 # Maximum leverage offered by Zeta Markets
 MAX_LEVERAGE = 50
 
 
+def _load_keypair() -> Keypair:
+    """
+    Load trading keypair from environment.
+    Tries DEVNET_AGENT_KEYPAIR_PATH (JSON file) first,
+    then PHANTOM_PRIVATE_KEY (base58 string).
+    """
+    keypair_path = os.getenv("DEVNET_AGENT_KEYPAIR_PATH", "")
+    if keypair_path:
+        expanded = os.path.expanduser(keypair_path)
+        if os.path.exists(expanded):
+            with open(expanded) as f:
+                secret = bytes(json.load(f))
+            return Keypair.from_bytes(secret)
+
+    b58_key = os.getenv("PHANTOM_PRIVATE_KEY", "")
+    if b58_key:
+        secret = based58.b58decode(b58_key.encode())
+        return Keypair.from_bytes(secret)
+
+    raise EnvironmentError(
+        "No keypair found. Set DEVNET_AGENT_KEYPAIR_PATH (path to JSON) "
+        "or PHANTOM_PRIVATE_KEY (base58) in .env."
+    )
+
+
+def _network_enum(network: str) -> Network:
+    mapping = {"devnet": Network.DEVNET, "mainnet": Network.MAINNET}
+    n = mapping.get(network.lower())
+    if n is None:
+        raise ValueError(f"Unknown network '{network}'. Use 'devnet' or 'mainnet'.")
+    return n
+
+
 class ZetaClient:
     """
     Async client for Zeta Markets perpetuals (primary Solana perps protocol).
-    Program ID: ZETAxsqBRPpep611126PjPNs6pCgB28B47v1vX61X6
+    Program ID: ZETAxsqBRek56DhiGXrn75yj2NHU3aYUnxvHXpkf3aD (mainnet)
+                BG3oRikW8d16YjUEmX3ZxHm9SiJzrGtMhsSR8aCw1Cd7 (devnet)
     Pairs: SOL, BTC, ETH, APT, ARB  |  Max leverage: 50x
+
+    Usage:
+        client = ZetaClient("devnet")
+        await client.initialise()
+        balance = await client.get_balance()
+        await client.close()
     """
 
     def __init__(self, network: str = "devnet"):
-        # Populated in async initialise()
-        self._network = network
+        self._network_str = network
+        self._network: Network = _network_enum(network)
         self._rpc_url: str = os.getenv("HELIUS_RPC_URL", "")
-        self._keypair: Optional[Keypair] = None
-        self._rpc: Optional[AsyncClient] = None
-        self._zeta = None  # zetamarkets_py.Client, set in initialise()
+        self._zeta: Optional[Client] = None  # zetamarkets_py.Client
 
     # ------------------------------------------------------------------
     # Lifecycle
     # ------------------------------------------------------------------
 
     async def initialise(self) -> None:
-        """Load keypair, connect to Helius RPC, init Zeta client. (ZC4)"""
-        raise NotImplementedError
+        """Load keypair from env, connect to Helius RPC, init Zeta client."""
+        if not self._rpc_url:
+            raise EnvironmentError("HELIUS_RPC_URL not set in environment.")
+
+        keypair = _load_keypair()
+        wallet = Wallet(keypair)
+
+        # Only load the assets we actually trade to reduce startup time
+        assets = [_SYMBOL_TO_ASSET[s] for s in SUPPORTED_SYMBOLS]
+
+        self._zeta = await Client.load(
+            endpoint=self._rpc_url,
+            wallet=wallet,
+            network=self._network,
+            assets=assets,
+        )
+        logger.info(
+            "ZetaClient initialised — network=%s pubkey=%s",
+            self._network_str,
+            keypair.pubkey(),
+        )
 
     async def close(self) -> None:
-        """Close RPC connection gracefully."""
-        if self._rpc:
-            await self._rpc.close()
-            logger.info("ZetaClient RPC connection closed")
+        """Close the underlying RPC connection gracefully."""
+        if self._zeta is not None:
+            await self._zeta.connection.close()
+            self._zeta = None
+            logger.info("ZetaClient closed")
+
+    def _require_init(self) -> Client:
+        """Return the inner Client, raising if initialise() was not called."""
+        if self._zeta is None:
+            raise RuntimeError("ZetaClient not initialised — call await initialise() first.")
+        return self._zeta
 
     # ------------------------------------------------------------------
     # Account
     # ------------------------------------------------------------------
 
     async def get_balance(self) -> float:
-        """Return USDC margin balance (ZC5)."""
+        """Return USDC margin balance. (ZC5)"""
         raise NotImplementedError
 
     # ------------------------------------------------------------------
@@ -56,7 +131,7 @@ class ZetaClient:
     # ------------------------------------------------------------------
 
     async def get_price(self, symbol: str) -> float:
-        """Return latest mid price for symbol via Pyth feed (ZC6)."""
+        """Return latest mid price for symbol via Pyth oracle. (ZC6)"""
         raise NotImplementedError
 
     # ------------------------------------------------------------------
@@ -70,7 +145,7 @@ class ZetaClient:
         size: float,        # base asset quantity
         leverage: float,
     ) -> str:
-        """Place a market order. Returns order/tx signature. (ZC7)"""
+        """Place a market order. Returns tx signature. (ZC7)"""
         raise NotImplementedError
 
     async def close_position(self, symbol: str) -> str:
@@ -78,11 +153,11 @@ class ZetaClient:
         raise NotImplementedError
 
     async def set_sl(self, symbol: str, price: float) -> str:
-        """Place stop-loss order. Returns order ID. (ZC9)"""
+        """Place stop-loss trigger order. Returns order ID. (ZC9)"""
         raise NotImplementedError
 
     async def set_tp(self, symbol: str, price: float, qty: float) -> str:
-        """Place take-profit order for qty. Returns order ID. (ZC10)"""
+        """Place take-profit trigger order for qty. Returns order ID. (ZC10)"""
         raise NotImplementedError
 
     async def get_position(self, symbol: str) -> Optional[dict]:
@@ -102,3 +177,7 @@ class ZetaClient:
                 f"Symbol '{symbol}' not supported by Zeta Markets. "
                 f"Supported: {SUPPORTED_SYMBOLS}"
             )
+
+    def _to_asset(self, symbol: str) -> Asset:
+        self._assert_supported(symbol)
+        return _SYMBOL_TO_ASSET[symbol]
