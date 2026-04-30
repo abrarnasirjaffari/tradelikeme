@@ -91,7 +91,7 @@
 - [x] PY5 — Write `get_price(symbol)` — return latest mid price
 - [x] PY6 — Write `disconnect()` — clean WebSocket close
 - [x] PY7 — Write auto-reconnect with exponential backoff on disconnect
-- [ ] PY8 — Test pyth_ws.py on devnet — confirm prices streaming for SOL/BTC/ETH
+- [x] PY8 — Test pyth_ws.py on devnet — confirm prices streaming for SOL/BTC/ETH
 - [x] PY9 — Add REST fallback `get_price_rest(symbol)` — poll Pyth HTTP API if WS down
 
 ---
