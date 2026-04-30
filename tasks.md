@@ -78,7 +78,7 @@
 - [x] V17 — Deploy to devnet: `anchor deploy --provider.cluster devnet`
 - [x] V18 — Note deployed program ID, add to config — Program ID: `rGMTq8sS5GUJ7q1ei9x75dnZ3kM2QCn5YRKYGHbwdSd` (devnet, slot 459047601)
 - [x] V19 — Run `anchor test` on devnet — all tests pass
-- [~] V20 — Verify vault PDA is unique per (user × strategy) on devnet — tests written + V20-1 passes, V20-2/V20-3 blocked: devnet wallet drained (0.016 SOL). Faucet rate-limited 8h. Re-run with `anchor test --skip-build --skip-deploy` after next airdrop.
+- [x] V20 — Verify vault PDA is unique per (user × strategy) on devnet — all 3 sub-tests pass (V20-1, V20-2, V20-3)
 
 ---
 
@@ -232,15 +232,15 @@
 
 ## ZONE SCANNER (zones.py)
 
-- [ ] ZS1 — Create trading_agent/strategies/sd_zones/zones.py
-- [ ] ZS2 — Write `fetch_ohlcv(symbol, tf)` — get candle data from Pyth/exchange REST
-- [ ] ZS3 — Write `render_chart(symbol, tf)` — open `infra/chart_server/index.html?symbol=X&tf=Y` via Playwright, wait for `data-ready` attribute
-- [ ] ZS4 — Confirm chart server is running before zone scan starts (health check in `scan_tf_stack`)
-- [ ] ZS5 — Install Playwright: `playwright install chromium`
-- [ ] ZS6 — Write `screenshot_chart(html_path)` — Playwright headless screenshot → PNG
-- [ ] ZS7 — Write `analyze_zones(png_path, symbol, tf)` — send screenshot to Claude Opus 4.6 via AWS Bedrock
-- [ ] ZS8 — Write Claude prompt for zone identification (S/D zones, FVG, structure)
-- [ ] ZS9 — Parse Claude response → structured zone list `[{type, top, bottom, tf, strength}]`
+- [x] ZS1 — Create trading_agent/strategies/sd_zones/zones.py
+- [x] ZS2 — Write `fetch_ohlcv(symbol, tf)` — get candle data from Pyth/exchange REST
+- [x] ZS3 — Write `render_chart(symbol, tf)` — open `infra/chart_server/index.html?symbol=X&tf=Y` via Playwright, wait for `data-ready` attribute
+- [x] ZS4 — Confirm chart server is running before zone scan starts (health check in `scan_tf_stack`)
+- [x] ZS5 — Install Playwright: `playwright install chromium`
+- [x] ZS6 — Write `screenshot_chart(html_path)` — Playwright headless screenshot → PNG
+- [x] ZS7 — Write `analyze_zones(png_path, symbol, tf)` — send screenshot to Claude Opus 4.6 via AWS Bedrock
+- [x] ZS8 — Write Claude prompt for zone identification (S/D zones, FVG, structure)
+- [x] ZS9 — Parse Claude response → structured zone list `[{type, top, bottom, tf, strength}]`
 - [ ] ZS10 — Write `scan_tf_stack(symbol)` — loop all 7 TFs, collect zones
 - [ ] ZS11 — Write `apply_4h_gate(zones)` — filter out lower-TF zones with no 4H zone within ±5%
 - [ ] ZS12 — Write `apply_btc_gate(direction)` — check BTC 1D structure, block entries against it
