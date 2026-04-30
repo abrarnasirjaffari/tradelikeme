@@ -6,11 +6,27 @@ import {
   mintTo,
   getAccount,
 } from "@solana/spl-token";
-import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
+import { Keypair, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import { assert } from "chai";
 import { Vault } from "../target/types/vault";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
+
+// Transfer SOL from provider wallet instead of requestAirdrop to avoid devnet rate limits
+async function fundSol(
+  provider: anchor.AnchorProvider,
+  dest: PublicKey,
+  lamports: number = 2e9
+): Promise<void> {
+  const tx = new Transaction().add(
+    SystemProgram.transfer({
+      fromPubkey: provider.wallet.publicKey,
+      toPubkey: dest,
+      lamports,
+    })
+  );
+  await provider.sendAndConfirm(tx);
+}
 
 async function makeTokenAccount(
   provider: anchor.AnchorProvider,
@@ -81,9 +97,7 @@ describe("vault — deposit()", () => {
     platformWallet = Keypair.generate();
     sid = strategyId(1);
 
-    // Fund user with SOL for rent + fees
-    const sig = await provider.connection.requestAirdrop(user.publicKey, 2e9);
-    await provider.connection.confirmTransaction(sig);
+    await fundSol(provider, user.publicKey);
 
     // Create USDC-like mint (6 decimals)
     mint = await createMint(
@@ -212,8 +226,7 @@ describe("vault — deposit()", () => {
   it("V13-4: rejects deposit when user has insufficient token balance", async () => {
     // Use a fresh user with no token balance
     const poorUser = Keypair.generate();
-    const fundSig = await provider.connection.requestAirdrop(poorUser.publicKey, 2e9);
-    await provider.connection.confirmTransaction(fundSig);
+    await fundSol(provider, poorUser.publicKey);
 
     const poorSid = strategyId(99);
     const [poorVaultPda] = await deriveVaultPda(program.programId, poorUser.publicKey, poorSid);
@@ -252,8 +265,7 @@ describe("vault — deposit()", () => {
 
   it("V13-5: non-owner cannot deposit into another user's vault", async () => {
     const attacker = Keypair.generate();
-    const atkSig = await provider.connection.requestAirdrop(attacker.publicKey, 2e9);
-    await provider.connection.confirmTransaction(atkSig);
+    await fundSol(provider, attacker.publicKey);
 
     const attackerTokenAccount = await makeTokenAccount(provider, mint, attacker.publicKey);
     await fundTokenAccount(provider, mint, mintAuthority, attackerTokenAccount, 10_000_000);
@@ -304,8 +316,7 @@ describe("vault — withdraw()", () => {
     platformWallet = Keypair.generate();
     sid = strategyId(2);
 
-    const sig = await provider.connection.requestAirdrop(user.publicKey, 2e9);
-    await provider.connection.confirmTransaction(sig);
+    await fundSol(provider, user.publicKey);
 
     mint = await createMint(
       provider.connection,
@@ -479,8 +490,7 @@ describe("vault — withdraw()", () => {
 
   it("V14-5: non-owner cannot withdraw from another user's vault", async () => {
     const attacker = Keypair.generate();
-    const atkSig = await provider.connection.requestAirdrop(attacker.publicKey, 2e9);
-    await provider.connection.confirmTransaction(atkSig);
+    await fundSol(provider, attacker.publicKey);
 
     const attackerTokenAccount = await makeTokenAccount(provider, mint, attacker.publicKey);
 
@@ -530,8 +540,7 @@ describe("vault — V20: PDA uniqueness per (user × strategy)", () => {
   });
 
   async function airdrop(pubkey: PublicKey): Promise<void> {
-    const sig = await provider.connection.requestAirdrop(pubkey, 2e9);
-    await provider.connection.confirmTransaction(sig);
+    await fundSol(provider, pubkey);
   }
 
   it("V20-1: same user + different strategy_id → different PDA addresses", async () => {
@@ -664,8 +673,7 @@ describe("vault — settle_epoch()", () => {
     const pw = Keypair.generate();
     const s = strategyId(sidN);
 
-    const sig = await provider.connection.requestAirdrop(u.publicKey, 2e9);
-    await provider.connection.confirmTransaction(sig);
+    await fundSol(provider, u.publicKey);
 
     const [pda] = await deriveVaultPda(program.programId, u.publicKey, s);
     const uTA = await makeTokenAccount(provider, mint, u.publicKey);
@@ -731,8 +739,7 @@ describe("vault — settle_epoch()", () => {
     platformWallet = Keypair.generate();
     sid = strategyId(3);
 
-    const sig = await provider.connection.requestAirdrop(user.publicKey, 2e9);
-    await provider.connection.confirmTransaction(sig);
+    await fundSol(provider, user.publicKey);
 
     mint = await createMint(
       provider.connection,
@@ -946,8 +953,7 @@ describe("vault — settle_epoch()", () => {
 
   it("V15-5: non-agent cannot call settle_epoch", async () => {
     const impostor = Keypair.generate();
-    const impostorSig = await provider.connection.requestAirdrop(impostor.publicKey, 1e9);
-    await provider.connection.confirmTransaction(impostorSig);
+    await fundSol(provider, impostor.publicKey, 1e9);
 
     let threw = false;
     try {
