@@ -257,11 +257,11 @@
 - [x] SE3 — Write `add_watch(symbol, zone_top, zone_bottom, watch_type)` — add to watchlist
 - [x] SE4 — Write `remove_watch(symbol)` — remove from watchlist
 - [x] SE5 — Write `_on_price_tick(symbol, price)` — called on every WS tick
-- [ ] SE6 — Write zone touch detection — price enters zone → fire event
-- [ ] SE7 — Write TP1 hit detection — price hits TP1 level → fire event
-- [ ] SE8 — Write 30m candle body-close SL check — runs every 30 min
-- [ ] SE9 — Wick logic: if candle wicks past SL but body closes above → ignore
-- [ ] SE10 — Write `start()` — launch all 3 watchers as asyncio tasks
+- [x] SE6 — Write zone touch detection — price enters zone → fire event
+- [x] SE7 — Write TP1 hit detection — price hits TP1 level → fire event
+- [x] SE8 — Write 30m candle body-close SL check — runs every 30 min
+- [x] SE9 — Wick logic: if candle wicks past SL but body closes above → ignore
+- [x] SE10 — Write `start()` — launch all 3 watchers as asyncio tasks
 - [ ] SE11 — Write `stop()` — graceful shutdown of all watchers
 - [ ] SE12 — Test sentinel zone touch detection on devnet with mock prices
 

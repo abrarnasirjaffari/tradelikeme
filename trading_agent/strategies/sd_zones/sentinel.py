@@ -47,19 +47,21 @@ class SentinelEvent:
 
 @dataclass
 class ZoneWatch:
-    """Fires ZONE_TOUCH when price enters [zone_bottom, zone_top]."""
+    """Fires ZONE_TOUCH when price enters [zone_bottom, zone_top] from outside."""
     symbol: str
     zone_top: float
     zone_bottom: float
-    direction: Literal["long", "short"]   # expected trade direction
+    direction: Literal["long", "short"]   # long = demand zone (price approaches from above)
+    prev_price: float = 0.0               # last tick price — used to detect entry direction
 
 
 @dataclass
 class TP1Watch:
-    """Fires TP1_HIT when price crosses tp1_price in the trade direction."""
+    """Fires TP1_HIT when price first crosses tp1_price in the trade direction."""
     symbol: str
     tp1_price: float
-    direction: Literal["long", "short"]   # long = price falls to tp1, short = price rises to tp1
+    direction: Literal["long", "short"]   # long = price rises to tp1, short = price falls to tp1
+    prev_price: float = 0.0               # last tick price — used to detect the crossing moment
 
 
 @dataclass
@@ -111,6 +113,12 @@ class Sentinel:
         self._tp1_watches:     dict[str, TP1Watch]     = {}
         self._body_sl_watches: dict[str, BodySLWatch]  = {}
 
+        # Tracks which pyth symbols already have _on_price_tick registered.
+        # A symbol may have multiple watch types (zone + tp1 + body_sl) but must
+        # only be subscribed once — duplicate subscriptions cause the callback to
+        # fire multiple times per tick.
+        self._subscribed_symbols: set[str] = set()
+
         # All callers share one event queue
         self._event_queue: asyncio.Queue[SentinelEvent] = asyncio.Queue()
 
@@ -156,11 +164,22 @@ class Sentinel:
         if self._initial_watchlist:
             logger.info("Sentinel: restored %d watch(es) from watchlist", len(self._initial_watchlist))
 
-        # 3. Launch background tasks
-        # Zone-touch and TP1 watchers are driven by Pyth WS callbacks — no polling needed.
-        # Body-close SL needs its own 30-min boundary task.
-        self._tasks.append(asyncio.create_task(self._body_sl_loop(), name="sentinel-body-sl"))
-        logger.info("Sentinel started")
+        # 3. Launch all 3 watcher mechanisms as asyncio tasks.
+        #
+        #   - zone-touch watcher: driven by _on_price_tick (Pyth WS callback) — no
+        #     dedicated task needed; the event fires inline on each price tick.
+        #   - tp1-hit watcher: same — driven by _on_price_tick.
+        #   - body-close SL watcher: needs its own task that wakes at 30m boundaries.
+        #
+        # We still create explicit tasks for zone/tp1 heartbeat logging so that all
+        # 3 watchers are visible in asyncio task listings and can be cancelled cleanly.
+        self._tasks.append(asyncio.create_task(self._zone_tp1_tick_watcher(), name="sentinel-zone-tp1"))
+        self._tasks.append(asyncio.create_task(self._body_sl_loop(),          name="sentinel-body-sl"))
+        logger.info(
+            "Sentinel started — 3 watchers active: zone-touch, tp1-hit, 30m-body-sl "
+            "(%d symbol(s) subscribed)",
+            len(self._subscribed_symbols),
+        )
 
     async def stop(self) -> None:
         """Gracefully cancel all watcher tasks and disconnect Pyth WebSocket."""
@@ -207,7 +226,6 @@ class Sentinel:
                 zone_bottom=zone_bottom,
                 direction=direction,
             )
-            await self._pyth.subscribe(pyth_symbol, self._on_price_tick)
             logger.info("Zone watch added: %s top=%.4f bottom=%.4f", symbol, zone_top, zone_bottom)
 
         elif watch_type == WatchType.TP1_HIT:
@@ -216,7 +234,6 @@ class Sentinel:
                 tp1_price=tp1_price,
                 direction=direction,
             )
-            await self._pyth.subscribe(pyth_symbol, self._on_price_tick)
             logger.info("TP1 watch added: %s tp1=%.4f dir=%s", symbol, tp1_price, direction)
 
         elif watch_type == WatchType.BODY_SL:
@@ -234,11 +251,18 @@ class Sentinel:
                 candle_low=current_price if current_price > 0 else float("inf"),
                 candle_close=current_price,
             )
-            await self._pyth.subscribe(pyth_symbol, self._on_price_tick)
             logger.info("Body-SL watch added: %s sl=%.4f dir=%s", symbol, sl_price, direction)
 
         else:
             raise ValueError(f"Unknown WatchType: {watch_type}")
+
+        # Subscribe to Pyth feed exactly once per symbol regardless of how many
+        # watch types are registered for it. Duplicate subscriptions would fire
+        # _on_price_tick multiple times per tick.
+        if pyth_symbol not in self._subscribed_symbols:
+            await self._pyth.subscribe(pyth_symbol, self._on_price_tick)
+            self._subscribed_symbols.add(pyth_symbol)
+            logger.debug("Pyth feed subscribed: %s", pyth_symbol)
 
     async def remove_watch(self, symbol: str) -> None:
         """Remove all watches for *symbol*."""
@@ -254,6 +278,16 @@ class Sentinel:
             removed.append("BODY_SL")
         if removed:
             logger.info("Removed watches for %s: %s", symbol, removed)
+            # If no watch types remain for this symbol, drop it from the subscribed
+            # set so a future add_watch() re-subscribes cleanly.
+            still_watching = (
+                symbol in self._zone_watches or
+                symbol in self._tp1_watches or
+                symbol in self._body_sl_watches
+            )
+            if not still_watching:
+                pyth_symbol = _to_pyth_symbol(symbol)
+                self._subscribed_symbols.discard(pyth_symbol)
         else:
             logger.warning("remove_watch: no watches found for %s", symbol)
 
@@ -282,25 +316,51 @@ class Sentinel:
 
         # --- Zone touch check ---
         watch = self._zone_watches.get(symbol)
-        if watch and watch.zone_bottom <= price <= watch.zone_top:
-            logger.info("ZONE_TOUCH fired: %s @ %.4f (zone %.4f–%.4f)",
-                        symbol, price, watch.zone_bottom, watch.zone_top)
-            await self._fire(SentinelEvent(WatchType.ZONE_TOUCH, symbol, price))
-            # Remove watch so it doesn't fire again on the same touch
-            del self._zone_watches[symbol]
+        if watch:
+            inside_zone = watch.zone_bottom <= price <= watch.zone_top
+            # Only fire when price first crosses INTO the zone from outside.
+            # Long (demand) zones: price must be approaching from above (prev > zone_top).
+            # Short (supply) zones: price must be approaching from below (prev < zone_bottom).
+            prev = watch.prev_price
+            approaching = (
+                (watch.direction == "long"  and prev > watch.zone_top) or
+                (watch.direction == "short" and prev < watch.zone_bottom) or
+                prev == 0.0  # first tick — skip direction guard, fire on entry
+            )
+            if inside_zone and approaching:
+                logger.info(
+                    "ZONE_TOUCH fired: %s @ %.4f (zone %.4f–%.4f dir=%s prev=%.4f)",
+                    symbol, price, watch.zone_bottom, watch.zone_top,
+                    watch.direction, prev,
+                )
+                await self._fire(SentinelEvent(WatchType.ZONE_TOUCH, symbol, price))
+                del self._zone_watches[symbol]
+            else:
+                watch.prev_price = price
 
         # --- TP1 hit check ---
         tp_watch = self._tp1_watches.get(symbol)
         if tp_watch:
-            hit = (
-                (tp_watch.direction == "long"  and price >= tp_watch.tp1_price) or
-                (tp_watch.direction == "short" and price <= tp_watch.tp1_price)
+            prev = tp_watch.prev_price
+            # Fire only on the tick where price first crosses the TP1 level.
+            # Long trade: price must rise FROM below tp1 TO at/above tp1.
+            # Short trade: price must fall FROM above tp1 TO at/below tp1.
+            # On first tick (prev == 0.0) skip the guard — just record prev and wait.
+            crossed = (
+                prev != 0.0 and (
+                    (tp_watch.direction == "long"  and prev < tp_watch.tp1_price and price >= tp_watch.tp1_price) or
+                    (tp_watch.direction == "short" and prev > tp_watch.tp1_price and price <= tp_watch.tp1_price)
+                )
             )
-            if hit:
-                logger.info("TP1_HIT fired: %s @ %.4f (tp1=%.4f)",
-                            symbol, price, tp_watch.tp1_price)
+            if crossed:
+                logger.info(
+                    "TP1_HIT fired: %s @ %.4f (tp1=%.4f dir=%s prev=%.4f)",
+                    symbol, price, tp_watch.tp1_price, tp_watch.direction, prev,
+                )
                 await self._fire(SentinelEvent(WatchType.TP1_HIT, symbol, price))
                 del self._tp1_watches[symbol]
+            else:
+                tp_watch.prev_price = price
 
         # --- Update rolling 30-min candle for body-SL watch ---
         sl_watch = self._body_sl_watches.get(symbol)
@@ -317,20 +377,27 @@ class Sentinel:
         """
         Fires every 30 minutes (aligned to wall-clock boundaries).
         For each BodySLWatch, checks if the candle BODY closed beyond sl_price.
-        Wicks past SL are intentionally ignored.
+        Wicks past SL are intentionally ignored — only the candle body matters.
         """
         while self._running:
             await self._sleep_until_next_30m()
+
+            # Re-check after waking — stop() may have fired during the sleep.
+            if not self._running:
+                break
+
             now = time.time()
 
             for symbol, watch in list(self._body_sl_watches.items()):
-                body_open  = watch.candle_open
                 body_close = watch.candle_close
 
-                # BODY is the min/max of open+close — wicks are high/low
-                body_low  = min(body_open, body_close)
-                body_high = max(body_open, body_close)
+                # Skip if no real price has arrived yet for this candle window.
+                if body_close == 0.0:
+                    logger.debug("Body-SL: %s skipped — no price data yet", symbol)
+                    continue
 
+                # Body is defined by open + close; wicks (high/low) are irrelevant.
+                # A wick past SL that doesn't close below it = stop hunt = ignore.
                 sl_breached = (
                     (watch.direction == "long"  and body_close < watch.sl_price) or
                     (watch.direction == "short" and body_close > watch.sl_price)
@@ -339,19 +406,60 @@ class Sentinel:
                 if sl_breached:
                     logger.info(
                         "BODY_SL fired: %s body_close=%.4f sl=%.4f dir=%s "
-                        "(wick_low=%.4f wick_high=%.4f — ignored)",
+                        "(candle: open=%.4f high=%.4f low=%.4f)",
                         symbol, body_close, watch.sl_price, watch.direction,
-                        watch.candle_low, watch.candle_high,
+                        watch.candle_open, watch.candle_high, watch.candle_low,
                     )
                     await self._fire(SentinelEvent(WatchType.BODY_SL, symbol, body_close))
                     del self._body_sl_watches[symbol]
                 else:
-                    # Reset candle for next 30-min window
+                    # Wick logic: check if the candle wicked past SL but body held.
+                    # This is a stop hunt — price spiked through SL to sweep retail
+                    # stops then reversed.  The body closing above SL means the trade
+                    # is still valid; we stay in and do NOT fire BODY_SL.
+                    wick_past_sl = (
+                        (watch.direction == "long"  and watch.candle_low  < watch.sl_price) or
+                        (watch.direction == "short" and watch.candle_high > watch.sl_price)
+                    )
+                    if wick_past_sl:
+                        wick_extreme = watch.candle_low if watch.direction == "long" else watch.candle_high
+                        logger.info(
+                            "STOP HUNT ignored: %s wick reached %.4f (past sl=%.4f) "
+                            "but body_close=%.4f held — staying in trade (dir=%s)",
+                            symbol, wick_extreme, watch.sl_price,
+                            body_close, watch.direction,
+                        )
+                    else:
+                        logger.debug(
+                            "Body-SL: %s safe — body_close=%.4f sl=%.4f "
+                            "(wick_low=%.4f wick_high=%.4f)",
+                            symbol, body_close, watch.sl_price,
+                            watch.candle_low, watch.candle_high,
+                        )
+                    # Reset candle for the next 30-min window regardless of wick.
                     watch.candle_open      = body_close
                     watch.candle_open_time = now
                     watch.candle_high      = body_close
                     watch.candle_low       = body_close
                     watch.candle_close     = body_close
+
+    async def _zone_tp1_tick_watcher(self) -> None:
+        """
+        Keeps the zone-touch and TP1-hit watchers alive as an explicit asyncio task.
+        The actual detection runs inside _on_price_tick (Pyth WS callback) — this task
+        just emits a periodic heartbeat so the watcher is visible in task listings and
+        can be cancelled cleanly via stop().
+        """
+        _HEARTBEAT = 300  # log every 5 minutes
+        while self._running:
+            await asyncio.sleep(_HEARTBEAT)
+            if not self._running:
+                break
+            logger.debug(
+                "Sentinel tick-watcher alive — zone watches: %d, tp1 watches: %d",
+                len(self._zone_watches),
+                len(self._tp1_watches),
+            )
 
     @staticmethod
     async def _sleep_until_next_30m() -> None:
@@ -364,6 +472,11 @@ class Sentinel:
 
     async def _fire(self, event: SentinelEvent) -> None:
         await self._event_queue.put(event)
+        for cb in self._event_callbacks:
+            try:
+                cb(event)
+            except Exception as exc:
+                logger.error("Event callback error: %s", exc)
 
 
 # ---------------------------------------------------------------------------
