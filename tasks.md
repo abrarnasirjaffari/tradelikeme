@@ -134,16 +134,16 @@
 > Pairs: SOL, BTC, ETH only. REST API available via Jupiter station.
 > Python reference: github.com/lukatavcer/jupiter_perpetuals
 
-- [ ] JC1 — Research Jupiter Perps anchorpy integration — study lukatavcer/jupiter_perpetuals repo
-- [ ] JC2 — Create trading_agent/exchanges/solana/jupiter_client.py
-- [ ] JC3 — Write `__init__()` — load keypair, connect to Helius RPC, load IDL
-- [ ] JC4 — Write `get_balance()` — return USDC balance from custody pool
-- [ ] JC5 — Write `open_position(symbol, side, size, leverage)` — increasePosition instruction
+- [x] JC1 — Research Jupiter Perps anchorpy integration — study lukatavcer/jupiter_perpetuals repo. Program ID confirmed. Keeper/Request model verified. No devnet — mainnet only. instantIncreasePosition path bypasses keeper wait. IDL in julianfssen/jupiter-perps-anchor-idl-parsing.
+- [x] JC2 — Create trading_agent/exchanges/solana/jupiter_client.py
+- [x] JC3 — Write `__init__()` — load keypair, connect to Helius RPC, load IDL
+- [x] JC4 — Write `get_balance()` — return USDC balance from custody pool
+- [x] JC5 — Write `open_position(symbol, side, size, leverage)` — increasePosition instruction
 - [ ] JC6 — Write `close_position(symbol)` — decreasePosition instruction (full)
 - [ ] JC7 — Write `set_sl(symbol, price)` — place stop loss
 - [ ] JC8 — Write `set_tp(symbol, price, qty)` — place take profit
 - [ ] JC9 — Write `get_position(symbol)` — fetch position from on-chain state
-- [ ] JC10 — Test all methods on devnet
+- [ ] JC10 — Test all methods on mainnet with minimal real funds (Jupiter Perps has no devnet deployment)
 
 ---
 
