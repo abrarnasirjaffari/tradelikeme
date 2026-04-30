@@ -252,11 +252,11 @@
 
 ## SENTINEL (sentinel.py)
 
-- [ ] SE1 — Create trading_agent/strategies/sd_zones/sentinel.py
-- [ ] SE2 — Write `__init__()` — load watchlist, connect Pyth WS
-- [ ] SE3 — Write `add_watch(symbol, zone_top, zone_bottom, watch_type)` — add to watchlist
-- [ ] SE4 — Write `remove_watch(symbol)` — remove from watchlist
-- [ ] SE5 — Write `_on_price_tick(symbol, price)` — called on every WS tick
+- [x] SE1 — Create trading_agent/strategies/sd_zones/sentinel.py
+- [x] SE2 — Write `__init__()` — load watchlist, connect Pyth WS
+- [x] SE3 — Write `add_watch(symbol, zone_top, zone_bottom, watch_type)` — add to watchlist
+- [x] SE4 — Write `remove_watch(symbol)` — remove from watchlist
+- [x] SE5 — Write `_on_price_tick(symbol, price)` — called on every WS tick
 - [ ] SE6 — Write zone touch detection — price enters zone → fire event
 - [ ] SE7 — Write TP1 hit detection — price hits TP1 level → fire event
 - [ ] SE8 — Write 30m candle body-close SL check — runs every 30 min
