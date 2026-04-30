@@ -111,7 +111,7 @@
 - [ ] ZC6 — Write `get_price(symbol)` — fetch from Pyth feed via zeta or pyth_ws
 - [ ] ZC7 — Write `open_position(symbol, side, size, leverage)` — place market order
 - [x] ZC8 — Write `close_position(symbol)` — full close
-- [ ] ZC9 — Write `set_sl(symbol, price)` — place stop loss order
+- [x] ZC9 — Write `set_sl(symbol, price)` — place stop loss order
 - [ ] ZC10 — Write `set_tp(symbol, price, qty)` — place take profit order
 - [x] ZC11 — Write `get_position(symbol)` — return current position size + entry price
 - [ ] ZC12 — Test open_position on devnet

@@ -6,8 +6,24 @@ from typing import Optional
 import based58
 from anchorpy import Wallet
 from solders.keypair import Keypair
+from solders.pubkey import Pubkey
 from zetamarkets_py.client import Client
+from zetamarkets_py.constants import MATCHING_ENGINE_PID
 from zetamarkets_py.types import Asset, Network, OrderArgs, OrderOptions, OrderType, Side
+from zetamarkets_py.zeta_client.instructions import place_trigger_order, cancel_trigger_order_v2
+from zetamarkets_py.zeta_client.instructions.place_trigger_order import (
+    PlaceTriggerOrderArgs,
+    PlaceTriggerOrderAccounts,
+)
+from zetamarkets_py.zeta_client.instructions.cancel_trigger_order_v2 import (
+    CancelTriggerOrderV2Args,
+    CancelTriggerOrderV2Accounts,
+)
+from zetamarkets_py.zeta_client.types.order_type import Limit as LimitOrderType
+from zetamarkets_py.zeta_client.types.trigger_direction import (
+    LessThanOrEqual,
+    GreaterThanOrEqual,
+)
 
 from trading_agent.exchanges.solana.pyth_ws import PythPriceFeed
 
@@ -34,6 +50,22 @@ _SYMBOL_TO_FEED: dict[str, str] = {
 
 # Maximum leverage offered by Zeta Markets
 MAX_LEVERAGE = 50
+
+# Zeta prices are stored as integers with 6 decimal places (1 USD = 1_000_000)
+_PRICE_DECIMALS = 1_000_000
+
+# Trigger order bit used for SL (0) and TP (1) per position.
+# Zeta supports up to 128 trigger orders per margin account (bits 0–127).
+_SL_BIT = 0
+_TP_BIT = 1
+
+
+def _get_trigger_order_address(program_id: Pubkey, margin_account: Pubkey, bit: int) -> Pubkey:
+    """Derive trigger order PDA. Seeds: [b'trigger-order', margin_account, bit]."""
+    return Pubkey.find_program_address(
+        [b"trigger-order", bytes(margin_account), bytes([bit])],
+        program_id,
+    )[0]
 
 # IOC slippage: price we send to guarantee a fill.
 # Buy: ask × (1 + SLIPPAGE). Sell: bid × (1 - SLIPPAGE).
@@ -265,8 +297,105 @@ class ZetaClient:
         return tx_sig
 
     async def set_sl(self, symbol: str, price: float) -> str:
-        """Place stop-loss trigger order. Returns order ID. (ZC9)"""
-        raise NotImplementedError
+        """Place a stop-loss trigger order for the current open position. (ZC9)
+
+        Uses Zeta trigger orders: fires when mark price crosses the SL level.
+        - Long position SL: triggers when price <= sl_price (LessThanOrEqual)
+        - Short position SL: triggers when price >= sl_price (GreaterThanOrEqual)
+
+        The order is reduce_only=True so it can only close, never flip.
+        Returns the tx signature.
+        Raises RuntimeError if no open position exists for symbol.
+        """
+        zeta = self._require_init()
+        self._assert_supported(symbol)
+
+        position = await self.get_position(symbol)
+        if position is None:
+            raise RuntimeError(f"No open position for {symbol} — cannot set SL.")
+
+        asset = _SYMBOL_TO_ASSET[symbol]
+        size = position["size"]
+
+        # SL closes the position: long → sell (Ask), short → buy (Bid)
+        close_side = Side.Ask if position["side"] == "long" else Side.Bid
+
+        # Trigger fires when price crosses SL level in the loss direction
+        trigger_direction = (
+            LessThanOrEqual() if position["side"] == "long" else GreaterThanOrEqual()
+        )
+
+        trigger_price_native = int(price * _PRICE_DECIMALS)
+        # Order executes at market (use same aggressive price as open_position)
+        if position["side"] == "long":
+            order_price_native = int(price * (1 - _MARKET_SLIPPAGE) * _PRICE_DECIMALS)
+        else:
+            order_price_native = int(price * (1 + _MARKET_SLIPPAGE) * _PRICE_DECIMALS)
+
+        program_id = zeta.exchange.program_id
+        margin_account_addr = zeta._margin_account_address
+        open_orders_addr = zeta._open_orders_addresses[asset]
+        trigger_order_addr = _get_trigger_order_address(program_id, margin_account_addr, _SL_BIT)
+        dex_program_id = MATCHING_ENGINE_PID[self._network]
+        market_addr = zeta.exchange.markets[asset].address
+
+        args: PlaceTriggerOrderArgs = {
+            "trigger_order_bit": _SL_BIT,
+            "order_price": order_price_native,
+            "trigger_price": trigger_price_native,
+            "trigger_direction": trigger_direction,
+            "trigger_ts": None,
+            "size": int(size),
+            "side": close_side,
+            "order_type": LimitOrderType(),
+            "reduce_only": True,
+            "tag": "sl",
+            "asset": asset,
+        }
+        accounts: PlaceTriggerOrderAccounts = {
+            "state": zeta.exchange._state_address,
+            "open_orders": open_orders_addr,
+            "authority": zeta.provider.wallet.public_key,
+            "margin_account": margin_account_addr,
+            "pricing": zeta.exchange._pricing_address,
+            "trigger_order": trigger_order_addr,
+            "dex_program": dex_program_id,
+            "market": market_addr,
+        }
+
+        ix = place_trigger_order(args, accounts, program_id)
+        tx_sig = await zeta._send_versioned_transaction([ix])
+
+        logger.info(
+            "set_sl %s side=%s price=%.4f size=%.4f tx=%s",
+            symbol, position["side"], price, size, tx_sig,
+        )
+        return str(tx_sig)
+
+    async def cancel_sl(self, symbol: str) -> str:
+        """Cancel the stop-loss trigger order for symbol. Returns tx signature.
+
+        Call this when moving SL to break-even (after TP1 hit) — cancel old SL
+        then call set_sl again with the new price.
+        """
+        zeta = self._require_init()
+        self._assert_supported(symbol)
+
+        program_id = zeta.exchange.program_id
+        margin_account_addr = zeta._margin_account_address
+        trigger_order_addr = _get_trigger_order_address(program_id, margin_account_addr, _SL_BIT)
+
+        args: CancelTriggerOrderV2Args = {"trigger_order_bit": _SL_BIT}
+        accounts: CancelTriggerOrderV2Accounts = {
+            "authority": zeta.provider.wallet.public_key,
+            "trigger_order": trigger_order_addr,
+            "margin_account": margin_account_addr,
+        }
+
+        ix = cancel_trigger_order_v2(args, accounts, program_id)
+        tx_sig = await zeta._send_versioned_transaction([ix])
+        logger.info("cancel_sl %s tx=%s", symbol, tx_sig)
+        return str(tx_sig)
 
     async def set_tp(self, symbol: str, price: float, qty: float) -> str:
         """Place take-profit trigger order for qty. Returns order ID. (ZC10)"""
