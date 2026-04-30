@@ -5,15 +5,17 @@ import os
 from typing import Callable
 
 import websockets
+from websockets.connection import State as WsState
 import httpx
 
 logger = logging.getLogger(__name__)
 
 # Feed IDs loaded from env — same on devnet and mainnet
 FEED_IDS: dict[str, str] = {
-    "SOL/USD":  os.getenv("PYTH_FEED_SOL_USD",  "0xef48a7d1ce6fc12ea3b43e5d1d32b66e2a12dc5cdcd8021f898c1c03f0d1f72f"),
+    # Canonical IDs from https://pyth.network/developers/price-feed-ids
+    "SOL/USD":  os.getenv("PYTH_FEED_SOL_USD",  "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d"),
     "BTC/USD":  os.getenv("PYTH_FEED_BTC_USD",  "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"),
-    "ETH/USD":  os.getenv("PYTH_FEED_ETH_USD",  "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874508cc0881"),
+    "ETH/USD":  os.getenv("PYTH_FEED_ETH_USD",  "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"),
     "USDC/USD": os.getenv("PYTH_FEED_USDC_USD", "0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a"),
     "USDT/USD": os.getenv("PYTH_FEED_USDT_USD", "0x2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688d2e53b"),
 }
@@ -21,7 +23,10 @@ FEED_IDS: dict[str, str] = {
 
 def _parse_price(raw: dict) -> float:
     """Convert Pyth raw price (int + expo) to a float."""
-    return int(raw["price"]) * (10 ** int(raw["expo"]))
+    # raw["price"] may be a nested {"price": str, "expo": int} or a plain str/int
+    if isinstance(raw, dict) and "price" in raw and "expo" in raw:
+        return int(raw["price"]) * (10 ** int(raw["expo"]))
+    raise ValueError(f"Unrecognised price format: {raw}")
 
 
 class PythPriceFeed:
@@ -32,12 +37,13 @@ class PythPriceFeed:
 
     def __init__(self, network: str = "devnet"):
         network = network.lower()
+        # hermes-beta.pyth.network is retired — Pyth uses the same endpoint for devnet/mainnet
         if network == "mainnet":
             self._ws_url   = os.getenv("PYTH_WS_URL_MAINNET",   "wss://hermes.pyth.network/ws")
             self._rest_url = os.getenv("PYTH_REST_URL_MAINNET",  "https://hermes.pyth.network")
         else:
-            self._ws_url   = os.getenv("PYTH_WS_URL_DEVNET",    "wss://hermes-beta.pyth.network/ws")
-            self._rest_url = os.getenv("PYTH_REST_URL_DEVNET",   "https://hermes-beta.pyth.network")
+            self._ws_url   = os.getenv("PYTH_WS_URL_DEVNET",    "wss://hermes.pyth.network/ws")
+            self._rest_url = os.getenv("PYTH_REST_URL_DEVNET",   "https://hermes.pyth.network")
 
         # symbol -> latest float price
         self._prices: dict[str, float] = {}
@@ -74,8 +80,10 @@ class PythPriceFeed:
         if callback:
             self._callbacks.setdefault(symbol, []).append(callback)
 
-        if self._ws and not self._ws.closed:
-            await self._ws.send(json.dumps({"type": "subscribe", "feed_id": feed_id}))
+        # websockets ≥14 uses .state instead of .closed
+        ws_open = self._ws and getattr(self._ws, "state", None) is WsState.OPEN
+        if ws_open:
+            await self._ws.send(json.dumps({"type": "subscribe", "ids": [feed_id]}))
             logger.debug("Subscribed to %s (%s)", symbol, feed_id)
         else:
             logger.warning("subscribe() called before connect() — will auto-subscribe on reconnect")
@@ -106,14 +114,17 @@ class PythPriceFeed:
         feed_id = FEED_IDS.get(symbol)
         if not feed_id:
             raise ValueError(f"No Pyth feed ID for symbol '{symbol}'.")
-        url = f"{self._rest_url}/api/latest_price_feeds"
+        # Hermes v2 endpoint: /v2/updates/price/latest?ids[]=<feed_id>
+        url = f"{self._rest_url}/v2/updates/price/latest"
         try:
             async with httpx.AsyncClient(timeout=5) as client:
-                resp = await client.get(url, params={"ids[]": feed_id})
+                resp = await client.get(url, params={"ids[]": feed_id, "encoding": "hex", "parsed": "true"})
                 resp.raise_for_status()
                 data = resp.json()
-                if data:
-                    price = _parse_price(data[0]["price"])
+                # Response: {"parsed": [{"price": {"price": str, "expo": int, ...}, ...}]}
+                parsed = data.get("parsed") or []
+                if parsed:
+                    price = _parse_price(parsed[0]["price"])
                     self._prices[symbol] = price
                     return price
         except Exception as exc:
@@ -130,7 +141,7 @@ class PythPriceFeed:
     async def _resubscribe_all(self) -> None:
         """Re-send subscribe messages after a reconnect."""
         for feed_id, symbol in self._feed_to_symbol.items():
-            await self._ws.send(json.dumps({"type": "subscribe", "feed_id": feed_id}))
+            await self._ws.send(json.dumps({"type": "subscribe", "ids": [feed_id]}))
             logger.debug("Re-subscribed to %s after reconnect", symbol)
 
     async def _listen_loop(self) -> None:
@@ -162,12 +173,16 @@ class PythPriceFeed:
         if msg.get("type") != "price_update":
             return
 
-        feed_id = msg.get("id", "")
+        # Hermes v2: {"type":"price_update","price_feed":{"id":"0x...","price":{...}}}
+        feed_obj = msg.get("price_feed") or {}
+        raw_id = feed_obj.get("id", "")
+        # Normalise: Hermes may omit the "0x" prefix
+        feed_id = raw_id if raw_id.startswith("0x") else f"0x{raw_id}"
         symbol = self._feed_to_symbol.get(feed_id)
         if not symbol:
             return
 
-        price_data = msg.get("price")
+        price_data = feed_obj.get("price")
         if not price_data:
             return
 
