@@ -225,8 +225,44 @@ class ZetaClient:
         return tx_sig
 
     async def close_position(self, symbol: str) -> str:
-        """Full close of open position for symbol. Returns tx signature. (ZC8)"""
-        raise NotImplementedError
+        """Full close of open position for symbol. Returns tx signature. (ZC8)
+
+        Fetches current position size and side, then places a reverse IOC order
+        at an aggressive price to guarantee a fill (same pattern as open_position).
+        Raises RuntimeError if no open position exists.
+        """
+        zeta = self._require_init()
+        self._assert_supported(symbol)
+
+        position = await self.get_position(symbol)
+        if position is None:
+            raise RuntimeError(f"No open position for {symbol} — nothing to close.")
+
+        asset = _SYMBOL_TO_ASSET[symbol]
+        size = abs(position["size"])
+        # Reverse the side to close
+        close_side = Side.Ask if position["side"] == "long" else Side.Bid
+
+        current_price = await self.get_price(symbol)
+        if close_side == Side.Bid:  # closing a short → buying back
+            limit_price = current_price * (1 + _MARKET_SLIPPAGE)
+        else:                        # closing a long → selling
+            limit_price = current_price * (1 - _MARKET_SLIPPAGE)
+
+        order = OrderArgs(
+            price=limit_price,
+            size=size,
+            side=close_side,
+            order_opts=OrderOptions(order_type=OrderType.ImmediateOrCancel),
+        )
+
+        tx_sig = await zeta.place_orders_for_market(asset=asset, orders=[order])
+
+        logger.info(
+            "close_position %s size=%.4f price=%.4f tx=%s",
+            symbol, size, limit_price, tx_sig,
+        )
+        return tx_sig
 
     async def set_sl(self, symbol: str, price: float) -> str:
         """Place stop-loss trigger order. Returns order ID. (ZC9)"""
@@ -237,11 +273,38 @@ class ZetaClient:
         raise NotImplementedError
 
     async def get_position(self, symbol: str) -> Optional[dict]:
+        """Return current position or None if flat. (ZC11)
+
+        Returns dict with keys: symbol, side, size, entry_price, unrealised_pnl
+        size is always positive; side is 'long' or 'short'.
         """
-        Return current position or None if flat. (ZC11)
-        Dict keys: symbol, side, size, entry_price, unrealised_pnl
-        """
-        raise NotImplementedError
+        zeta = self._require_init()
+        self._assert_supported(symbol)
+
+        _, positions = await zeta.fetch_margin_state()
+        asset = _SYMBOL_TO_ASSET[symbol]
+        pos = positions.get(asset)
+
+        if pos is None or pos.size == 0:
+            return None
+
+        side = "long" if pos.size > 0 else "short"
+        size = abs(pos.size)
+        entry_price = pos.average_price
+
+        mark_price = await self.get_price(symbol)
+        if side == "long":
+            unrealised_pnl = (mark_price - entry_price) * size
+        else:
+            unrealised_pnl = (entry_price - mark_price) * size
+
+        return {
+            "symbol": symbol,
+            "side": side,
+            "size": size,
+            "entry_price": entry_price,
+            "unrealised_pnl": unrealised_pnl,
+        }
 
     # ------------------------------------------------------------------
     # Helpers
