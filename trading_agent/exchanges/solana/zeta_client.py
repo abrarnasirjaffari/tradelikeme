@@ -7,7 +7,7 @@ import based58
 from anchorpy import Wallet
 from solders.keypair import Keypair
 from zetamarkets_py.client import Client
-from zetamarkets_py.types import Asset, Network
+from zetamarkets_py.types import Asset, Network, OrderType, Side
 
 from trading_agent.exchanges.solana.pyth_ws import PythPriceFeed
 
@@ -34,6 +34,11 @@ _SYMBOL_TO_FEED: dict[str, str] = {
 
 # Maximum leverage offered by Zeta Markets
 MAX_LEVERAGE = 50
+
+# IOC slippage: price we send to guarantee a fill.
+# Buy: ask × (1 + SLIPPAGE). Sell: bid × (1 - SLIPPAGE).
+# Zeta has no native MARKET order type — IOC + aggressive price = market fill.
+_MARKET_SLIPPAGE = 0.02  # 2% — covers wide spreads on thin devnet books
 
 
 def _load_keypair() -> Keypair:
@@ -178,11 +183,46 @@ class ZetaClient:
         self,
         symbol: str,
         side: str,          # "long" | "short"
-        size: float,        # base asset quantity
-        leverage: float,
+        size: float,        # base asset quantity (e.g. 1.5 for 1.5 SOL)
+        leverage: float,    # informational only — Zeta uses cross-margin (implicit leverage)
     ) -> str:
-        """Place a market order. Returns tx signature. (ZC7)"""
-        raise NotImplementedError
+        """Place a market order. Returns tx signature. (ZC7)
+
+        Zeta Markets has no native MARKET order type. We use an
+        IMMEDIATE_OR_CANCEL order with an aggressive price (±2% slippage)
+        to guarantee a fill at the best available price.
+        """
+        zeta = self._require_init()
+        self._assert_supported(symbol)
+
+        if side not in ("long", "short"):
+            raise ValueError(f"side must be 'long' or 'short', got '{side}'")
+
+        asset = _SYMBOL_TO_ASSET[symbol]
+        zeta_side = Side.BID if side == "long" else Side.ASK
+
+        # Fetch current price to compute aggressive IOC limit
+        current_price = await self.get_price(symbol)
+        if side == "long":
+            # Buy above market to guarantee crossing the spread
+            limit_price = current_price * (1 + _MARKET_SLIPPAGE)
+        else:
+            # Sell below market
+            limit_price = current_price * (1 - _MARKET_SLIPPAGE)
+
+        tx_sig = await zeta.place_order(
+            asset=asset,
+            price=limit_price,
+            size=size,
+            side=zeta_side,
+            order_type=OrderType.IMMEDIATE_OR_CANCEL,
+        )
+
+        logger.info(
+            "open_position %s %s size=%.4f price=%.4f tx=%s",
+            side, symbol, size, limit_price, tx_sig,
+        )
+        return tx_sig
 
     async def close_position(self, symbol: str) -> str:
         """Full close of open position for symbol. Returns tx signature. (ZC8)"""
