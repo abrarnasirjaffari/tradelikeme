@@ -1,16 +1,73 @@
+# ── Secrets & credentials ──────────────────────────────
 .env
+.env.local
+.env.*.local
 *.pem
+
+# ── Python ─────────────────────────────────────────────
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
+*.pdb
+*.so
 .venv/
 venv/
-*.db
-*.sqlite
-.DS_Store
-node_modules/
+*.egg-info/
+*.egg
 dist/
 build/
-*.egg-info/
-.anchor/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# ── Node / JS ───────────────────────────────────────────
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/
+dist/
+build/
+.vite/
+.next/
+.nuxt/
+.output/
+*.tsbuildinfo
+
+# ── Databases ───────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+
+# ── Rust / Anchor ────────────────────────────────────────
 target/
+.anchor/
+**/.anchor/
+Cargo.lock
+
+# ── OS artefacts ────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Editor / IDE ────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Logs ────────────────────────────────────────────────
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Misc ────────────────────────────────────────────────
+*.tmp
+*.bak
+.cache/

@@ -23,7 +23,7 @@ const COLS: { heading: string; links: FooterItem[] }[] = [
     heading: 'Resources',
     links: [
       { label: 'Blog',           soon: true },
-      { label: 'Docs',           soon: true },
+      { label: 'Docs',           path: '/docs' },
       { label: 'Strategy Proof', soon: true },
     ],
   },
@@ -117,10 +117,11 @@ export default function Footer() {
                   )
                 }
 
+                const pathItem = item as { label: string; path: string }
                 return (
                   <button
                     key={item.label}
-                    onClick={() => navigate(item.path)}
+                    onClick={() => navigate(pathItem.path)}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left', fontFamily: "'Barlow', sans-serif", fontWeight: 400, fontSize: '13px', color: 'rgba(255,255,255,0.35)', transition: 'color 0.2s' }}
                     onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.7)')}
                     onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.35)')}
