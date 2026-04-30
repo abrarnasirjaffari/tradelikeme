@@ -12,11 +12,12 @@ import { Vault } from "../target/types/vault";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-// Transfer SOL from provider wallet instead of requestAirdrop to avoid devnet rate limits
+// Transfer SOL from provider wallet instead of requestAirdrop to avoid devnet rate limits.
+// Default 0.1 SOL — enough for rent + fees; avoids draining the provider wallet.
 async function fundSol(
   provider: anchor.AnchorProvider,
   dest: PublicKey,
-  lamports: number = 2e9
+  lamports: number = 1e8
 ): Promise<void> {
   const tx = new Transaction().add(
     SystemProgram.transfer({
@@ -953,7 +954,7 @@ describe("vault — settle_epoch()", () => {
 
   it("V15-5: non-agent cannot call settle_epoch", async () => {
     const impostor = Keypair.generate();
-    await fundSol(provider, impostor.publicKey, 1e9);
+    await fundSol(provider, impostor.publicKey);
 
     let threw = false;
     try {
