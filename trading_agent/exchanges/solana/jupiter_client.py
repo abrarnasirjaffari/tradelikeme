@@ -40,6 +40,33 @@ _ORACLE_PUBKEYS = {
     "ETH": "JBu1AL4obBcCMqKBBxhpWCNUt136ijcuMZLFvTP7iWdB",
 }
 
+# Doves oracle accounts (price feed source used by Jupiter Perps on-chain)
+_DOVES_ORACLE_PUBKEYS = {
+    "SOL": "Gnt27xtC473ZT2Mw5u8wZ68Z3gULkSTb5DuxJy7eJotD",
+    "BTC": "8SXvChNYFhRq4EZuZvnhjrB3jJRQCv4k3P4W6hesH3Ew",
+    "ETH": "2Cjg6kZDQJkSqjkrYXQhJJxTEGKr4k4F7EkLJ9Z6Z7Yd",
+}
+
+# Pythnet price accounts (secondary oracle used by createDecreasePositionRequest2)
+_PYTHNET_ORACLE_PUBKEYS = {
+    "SOL": "H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG",
+    "BTC": "GVXRSBjFk6e6J3NbVPXohDJetcTjaeeuykUpbQF8UoMU",
+    "ETH": "JBu1AL4obBcCMqKBBxhpWCNUt136ijcuMZLFvTP7iWdB",
+}
+
+# USDC collateral custody (same for all perp positions — collateral is always USDC)
+_USDC_CUSTODY_PUBKEY = "G18jKKXQwBbrHeiK3C9MRXhkHsLHf7XgCSisykV46EZa"
+_USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+
+# Perpetuals state PDA — seeds: [b"perpetuals"]
+_PERPETUALS_PUBKEY = "H4ND9aYttUVLFmNypZqLjZ52FYiGvdEB45GmwNoKEjTj"
+
+# Event authority PDA — seeds: [b"__event_authority"] under the program
+_EVENT_AUTHORITY_PUBKEY = "37cnMPXZ1S7rH7dBhQpjYoEZ2JVr5iuUeFsXcX3G2N7k"
+
+# Associated token program
+_ASSOCIATED_TOKEN_PROGRAM = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJe1bai"
+
 
 def _get_pool_pubkey() -> Pubkey:
     return Pubkey.from_string(_POOL_PUBKEY)
@@ -227,4 +254,341 @@ class JupiterClient:
         tx_sig = str(resp)
 
         logger.info("open_position %s %s size=$%.2f leverage=%.0fx tx=%s", side, symbol, size, leverage, tx_sig)
+        return tx_sig
+
+    async def close_position(self, symbol: str) -> str:
+        """Full close of open position for symbol via instantDecreasePosition. Returns tx signature. (JC6)
+
+        Tries long PDA first, then short PDA. Reads sizeUsd + collateralUsd from
+        on-chain position account so the decrease instruction gets exact amounts.
+        Raises RuntimeError if no open position exists.
+        """
+        program = self._require_init()
+        self._assert_supported(symbol)
+
+        from solana.transaction import Transaction
+        from solders.compute_budget import set_compute_unit_limit, set_compute_unit_price
+
+        pool = _get_pool_pubkey()
+        custody = _get_custody_pubkey(symbol)
+        owner = program.provider.wallet.public_key
+
+        # Find which side has an open position
+        position_pda = None
+        side_byte = None
+        position_account = None
+        for _side_byte, _side_label in [(b"\x00", "long"), (b"\x01", "short")]:
+            pda, _ = Pubkey.find_program_address(
+                [b"position", bytes(owner), bytes(pool), bytes(custody), _side_byte],
+                JUPITER_PERPS_PROGRAM_ID,
+            )
+            try:
+                acct = await program.account["Position"].fetch(pda)
+                if acct.size_usd > 0:
+                    position_pda = pda
+                    side_byte = _side_byte
+                    position_account = acct
+                    break
+            except Exception:
+                continue
+
+        if position_pda is None:
+            raise RuntimeError(f"No open position for {symbol} — nothing to close.")
+
+        size_usd = position_account.size_usd           # already in native u64 (6 dp)
+        collateral_usd = position_account.collateral_usd
+
+        ix = program.instruction["instantDecreasePosition"](
+            {"sizeUsd": size_usd, "collateralUsd": collateral_usd},
+            ctx=program.context(accounts={
+                "owner": owner,
+                "position": position_pda,
+                "pool": pool,
+                "custody": custody,
+                "custodyOracleAccount": _get_oracle_pubkey(symbol),
+                "systemProgram": Pubkey.from_string("11111111111111111111111111111111"),
+                "tokenProgram": Pubkey.from_string("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
+            }),
+        )
+
+        tx = Transaction()
+        tx.add(set_compute_unit_limit(_COMPUTE_UNIT_LIMIT))
+        tx.add(set_compute_unit_price(_PRIORITY_FEE_MICROLAMPORTS))
+        tx.add(ix)
+
+        resp = await program.provider.send(tx)
+        tx_sig = str(resp)
+
+        logger.info(
+            "close_position %s sizeUsd=%d collateralUsd=%d tx=%s",
+            symbol, size_usd, collateral_usd, tx_sig,
+        )
+        return tx_sig
+
+    async def set_sl(self, symbol: str, price: float) -> str:
+        """Place a stop-loss trigger request for the full open position. Returns tx signature. (JC7)
+
+        Uses createDecreasePositionRequest2 with requestType=Trigger.
+        Jupiter's on-chain keeper fires the decrease when mark price crosses the trigger.
+
+        - Long SL: triggerAboveThreshold=False (fires when price drops to or below sl_price)
+        - Short SL: triggerAboveThreshold=True  (fires when price rises to or above sl_price)
+
+        The positionRequest PDA is derived from seeds [b"position_request", owner, counter]
+        where counter is read from the on-chain Position account (bump field used as counter
+        seed in Jupiter's implementation — counter increments per request).
+        """
+        program = self._require_init()
+        self._assert_supported(symbol)
+
+        from solana.transaction import Transaction
+        from solders.compute_budget import set_compute_unit_limit, set_compute_unit_price
+
+        pool = _get_pool_pubkey()
+        custody = _get_custody_pubkey(symbol)
+        owner = program.provider.wallet.public_key
+
+        # Locate the open position PDA
+        position_pda = None
+        position_account = None
+        position_side = None
+        for side_byte, side_label in [(b"\x00", "long"), (b"\x01", "short")]:
+            pda, _ = Pubkey.find_program_address(
+                [b"position", bytes(owner), bytes(pool), bytes(custody), side_byte],
+                JUPITER_PERPS_PROGRAM_ID,
+            )
+            try:
+                acct = await program.account["Position"].fetch(pda)
+                if acct.size_usd > 0:
+                    position_pda = pda
+                    position_account = acct
+                    position_side = side_label
+                    break
+            except Exception:
+                continue
+
+        if position_pda is None:
+            raise RuntimeError(f"No open position for {symbol} — cannot set SL.")
+
+        size_usd = position_account.size_usd
+        collateral_usd = position_account.collateral_usd
+
+        # counter is used as a nonce for the positionRequest PDA seed
+        # Jupiter uses the position's bump field as the counter seed for trigger requests
+        counter = int(position_account.bump)
+
+        # SL fires when price moves against position
+        trigger_above = position_side == "short"  # short: SL above current price
+
+        # Prices stored as u64 with 6 decimal places
+        trigger_price_native = int(price * 1_000_000)
+
+        position_request_pda, _ = Pubkey.find_program_address(
+            [b"position_request", bytes(owner), counter.to_bytes(8, "little")],
+            JUPITER_PERPS_PROGRAM_ID,
+        )
+
+        usdc_custody = Pubkey.from_string(_USDC_CUSTODY_PUBKEY)
+        usdc_mint = Pubkey.from_string(_USDC_MINT)
+        perpetuals = Pubkey.from_string(_PERPETUALS_PUBKEY)
+        event_authority = Pubkey.from_string(_EVENT_AUTHORITY_PUBKEY)
+        assoc_token_program = Pubkey.from_string(_ASSOCIATED_TOKEN_PROGRAM)
+        token_program = Pubkey.from_string("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
+        system_program = Pubkey.from_string("11111111111111111111111111111111")
+
+        # Derive receiving ATA for USDC (where collateral is returned on close)
+        from spl.token.instructions import get_associated_token_address
+        receiving_account = get_associated_token_address(owner, usdc_mint)
+
+        # Derive positionRequestAta — ATA of the positionRequest PDA for USDC
+        position_request_ata = get_associated_token_address(position_request_pda, usdc_mint)
+
+        doves_oracle = Pubkey.from_string(_DOVES_ORACLE_PUBKEYS[symbol])
+        pythnet_oracle = Pubkey.from_string(_PYTHNET_ORACLE_PUBKEYS[symbol])
+
+        ix = program.instruction["createDecreasePositionRequest2"](
+            {
+                "params": {
+                    "collateralUsdDelta": collateral_usd,
+                    "sizeUsdDelta": size_usd,
+                    "requestType": {"trigger": {}},
+                    "priceSlippage": None,
+                    "jupiterMinimumOut": None,
+                    "triggerPrice": trigger_price_native,
+                    "triggerAboveThreshold": trigger_above,
+                    "entirePosition": True,
+                    "counter": counter,
+                }
+            },
+            ctx=program.context(accounts={
+                "owner": owner,
+                "receivingAccount": receiving_account,
+                "perpetuals": perpetuals,
+                "pool": pool,
+                "position": position_pda,
+                "positionRequest": position_request_pda,
+                "positionRequestAta": position_request_ata,
+                "custody": custody,
+                "custodyDovesPriceAccount": doves_oracle,
+                "custodyPythnetPriceAccount": pythnet_oracle,
+                "collateralCustody": usdc_custody,
+                "desiredMint": usdc_mint,
+                "referral": None,
+                "tokenProgram": token_program,
+                "associatedTokenProgram": assoc_token_program,
+                "systemProgram": system_program,
+                "eventAuthority": event_authority,
+                "program": JUPITER_PERPS_PROGRAM_ID,
+            }),
+        )
+
+        tx = Transaction()
+        tx.add(set_compute_unit_limit(_COMPUTE_UNIT_LIMIT))
+        tx.add(set_compute_unit_price(_PRIORITY_FEE_MICROLAMPORTS))
+        tx.add(ix)
+
+        resp = await program.provider.send(tx)
+        tx_sig = str(resp)
+
+        logger.info(
+            "set_sl %s side=%s price=%.4f tx=%s",
+            symbol, position_side, price, tx_sig,
+        )
+        return tx_sig
+
+    async def set_tp(self, symbol: str, price: float, qty: float) -> str:
+        """Place a take-profit trigger request for qty (USD notional) at price. Returns tx signature. (JC8)
+
+        Uses createDecreasePositionRequest2 with requestType=Trigger.
+        Jupiter's on-chain keeper fires the decrease when mark price crosses the trigger.
+
+        - Long TP: triggerAboveThreshold=True  (fires when price rises to or above tp_price)
+        - Short TP: triggerAboveThreshold=False (fires when price drops to or below tp_price)
+
+        qty is USD notional (same unit Jupiter uses for sizeUsd). collateralUsdDelta
+        is proportional to the fraction of the position being closed.
+        Counter is bumped by 1 vs set_sl so the positionRequest PDA doesn't collide.
+        """
+        program = self._require_init()
+        self._assert_supported(symbol)
+
+        from solana.transaction import Transaction
+        from solders.compute_budget import set_compute_unit_limit, set_compute_unit_price
+
+        pool = _get_pool_pubkey()
+        custody = _get_custody_pubkey(symbol)
+        owner = program.provider.wallet.public_key
+
+        # Locate the open position PDA
+        position_pda = None
+        position_account = None
+        position_side = None
+        for side_byte, side_label in [(b"\x00", "long"), (b"\x01", "short")]:
+            pda, _ = Pubkey.find_program_address(
+                [b"position", bytes(owner), bytes(pool), bytes(custody), side_byte],
+                JUPITER_PERPS_PROGRAM_ID,
+            )
+            try:
+                acct = await program.account["Position"].fetch(pda)
+                if acct.size_usd > 0:
+                    position_pda = pda
+                    position_account = acct
+                    position_side = side_label
+                    break
+            except Exception:
+                continue
+
+        if position_pda is None:
+            raise RuntimeError(f"No open position for {symbol} — cannot set TP.")
+
+        total_size_usd = position_account.size_usd        # native u64, 6 dp
+        total_collateral_usd = position_account.collateral_usd
+
+        # qty is in USD notional (6 dp native)
+        size_usd_delta = int(qty * 1_000_000)
+        if size_usd_delta > total_size_usd:
+            size_usd_delta = total_size_usd
+
+        # Release collateral proportional to the fraction of position being closed
+        fraction = size_usd_delta / total_size_usd if total_size_usd > 0 else 1.0
+        collateral_usd_delta = int(total_collateral_usd * fraction)
+
+        entire = size_usd_delta >= total_size_usd
+
+        # TP fires when price moves in the profit direction
+        trigger_above = position_side == "long"  # long: TP above current price
+
+        trigger_price_native = int(price * 1_000_000)
+
+        # counter + 1 so this PDA is distinct from the SL positionRequest PDA
+        counter = int(position_account.bump) + 1
+
+        position_request_pda, _ = Pubkey.find_program_address(
+            [b"position_request", bytes(owner), counter.to_bytes(8, "little")],
+            JUPITER_PERPS_PROGRAM_ID,
+        )
+
+        usdc_custody = Pubkey.from_string(_USDC_CUSTODY_PUBKEY)
+        usdc_mint = Pubkey.from_string(_USDC_MINT)
+        perpetuals = Pubkey.from_string(_PERPETUALS_PUBKEY)
+        event_authority = Pubkey.from_string(_EVENT_AUTHORITY_PUBKEY)
+        assoc_token_program = Pubkey.from_string(_ASSOCIATED_TOKEN_PROGRAM)
+        token_program = Pubkey.from_string("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
+        system_program = Pubkey.from_string("11111111111111111111111111111111")
+
+        from spl.token.instructions import get_associated_token_address
+        receiving_account = get_associated_token_address(owner, usdc_mint)
+        position_request_ata = get_associated_token_address(position_request_pda, usdc_mint)
+
+        doves_oracle = Pubkey.from_string(_DOVES_ORACLE_PUBKEYS[symbol])
+        pythnet_oracle = Pubkey.from_string(_PYTHNET_ORACLE_PUBKEYS[symbol])
+
+        ix = program.instruction["createDecreasePositionRequest2"](
+            {
+                "params": {
+                    "collateralUsdDelta": collateral_usd_delta,
+                    "sizeUsdDelta": size_usd_delta,
+                    "requestType": {"trigger": {}},
+                    "priceSlippage": None,
+                    "jupiterMinimumOut": None,
+                    "triggerPrice": trigger_price_native,
+                    "triggerAboveThreshold": trigger_above,
+                    "entirePosition": entire,
+                    "counter": counter,
+                }
+            },
+            ctx=program.context(accounts={
+                "owner": owner,
+                "receivingAccount": receiving_account,
+                "perpetuals": perpetuals,
+                "pool": pool,
+                "position": position_pda,
+                "positionRequest": position_request_pda,
+                "positionRequestAta": position_request_ata,
+                "custody": custody,
+                "custodyDovesPriceAccount": doves_oracle,
+                "custodyPythnetPriceAccount": pythnet_oracle,
+                "collateralCustody": usdc_custody,
+                "desiredMint": usdc_mint,
+                "referral": None,
+                "tokenProgram": token_program,
+                "associatedTokenProgram": assoc_token_program,
+                "systemProgram": system_program,
+                "eventAuthority": event_authority,
+                "program": JUPITER_PERPS_PROGRAM_ID,
+            }),
+        )
+
+        tx = Transaction()
+        tx.add(set_compute_unit_limit(_COMPUTE_UNIT_LIMIT))
+        tx.add(set_compute_unit_price(_PRIORITY_FEE_MICROLAMPORTS))
+        tx.add(ix)
+
+        resp = await program.provider.send(tx)
+        tx_sig = str(resp)
+
+        logger.info(
+            "set_tp %s side=%s price=%.4f qty_usd=%.2f tx=%s",
+            symbol, position_side, price, qty, tx_sig,
+        )
         return tx_sig

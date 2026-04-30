@@ -139,9 +139,9 @@
 - [x] JC3 — Write `__init__()` — load keypair, connect to Helius RPC, load IDL
 - [x] JC4 — Write `get_balance()` — return USDC balance from custody pool
 - [x] JC5 — Write `open_position(symbol, side, size, leverage)` — increasePosition instruction
-- [ ] JC6 — Write `close_position(symbol)` — decreasePosition instruction (full)
-- [ ] JC7 — Write `set_sl(symbol, price)` — place stop loss
-- [ ] JC8 — Write `set_tp(symbol, price, qty)` — place take profit
+- [x] JC6 — Write `close_position(symbol)` — decreasePosition instruction (full)
+- [x] JC7 — Write `set_sl(symbol, price)` — place stop loss
+- [x] JC8 — Write `set_tp(symbol, price, qty)` — place take profit
 - [ ] JC9 — Write `get_position(symbol)` — fetch position from on-chain state
 - [ ] JC10 — Test all methods on mainnet with minimal real funds (Jupiter Perps has no devnet deployment)
 
