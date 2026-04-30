@@ -104,7 +104,7 @@
 > Pairs: SOL, BTC, ETH, APT, ARB. Max leverage: 50x.
 
 - [x] ZC1 — Research Zeta Markets Python SDK (`zetamarkets-py`) — docs, GitHub, examples
-- [ ] ZC2 — Add `zetamarkets-py` to requirements.txt, run `pip install`
+- [x] ZC2 — Add `zetamarkets-py` to requirements.txt, run `pip install` — added to requirements.txt; local Windows install blocked (MSVC required for zstandard wheel). Installs cleanly on EC2 Ubuntu.
 - [ ] ZC3 — Create trading_agent/exchanges/solana/zeta_client.py
 - [ ] ZC4 — Write `__init__()` — load keypair, connect to Helius RPC, init Zeta client
 - [ ] ZC5 — Write `get_balance()` — return USDC margin balance
