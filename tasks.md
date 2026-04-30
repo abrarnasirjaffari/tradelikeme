@@ -108,8 +108,8 @@
 - [x] ZC3 — Create trading_agent/exchanges/solana/zeta_client.py
 - [x] ZC4 — Write `__init__()` — load keypair, connect to Helius RPC, init Zeta client
 - [x] ZC5 — Write `get_balance()` — return USDC margin balance
-- [ ] ZC6 — Write `get_price(symbol)` — fetch from Pyth feed via zeta or pyth_ws
-- [ ] ZC7 — Write `open_position(symbol, side, size, leverage)` — place market order
+- [x] ZC6 — Write `get_price(symbol)` — fetch from Pyth feed via zeta or pyth_ws
+- [x] ZC7 — Write `open_position(symbol, side, size, leverage)` — place market order
 - [x] ZC8 — Write `close_position(symbol)` — full close
 - [x] ZC9 — Write `set_sl(symbol, price)` — place stop loss order
 - [ ] ZC10 — Write `set_tp(symbol, price, qty)` — place take profit order
