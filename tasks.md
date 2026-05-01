@@ -344,15 +344,15 @@
 
 ## NOTIFICATIONS (notifier.py + channels)
 
-- [ ] N1 — Create trading_agent/base/notifier.py
-- [ ] N2 — Write `send(user_id, event, data)` — dispatcher
-- [ ] N3 — Write `asyncio.gather()` across all enabled channels
-- [ ] N4 — Create trading_agent/channels/telegram.py
-- [ ] N5 — Write `send_telegram(chat_id, message)` — send via Bot API
-- [ ] N6 — Write `send_photo_telegram(chat_id, image_path, caption)` — send chart screenshot
-- [ ] N9 — Define all event types: ZONE_TOUCH, TRADE_ENTERED, TP1_HIT, TP2_HIT, SL_HIT, BALANCE_LOW, AGENT_DOWN, DAILY_SUMMARY
-- [ ] N10 — Write message templates for each event type
-- [ ] N11 — Test Telegram send on real bot
+- [x] N1 — Create trading_agent/base/notifier.py
+- [x] N2 — Write `send(user_id, event, data)` — dispatcher
+- [x] N3 — Write `asyncio.gather()` across all enabled channels
+- [x] N4 — Create trading_agent/channels/telegram.py
+- [x] N5 — Write `send_telegram(chat_id, message)` — send via Bot API
+- [x] N6 — Write `send_photo_telegram(chat_id, image_path, caption)` — send chart screenshot
+- [x] N9 — Define all event types: ZONE_TOUCH, TRADE_ENTERED, TP1_HIT, TP2_HIT, SL_HIT, BALANCE_LOW, AGENT_DOWN, DAILY_SUMMARY
+- [x] N10 — Write message templates for each event type
+- [x] N11 — Test Telegram send on real bot
 
 ---
 
