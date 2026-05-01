@@ -101,18 +101,7 @@ class LoopOrchestrator:
         self._running = True
 
         # 1. Fetch initial balance — needed for position sizing before first compound cycle.
-        try:
-            self._balance = await self._exchange.get_balance()
-            logger.info("Initial balance: $%.2f USDC", self._balance)
-        except Exception:
-            logger.exception("Failed to fetch initial balance — using $0 (entries will be blocked)")
-            self._balance = 0.0
-
-        if self._balance < MIN_BALANCE_USD:
-            logger.warning(
-                "Balance $%.2f is below MIN_BALANCE_USD $%.2f — entries will stay blocked",
-                self._balance, MIN_BALANCE_USD,
-            )
+        await self._check_min_balance()
 
         # 2. Start sentinel — this calls pyth.connect() internally.
         await self._sentinel.start()
@@ -231,12 +220,8 @@ class LoopOrchestrator:
             logger.debug("Entry gate: BLOCKED — initial scan not complete")
             return False
 
-        open_count = len(self._trade_agent.get_open_trades())
-        if open_count >= MAX_AT_RISK_SLOTS:
-            logger.debug(
-                "Entry gate: BLOCKED — %d/%d slots in use",
-                open_count, MAX_AT_RISK_SLOTS,
-            )
+        if not self._slots_available():
+            logger.debug("Entry gate: BLOCKED — MAX_AT_RISK_SLOTS reached")
             return False
 
         if self._balance < MIN_BALANCE_USD:
@@ -337,31 +322,99 @@ class LoopOrchestrator:
 
     def _slots_available(self) -> bool:
         """Return True if open positions < MAX_AT_RISK_SLOTS."""
-        raise NotImplementedError("LO6")
+        open_count = len(self._trade_agent.get_open_trades())
+        if open_count >= MAX_AT_RISK_SLOTS:
+            logger.debug(
+                "Slots full: %d/%d positions open", open_count, MAX_AT_RISK_SLOTS
+            )
+            return False
+        return True
 
     # ------------------------------------------------------------------
     # LO7 — MIN_BALANCE check
     # ------------------------------------------------------------------
 
     async def _check_min_balance(self) -> bool:
-        """Return True if current exchange balance >= MIN_BALANCE_USD."""
-        raise NotImplementedError("LO7")
+        """
+        Fetch live balance from exchange, update self._balance, and return
+        True if it is at or above MIN_BALANCE_USD.
+
+        Used at startup and by the compound cycle.  The entry gate uses the
+        cached self._balance for tick-safe sync checks — this method is the
+        authoritative live refresh.
+        """
+        try:
+            self._balance = await self._exchange.get_balance()
+            logger.info("Balance check: $%.2f USDC", self._balance)
+        except Exception:
+            logger.exception("_check_min_balance: exchange call failed — keeping cached $%.2f", self._balance)
+
+        if self._balance < MIN_BALANCE_USD:
+            logger.warning(
+                "Balance $%.2f below MIN_BALANCE_USD $%.2f — entries blocked",
+                self._balance, MIN_BALANCE_USD,
+            )
+            return False
+        return True
 
     # ------------------------------------------------------------------
     # LO8 — compound cycle
     # ------------------------------------------------------------------
 
     async def _compound_loop(self) -> None:
-        """Every 72H refresh balance and recalculate position sizing."""
-        raise NotImplementedError("LO8")
+        """
+        Every 72H: fetch live balance, update self._balance so that the next
+        position size calculation (in _on_zone_touch via _calc_position_size)
+        uses the current account equity rather than the stale startup value.
+
+        Sleeps first so the first recalculation happens 72H after boot, not
+        immediately (startup already calls _check_min_balance at boot).
+        """
+        while self._running:
+            await asyncio.sleep(COMPOUND_SECS)
+            if not self._running:
+                break
+            logger.info("Compound cycle: refreshing balance and position sizing…")
+            try:
+                await self._check_min_balance()
+                logger.info(
+                    "Compound cycle complete — new position size basis: $%.2f × %.1f%% × %dx leverage",
+                    self._balance, MARGIN_PCT * 100, LEVERAGE,
+                )
+            except Exception:
+                logger.exception("Compound cycle failed — retrying in %dH", COMPOUND_SECS // 3600)
 
     # ------------------------------------------------------------------
     # LO9 — shutdown()
     # ------------------------------------------------------------------
 
     async def shutdown(self) -> None:
-        """Graceful stop — cancel all asyncio tasks and disconnect."""
-        raise NotImplementedError("LO9")
+        """
+        Graceful stop:
+          1. Set _running = False so all loops exit on their next iteration.
+          2. Cancel and await all background asyncio tasks.
+          3. Stop the sentinel (closes Pyth WS).
+        """
+        if not self._running:
+            return
+
+        logger.info("LoopOrchestrator shutting down…")
+        self._running = False
+
+        # Cancel all background tasks and wait for them to finish.
+        for task in self._tasks:
+            task.cancel()
+        if self._tasks:
+            await asyncio.gather(*self._tasks, return_exceptions=True)
+        self._tasks.clear()
+
+        # Stop sentinel — closes the Pyth WebSocket connection.
+        try:
+            await self._sentinel.stop()
+        except Exception:
+            logger.exception("Error stopping sentinel during shutdown")
+
+        logger.info("LoopOrchestrator stopped")
 
     # ------------------------------------------------------------------
     # Sentinel event router (internal)
