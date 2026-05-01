@@ -316,14 +316,14 @@
 
 ## BASE STRATEGY CLASS (base_strategy.py)
 
-- [ ] BS1 — Create trading_agent/base/base_strategy.py
-- [ ] BS2 — Define abstract class `BaseStrategy`
-- [ ] BS3 — Define abstract method `scan_zones(symbol)`
-- [ ] BS4 — Define abstract method `check_entry(symbol, zones)`
-- [ ] BS5 — Define abstract method `get_config()` — return strategy params from DB
-- [ ] BS6 — Define abstract method `on_event(event_type, data)`
-- [ ] BS7 — Write `load_params(strategy_id)` — read params row from strategy DB
-- [ ] BS8 — Make SDZoneStrategy inherit BaseStrategy
+- [x] BS1 — Create trading_agent/base/base_strategy.py
+- [x] BS2 — Define abstract class `BaseStrategy`
+- [x] BS3 — Define abstract method `scan_zones(symbol)`
+- [x] BS4 — Define abstract method `check_entry(symbol, zones)`
+- [x] BS5 — Define abstract method `get_config()` — return strategy params from DB
+- [x] BS6 — Define abstract method `on_event(event_type, data)`
+- [x] BS7 — Write `load_params(strategy_id)` — read params row from strategy DB
+- [x] BS8 — Make SDZoneStrategy inherit BaseStrategy
 
 ---
 
