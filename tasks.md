@@ -329,16 +329,16 @@
 
 ## PLATFORM CONFIG (config.py)
 
-- [ ] CF1 — Create trading_agent/base/config.py
-- [ ] CF2 — Load all env vars (AWS, Telegram, Twilio, Helius, Solana keys)
-- [ ] CF3 — Define SUPPORTED_EXCHANGES list
-- [ ] CF4 — Define SUPPORTED_NOTIFICATION_CHANNELS list
-- [ ] CF5 — Define MAX_AT_RISK_SLOTS = 2
-- [ ] CF6 — Define MIN_BALANCE_USD = 35
-- [ ] CF7 — Define TF_STACK = [1M, 1W, 1D, 4H, 1H, 30M, 15M]
-- [ ] CF8 — Define ZONE_GATE_PCT = 0.05 (4H gate ±5%)
-- [ ] CF9 — Define DISASTER_SL_BUFFER = 0.03 (structural + 3%)
-- [ ] CF10 — Define EPOCH_INTERVAL_DAYS = 30
+- [x] CF1 — Create trading_agent/base/config.py
+- [x] CF2 — Load all env vars (AWS, Telegram, Twilio, Helius, Solana keys)
+- [x] CF3 — Define SUPPORTED_EXCHANGES list
+- [x] CF4 — Define SUPPORTED_NOTIFICATION_CHANNELS list
+- [x] CF5 — Define MAX_AT_RISK_SLOTS = 2
+- [x] CF6 — Define MIN_BALANCE_USD = 35
+- [x] CF7 — Define TF_STACK = [1M, 1W, 1D, 4H, 1H, 30M, 15M]
+- [x] CF8 — Define ZONE_GATE_PCT = 0.05 (4H gate ±5%)
+- [x] CF9 — Define DISASTER_SL_BUFFER = 0.03 (structural + 3%)
+- [x] CF10 — Define EPOCH_INTERVAL_DAYS = 30
 
 ---
 
