@@ -301,16 +301,16 @@
 
 ## JOURNAL & STATE (journal.py / state.py)
 
-- [ ] JS1 — Create trading_agent/strategies/sd_zones/journal.py
-- [ ] JS2 — Define trades table (id, symbol, side, entry, sl, tp1, tp2, status, open_time, close_time, pnl)
-- [ ] JS3 — Define positions table (id, symbol, side, size, entry, current_sl, tp1, tp2, strategy_id)
-- [ ] JS4 — Define epochs table (id, strategy_id, user_id, open_balance, close_balance, profit, platform_fee, timestamp)
-- [ ] JS5 — Write `log_trade_open(trade)` — insert trade row
-- [ ] JS6 — Write `log_trade_close(trade_id, exit_price, pnl)` — update trade row
-- [ ] JS7 — Write `get_open_trades()` — query open trades
-- [ ] JS8 — Write `log_epoch(epoch)` — insert epoch settlement row
-- [ ] JS9 — Create trading_agent/strategies/sd_zones/state.py
-- [ ] JS10 — Define in-memory state: open_trades dict, watchlist dict, last_scan_time, scan_complete flag
+- [x] JS1 — Create trading_agent/strategies/sd_zones/journal.py
+- [x] JS2 — Define trades table (id, symbol, side, entry, sl, tp1, tp2, status, open_time, close_time, pnl)
+- [x] JS3 — Define positions table (id, symbol, side, size, entry, current_sl, tp1, tp2, strategy_id)
+- [x] JS4 — Define epochs table (id, strategy_id, user_id, open_balance, close_balance, profit, platform_fee, timestamp)
+- [x] JS5 — Write `log_trade_open(trade)` — insert trade row
+- [x] JS6 — Write `log_trade_close(trade_id, exit_price, pnl)` — update trade row
+- [x] JS7 — Write `get_open_trades()` — query open trades
+- [x] JS8 — Write `log_epoch(epoch)` — insert epoch settlement row
+- [x] JS9 — Create trading_agent/strategies/sd_zones/state.py
+- [x] JS10 — Define in-memory state: open_trades dict, watchlist dict, last_scan_time, scan_complete flag
 
 ---
 
