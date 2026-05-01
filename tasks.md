@@ -262,25 +262,25 @@
 - [x] SE8 — Write 30m candle body-close SL check — runs every 30 min
 - [x] SE9 — Wick logic: if candle wicks past SL but body closes above → ignore
 - [x] SE10 — Write `start()` — launch all 3 watchers as asyncio tasks
-- [ ] SE11 — Write `stop()` — graceful shutdown of all watchers
-- [ ] SE12 — Test sentinel zone touch detection on devnet with mock prices
+- [x] SE11 — Write `stop()` — graceful shutdown of all watchers
+- [x] SE12 — Test sentinel zone touch detection on devnet with mock prices
 
 ---
 
 ## TRADE AGENT (trade_agent.py)
 
-- [ ] TA1 — Create trading_agent/strategies/sd_zones/trade_agent.py
-- [ ] TA2 — Write `enter_trade(symbol, side, entry, sl, tp1, tp2)` — place 4 orders at once
-- [ ] TA3 — Place market entry order via exchange_base
-- [ ] TA4 — Place TP1 limit order (50% qty) via exchange_base
-- [ ] TA5 — Place TP2 limit order (50% qty) via exchange_base
-- [ ] TA6 — Place disaster SL order (structural + 3% buffer) via exchange_base
-- [ ] TA7 — Write `on_tp1_hit(symbol)` — move SL to entry (break-even)
-- [ ] TA8 — Write `on_sl_hit(symbol)` — log trade, update journal
-- [ ] TA9 — Write `on_tp2_hit(symbol)` — log trade complete, update journal
-- [ ] TA10 — Write `on_body_close_sl(symbol)` — close position, log trade
-- [ ] TA11 — Write `get_open_trades()` — return list of active trades
-- [ ] TA12 — Test enter_trade on devnet — verify all 4 orders placed correctly
+- [x] TA1 — Create trading_agent/strategies/sd_zones/trade_agent.py
+- [x] TA2 — Write `enter_trade(symbol, side, entry, sl, tp1, tp2)` — place 4 orders at once
+- [x] TA3 — Place market entry order via exchange_base
+- [x] TA4 — Place TP1 limit order (50% qty) via exchange_base
+- [x] TA5 — Place TP2 limit order (50% qty) via exchange_base
+- [x] TA6 — Place disaster SL order (structural + 3% buffer) via exchange_base
+- [x] TA7 — Write `on_tp1_hit(symbol)` — move SL to entry (break-even)
+- [x] TA8 — Write `on_sl_hit(symbol)` — log trade, update journal
+- [x] TA9 — Write `on_tp2_hit(symbol)` — log trade complete, update journal
+- [x] TA10 — Write `on_body_close_sl(symbol)` — close position, log trade
+- [x] TA11 — Write `get_open_trades()` — return list of active trades
+- [x] TA12 — Test enter_trade on devnet — verify all 4 orders placed correctly
 
 ---
 

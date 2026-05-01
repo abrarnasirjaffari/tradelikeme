@@ -22,6 +22,7 @@ import OpenSourcePage from './pages/OpenSourcePage'
 import JoinWaitlist from './pages/JoinWaitlist'
 import PrivacyPage from './pages/PrivacyPage'
 import TermsPage from './pages/TermsPage'
+import SignupPage from './pages/SignupPage'
 import DocsPage from './pages/docs/DocsPage'
 import BlogPage from './pages/blog/BlogPage'
 import BlogPostPage from './pages/blog/BlogPostPage'
@@ -46,6 +47,8 @@ export default function App() {
   if (page === '/how-it-works')  return <HowItWorksPage />
   if (page === '/pricing')       return <PricingPage />
   if (page === '/open-source')   return <OpenSourcePage />
+  if (page === '/signup')         return <SignupPage />
+  if (page === '/login')          return <SignupPage />
   if (page === '/privacy')       return <PrivacyPage />
   if (page === '/terms')         return <TermsPage />
   if (page.startsWith('/docs'))  return <DocsPage />
