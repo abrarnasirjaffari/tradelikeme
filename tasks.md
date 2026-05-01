@@ -376,7 +376,7 @@
 
 - [x] FA1 — Create backend/main.py — FastAPI app, CORS, startup/shutdown hooks
 - [x] FA2 — Create backend/routes/strategies.py — GET /strategies, GET /strategies/{id}
-- [ ] FA3 — Create backend/routes/subscriptions.py — POST/DELETE /subscriptions
+- [x] FA3 — Create backend/routes/subscriptions.py — POST/DELETE /subscriptions
 - [ ] FA4 — Create backend/routes/vaults.py — GET /vaults, POST /deposit, POST /withdraw
 - [ ] FA5 — Create backend/routes/trades.py — GET /trades, GET /pnl
 - [ ] FA6 — Create backend/routes/notifications.py — GET/POST /notifications/config, POST /test
