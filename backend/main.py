@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 from backend.models.base import init_db
+from backend.routes import strategies
 
 load_dotenv()
 
@@ -31,6 +32,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+app.include_router(strategies.router)
 
 
 @app.get("/health")
