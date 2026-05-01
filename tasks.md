@@ -356,14 +356,19 @@
 
 ---
 
-## DATABASE — PLATFORM (platform.db)
+## DATABASE — PLATFORM (Supabase Postgres)
 
-- [ ] DB1 — Create backend/models/user.py — users table (id, email, wallet_pubkey, risk_mode, created_at)
-- [ ] DB2 — Create backend/models/strategy.py — strategies table (id, name, tier, win_rate, monthly_return, status)
-- [ ] DB3 — Create backend/models/subscription.py — subscriptions table (user_id, strategy_id, vault_address, status)
-- [ ] DB4 — Create backend/models/notification_config.py — notification prefs table
-- [ ] DB5 — Write `init_db()` — create all tables if not exist
-- [ ] DB6 — Test DB init — all tables created correctly
+> Database changed from SQLite to Supabase (hosted Postgres). Using SQLAlchemy + psycopg2 for ORM consistency.
+
+- [x] DB0 — Create Supabase project, copy Postgres connection string, add SUPABASE_DATABASE_URL to .env — self-hosted on EC2, password from /opt/supabase/docker/.env
+- [x] DB0b — Add psycopg2-binary to requirements.txt, run pip install
+- [x] DB1 — Create backend/models/user.py — users table (id, email, wallet_pubkey, risk_mode, created_at)
+- [x] DB2 — Create backend/models/strategy.py — strategies table (id, name, tier, win_rate, monthly_return, status)
+- [x] DB3 — Create backend/models/subscription.py — subscriptions table (user_id, strategy_id, vault_address, status)
+- [x] DB4 — Create backend/models/notification_config.py — notification prefs table
+- [x] DB5 — Create backend/models/base.py — SQLAlchemy declarative base + engine using SUPABASE_DATABASE_URL
+- [x] DB6 — Write `init_db()` in backend/models/base.py — create all tables if not exist
+- [x] DB7 — Test DB init — all tables created in Supabase dashboard (users, strategies, subscriptions, notification_configs verified)
 
 ---
 
