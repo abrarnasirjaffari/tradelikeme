@@ -286,11 +286,11 @@
 
 ## LOOP ORCHESTRATOR (loop.py)
 
-- [ ] LO1 — Create trading_agent/strategies/sd_zones/loop.py
-- [ ] LO2 — Write `startup()` — load config, init exchange, start sentinel
-- [ ] LO3 — Write zone refresh cycle — rescan all coins every 4H
-- [ ] LO4 — Write entry gate — block entries until first full scan completes
-- [ ] LO5 — Write `check_entry(symbol, zones)` — validate setup, check all gates
+- [x] LO1 — Create trading_agent/strategies/sd_zones/loop.py
+- [x] LO2 — Write `startup()` — load config, init exchange, start sentinel
+- [x] LO3 — Write zone refresh cycle — rescan all coins every 4H
+- [x] LO4 — Write entry gate — block entries until first full scan completes
+- [x] LO5 — Write `check_entry(symbol, zones)` — validate setup, check all gates
 - [ ] LO6 — Write MAX_AT_RISK_SLOTS enforcement — max 2 concurrent positions
 - [ ] LO7 — Write MIN_BALANCE check — stop trading if balance below threshold
 - [ ] LO8 — Write compound cycle — every 72H recalculate position sizing
