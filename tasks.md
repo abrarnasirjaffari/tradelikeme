@@ -378,7 +378,7 @@
 - [x] FA2 — Create backend/routes/strategies.py — GET /strategies, GET /strategies/{id}
 - [x] FA3 — Create backend/routes/subscriptions.py — POST/DELETE /subscriptions
 - [x] FA4 — Create backend/routes/vaults.py — GET /vaults, POST /deposit, POST /withdraw
-- [ ] FA5 — Create backend/routes/trades.py — GET /trades, GET /pnl
+- [x] FA5 — Create backend/routes/trades.py — GET /trades, GET /pnl
 - [ ] FA6 — Create backend/routes/notifications.py — GET/POST /notifications/config, POST /test
 - [ ] FA7 — Create backend/routes/users.py — GET/POST /users/{id}/risk-mode
 - [ ] FA8 — Create backend/routes/admin.py — POST /strategies (add new), GET /admin/revenue
