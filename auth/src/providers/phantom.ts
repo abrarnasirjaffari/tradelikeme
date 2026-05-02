@@ -1,13 +1,12 @@
-import type { BetterAuthPlugin } from "@better-auth/core";
-import { createAuthEndpoint } from "@better-auth/core/api";
+import type { BetterAuthPlugin } from "better-auth";
+import { createAuthEndpoint, APIError, isAPIError } from "better-auth/api";
+import { setSessionCookie } from "better-auth/cookies";
 import { ed25519 } from "@noble/curves/ed25519.js";
 import * as z from "zod";
-import { APIError } from "../api/index.js";
-import { setSessionCookie } from "../cookies/index.js";
-import { isAPIError } from "../utils/is-api-error.js";
-import { PACKAGE_VERSION } from "../version.js";
 
-declare module "@better-auth/core" {
+const PACKAGE_VERSION = "1.6.9";
+
+declare module "better-auth" {
   interface BetterAuthPluginRegistry<AuthOptions, Options> {
     phantom: {
       creator: typeof phantom;

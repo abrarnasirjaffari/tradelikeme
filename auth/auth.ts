@@ -1,8 +1,8 @@
 import { PostgresDialect } from "kysely";
 import pg from "pg";
-import { betterAuth } from "./src/index.js";
-import { admin } from "./src/plugins/admin/index.js";
-import { twoFactor } from "./src/plugins/two-factor/index.js";
+import { betterAuth } from "better-auth";
+import { admin } from "better-auth/plugins/admin";
+import { twoFactor } from "better-auth/plugins/two-factor";
 import { phantom } from "./src/providers/phantom.js";
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "").split(",").map(e => e.trim()).filter(Boolean);
