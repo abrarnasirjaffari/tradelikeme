@@ -401,8 +401,8 @@
 - [x] DO6 — Create Dockerfile for FastAPI backend
 - [x] DO7 — Install Dokploy on EC2 (`curl -sSL https://dokploy.com/install.sh | bash`) — already running v0.29.2, dokploy-traefik owns ports 80+443
 - [x] DO8 — Configure Traefik routing in Dokploy (`api.tradelikeme.xyz` → FastAPI) — dynamic config written to /etc/dokploy/traefik/dynamic/tradelikeme-api.yml on EC2
-- [ ] DO9 — Deploy via Dokploy — all services running
-- [ ] DO10 — Verify auto-SSL cert issued for api.tradelikeme.xyz
+- [x] DO9 — Deploy via Dokploy — all services running (backend on :8001, agent running, DB via supabase_default network)
+- [x] DO10 — Verify auto-SSL cert issued for api.tradelikeme.xyz — Let's Encrypt R13 cert active, Verify OK
 
 ---
 
