@@ -28,6 +28,7 @@ import BlogPage from './pages/blog/BlogPage'
 import BlogPostPage from './pages/blog/BlogPostPage'
 import DashboardPage from './pages/DashboardPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import PublicOnlyRoute from './components/PublicOnlyRoute'
 
@@ -92,6 +93,7 @@ export default function App() {
         <Route path="/signup" element={<PublicOnlyRoute><SignupPage /></PublicOnlyRoute>} />
         <Route path="/login" element={<PublicOnlyRoute><SignupPage /></PublicOnlyRoute>} />
         <Route path="/forgot-password" element={<PublicOnlyRoute><ForgotPasswordPage /></PublicOnlyRoute>} />
+        <Route path="/reset-password" element={<PublicOnlyRoute><ResetPasswordPage /></PublicOnlyRoute>} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/docs/*" element={<DocsPage />} />
