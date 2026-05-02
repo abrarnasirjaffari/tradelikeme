@@ -47,11 +47,11 @@ Goal: Configure all auth features we need before touching the frontend.
   - Two endpoints: `GET /api/auth/phantom/nonce` (returns one-time nonce) + `POST /api/auth/phantom/verify` (verifies signed message, returns session)
   - User table: add `walletAddress` field (nullable — only set for Phantom users or users who link wallet)
   - Account table: `providerId = "phantom"`, `accountId = base58_wallet_address`
-- [ ] **BA18** — Sessions — set `expiresIn: 30 * 24 * 60 * 60` (30 days), `updateAge: 24 * 60 * 60` (refresh daily)
-- [ ] **BA19** — Two-factor auth (TOTP) — add `twoFactor()` plugin
-- [ ] **BA20** — Admin plugin — add `admin()` plugin, set admin user role for `abrarnasirjaffari@hacklikeme.com`
-- [ ] **BA21** — Rate limiting — add `rateLimit()` plugin (10 attempts / 15 min on login)
-- [ ] **BA22** — Add all new env vars to `frontend/.env.local` and `frontend/.env.example`: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `TWITTER_CLIENT_ID`, `TWITTER_CLIENT_SECRET`
+- [x] **BA18** — Sessions — set `expiresIn: 30 * 24 * 60 * 60` (30 days), `updateAge: 24 * 60 * 60` (refresh daily)
+- [x] **BA19** — Two-factor auth (TOTP) — add `twoFactor()` plugin
+- [x] **BA20** — Admin plugin — add `admin()` plugin, set admin user role for `abrarnasirjaffari@hacklikeme.com`
+- [x] **BA21** — Rate limiting — add `rateLimit()` plugin (10 attempts / 15 min on login)
+- [x] **BA22** — Add all new env vars to `frontend/.env.local` and `frontend/.env.example`: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `TWITTER_CLIENT_ID`, `TWITTER_CLIENT_SECRET`
 
 ---
 
