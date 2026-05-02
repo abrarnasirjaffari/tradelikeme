@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 from backend.models.base import init_db
-from backend.routes import strategies, subscriptions, vaults, trades
+from backend.routes import strategies, subscriptions, vaults, trades, notifications, users, admin, agent, ws
 
 load_dotenv()
 
@@ -38,6 +38,11 @@ app.include_router(strategies.router)
 app.include_router(subscriptions.router)
 app.include_router(vaults.router)
 app.include_router(trades.router)
+app.include_router(notifications.router)
+app.include_router(users.router)
+app.include_router(admin.router)
+app.include_router(agent.router)
+app.include_router(ws.router)
 
 
 @app.get("/health")

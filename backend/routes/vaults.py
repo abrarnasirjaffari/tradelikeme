@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from backend.auth import CurrentUser, require_auth
 from backend.models.base import get_db
 from backend.models.subscription import Subscription
 from backend.models.user import User
@@ -37,7 +38,7 @@ class TxResponse(BaseModel):
 
 
 @router.get("/users/{user_id}/vaults", response_model=list[VaultOut])
-def list_user_vaults(user_id: UUID, db: Session = Depends(get_db)):
+def list_user_vaults(user_id: UUID, db: Session = Depends(get_db), _: CurrentUser = Depends(require_auth)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -59,7 +60,7 @@ def list_user_vaults(user_id: UUID, db: Session = Depends(get_db)):
 
 
 @router.post("/vaults/{subscription_id}/deposit", response_model=TxResponse)
-def deposit(subscription_id: UUID, body: DepositRequest, db: Session = Depends(get_db)):
+def deposit(subscription_id: UUID, body: DepositRequest, db: Session = Depends(get_db), _: CurrentUser = Depends(require_auth)):
     sub = db.query(Subscription).filter(Subscription.id == subscription_id).first()
     if not sub:
         raise HTTPException(status_code=404, detail="Subscription not found")
@@ -80,7 +81,7 @@ def deposit(subscription_id: UUID, body: DepositRequest, db: Session = Depends(g
 
 
 @router.post("/vaults/{subscription_id}/withdraw", response_model=TxResponse)
-def withdraw(subscription_id: UUID, body: WithdrawRequest, db: Session = Depends(get_db)):
+def withdraw(subscription_id: UUID, body: WithdrawRequest, db: Session = Depends(get_db), _: CurrentUser = Depends(require_auth)):
     sub = db.query(Subscription).filter(Subscription.id == subscription_id).first()
     if not sub:
         raise HTTPException(status_code=404, detail="Subscription not found")

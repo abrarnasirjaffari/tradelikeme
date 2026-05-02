@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from backend.auth import CurrentUser, require_auth
 from backend.models.base import get_db
 from backend.models.subscription import Subscription
 from backend.models.user import User
@@ -30,7 +31,7 @@ class SubscriptionOut(BaseModel):
 
 
 @router.post("", response_model=SubscriptionOut, status_code=201)
-def create_subscription(body: SubscriptionCreate, db: Session = Depends(get_db)):
+def create_subscription(body: SubscriptionCreate, db: Session = Depends(get_db), _: CurrentUser = Depends(require_auth)):
     user = db.query(User).filter(User.id == body.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -63,7 +64,7 @@ def create_subscription(body: SubscriptionCreate, db: Session = Depends(get_db))
 
 
 @router.delete("/{subscription_id}", status_code=204)
-def cancel_subscription(subscription_id: UUID, db: Session = Depends(get_db)):
+def cancel_subscription(subscription_id: UUID, db: Session = Depends(get_db), _: CurrentUser = Depends(require_auth)):
     sub = db.query(Subscription).filter(Subscription.id == subscription_id).first()
     if not sub:
         raise HTTPException(status_code=404, detail="Subscription not found")

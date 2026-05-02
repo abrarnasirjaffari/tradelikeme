@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from backend.auth import CurrentUser, require_auth
 from backend.models.base import get_db
 from backend.models.user import User
 from trading_agent.strategies.sd_zones.journal import (
@@ -47,7 +48,7 @@ def _require_user(user_id: UUID, db: Session):
 
 
 @router.get("/users/{user_id}/trades", response_model=list[TradeOut])
-def list_trades(user_id: UUID, db: Session = Depends(get_db)):
+def list_trades(user_id: UUID, db: Session = Depends(get_db), _: CurrentUser = Depends(require_auth)):
     _require_user(user_id, db)
 
     if not DB_PATH.exists():
@@ -60,7 +61,7 @@ def list_trades(user_id: UUID, db: Session = Depends(get_db)):
 
 
 @router.get("/users/{user_id}/pnl", response_model=PnlSummary)
-def get_pnl(user_id: UUID, db: Session = Depends(get_db)):
+def get_pnl(user_id: UUID, db: Session = Depends(get_db), _: CurrentUser = Depends(require_auth)):
     _require_user(user_id, db)
 
     if not DB_PATH.exists():

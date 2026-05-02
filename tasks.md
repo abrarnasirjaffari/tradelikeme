@@ -379,15 +379,15 @@
 - [x] FA3 — Create backend/routes/subscriptions.py — POST/DELETE /subscriptions
 - [x] FA4 — Create backend/routes/vaults.py — GET /vaults, POST /deposit, POST /withdraw
 - [x] FA5 — Create backend/routes/trades.py — GET /trades, GET /pnl
-- [ ] FA6 — Create backend/routes/notifications.py — GET/POST /notifications/config, POST /test
-- [ ] FA7 — Create backend/routes/users.py — GET/POST /users/{id}/risk-mode
-- [ ] FA8 — Create backend/routes/admin.py — POST /strategies (add new), GET /admin/revenue
-- [ ] FA9 — Create backend/routes/agent.py — POST /agent/start, POST /agent/stop, GET /agent/status
-- [ ] FA10 — Add JWT validation middleware — verify BetterAuth token on every request
-- [ ] FA11 — Add WebSocket endpoint `WS /ws/live` — push live updates to website
-- [ ] FA12 — Test GET /strategies returns correct data
-- [ ] FA13 — Test POST /subscriptions creates vault record
-- [ ] FA14 — Test WS /ws/live delivers price update
+- [x] FA6 — Create backend/routes/notifications.py — GET/POST /notifications/config, POST /test
+- [x] FA7 — Create backend/routes/users.py — GET/POST /users/{id}/risk-mode
+- [x] FA8 — Create backend/routes/admin.py — POST /strategies (add new), GET /admin/revenue
+- [x] FA9 — Create backend/routes/agent.py — POST /agent/start, POST /agent/stop, GET /agent/status
+- [x] FA10 — Add JWT validation middleware — verify BetterAuth token on every request
+- [x] FA11 — Add WebSocket endpoint `WS /ws/live` — push live updates to website
+- [x] FA12 — Test GET /strategies returns correct data
+- [x] FA13 — Test POST /subscriptions creates vault record
+- [x] FA14 — Test WS /ws/live delivers price update
 
 ---
 
