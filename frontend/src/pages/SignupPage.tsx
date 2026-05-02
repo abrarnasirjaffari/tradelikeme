@@ -1,5 +1,6 @@
 import { useState, FormEvent } from 'react'
 import { ArrowUpRight } from 'lucide-react'
+import { toast } from 'sonner'
 import FadingVideo from '../components/FadingVideo'
 import ScrollProgress from '../components/ScrollProgress'
 import WaitlistNavbar from './WaitlistNavbar'
@@ -13,34 +14,33 @@ export default function SignupPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   const { signUp, signIn, signInWithPhantom } = useAuth()
 
   async function handlePhantom() {
-    setError('')
     setLoading(true)
     const result = await signInWithPhantom()
     setLoading(false)
     if (result.error) {
-      setError(result.error)
+      toast.error(result.error)
     } else {
+      toast.success('Signed in with Phantom')
       window.location.pathname = '/dashboard'
     }
   }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    setError('')
     setLoading(true)
     const result = tab === 'signup'
       ? await signUp(email, password, name)
       : await signIn(email, password)
     setLoading(false)
     if (result.error) {
-      setError(result.error)
+      toast.error(result.error)
     } else {
+      toast.success(tab === 'signup' ? 'Account created!' : 'Signed in!')
       window.location.pathname = '/dashboard'
     }
   }
@@ -64,7 +64,7 @@ export default function SignupPage() {
             {/* tab switcher */}
             <div className="liquid-glass" style={{ borderRadius: 9999, padding: '4px', display: 'flex', gap: '4px' }}>
               {(['signup', 'login'] as const).map(t => (
-                <button key={t} type="button" onClick={() => { setTab(t); setError('') }} style={{
+                <button key={t} type="button" onClick={() => setTab(t)} style={{
                   flex: 1, borderRadius: 9999, padding: '8px 0',
                   fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: '13px',
                   border: 'none', cursor: 'pointer', transition: 'all 0.2s',
@@ -100,13 +100,6 @@ export default function SignupPage() {
                 <input type="password" placeholder="••••••••" className="liquid-glass" style={inputStyle}
                   value={password} onChange={e => setPassword(e.target.value)} required />
               </div>
-
-              {/* error message */}
-              {error && (
-                <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: '13px', color: '#ff4d4f', margin: 0 }}>
-                  {error}
-                </p>
-              )}
 
               {/* submit */}
               <button type="submit" disabled={loading} style={{

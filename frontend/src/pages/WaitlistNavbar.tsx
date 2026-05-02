@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ArrowUpRight, X, LogOut } from 'lucide-react'
+import { toast } from 'sonner'
 import { useAuth } from '../context/AuthContext'
 
 function navigate(path: string) {
@@ -23,6 +24,7 @@ export default function WaitlistNavbar() {
   async function handleSignOut() {
     setOpen(false)
     await signOut()
+    toast.success('Signed out')
     navigate('/')
   }
 
