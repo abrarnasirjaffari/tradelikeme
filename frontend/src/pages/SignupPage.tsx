@@ -107,7 +107,17 @@ export default function SignupPage() {
                 background: loading ? 'rgba(0,82,255,0.5)' : '#0052FF', color: '#fff', borderRadius: 9999, padding: '13px 24px',
                 border: 'none', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               }}>
-                {loading ? 'Please wait…' : <>{tab === 'signup' ? 'Create Account' : 'Log In'} <ArrowUpRight size={15} /></>}
+                {loading ? (
+                  <>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ animation: 'spin 0.75s linear infinite', flexShrink: 0 }}>
+                      <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" strokeWidth="3" />
+                      <path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" strokeWidth="3" strokeLinecap="round" />
+                    </svg>
+                    {tab === 'signup' ? 'Creating account…' : 'Signing in…'}
+                  </>
+                ) : (
+                  <>{tab === 'signup' ? 'Create Account' : 'Log In'} <ArrowUpRight size={15} /></>
+                )}
               </button>
 
               {/* divider */}
@@ -158,10 +168,17 @@ export default function SignupPage() {
                   color: 'rgba(255,255,255,0.75)', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', background: 'transparent',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
                 }}>
-                <svg width="14" height="14" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
-                  <circle cx="64" cy="64" r="64" fill="#AB9FF2"/>
-                  <path d="M86 48c0-12-9.6-20-22-20S42 36 42 48c0 8 4.4 14.8 11 18.4V82l11 8 11-8V66.4C81.6 62.8 86 56 86 48z" fill="white"/>
-                </svg>
+                {loading ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ animation: 'spin 0.75s linear infinite', flexShrink: 0 }}>
+                    <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.2)" strokeWidth="3" />
+                    <path d="M12 2a10 10 0 0 1 10 10" stroke="rgba(255,255,255,0.7)" strokeWidth="3" strokeLinecap="round" />
+                  </svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+                    <circle cx="64" cy="64" r="64" fill="#AB9FF2"/>
+                    <path d="M86 48c0-12-9.6-20-22-20S42 36 42 48c0 8 4.4 14.8 11 18.4V82l11 8 11-8V66.4C81.6 62.8 86 56 86 48z" fill="white"/>
+                  </svg>
+                )}
                 Phantom
               </button>
               </div>

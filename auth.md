@@ -93,7 +93,7 @@ Goal: Redirect unauthenticated users away from protected pages.
 Goal: Make auth flows feel complete and production-ready.
 
 - [x] **BA37** — Add toast notification system (`sonner` or `react-hot-toast`) — show success/error on all auth actions
-- [ ] **BA38** — Add loading spinner on Sign In / Sign Up buttons while request is in flight
+- [x] **BA38** — Add loading spinner on Sign In / Sign Up buttons while request is in flight
 - [ ] **BA39** — Forgot password page + form → `authClient.forgetPassword()` call
 - [ ] **BA40** — Reset password page (handles `?token=` from email link) → `authClient.resetPassword()`
 - [ ] **BA41** — Email verification banner on dashboard for unverified accounts → `authClient.sendVerificationEmail()`
