@@ -28,6 +28,7 @@ import BlogPage from './pages/blog/BlogPage'
 import BlogPostPage from './pages/blog/BlogPostPage'
 import DashboardPage from './pages/DashboardPage'
 import ProtectedRoute from './components/ProtectedRoute'
+import PublicOnlyRoute from './components/PublicOnlyRoute'
 
 const HR = <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.07)', margin: '0 10rem' }} />
 
@@ -87,8 +88,8 @@ export default function App() {
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/open-source" element={<OpenSourcePage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/login" element={<SignupPage />} />
+        <Route path="/signup" element={<PublicOnlyRoute><SignupPage /></PublicOnlyRoute>} />
+        <Route path="/login" element={<PublicOnlyRoute><SignupPage /></PublicOnlyRoute>} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/docs/*" element={<DocsPage />} />
