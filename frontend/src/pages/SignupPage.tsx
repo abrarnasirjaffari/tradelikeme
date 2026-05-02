@@ -1,5 +1,6 @@
 import { useState, FormEvent } from 'react'
 import { ArrowUpRight } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import FadingVideo from '../components/FadingVideo'
 import ScrollProgress from '../components/ScrollProgress'
@@ -17,6 +18,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
 
   const { signUp, signIn, signInWithPhantom } = useAuth()
+  const navigate = useNavigate()
 
   async function handlePhantom() {
     setLoading(true)
@@ -100,6 +102,17 @@ export default function SignupPage() {
                 <input type="password" placeholder="••••••••" className="liquid-glass" style={inputStyle}
                   value={password} onChange={e => setPassword(e.target.value)} required />
               </div>
+
+              {/* forgot password — login tab only */}
+              {tab === 'login' && (
+                <div style={{ textAlign: 'right', marginTop: '-0.5rem' }}>
+                  <button type="button" onClick={() => navigate('/forgot-password')}
+                    style={{ fontFamily: "'Barlow', sans-serif", fontSize: '12px', color: 'rgba(255,255,255,0.4)', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+                    onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.75)')}
+                    onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.4)')}
+                  >Forgot password?</button>
+                </div>
+              )}
 
               {/* submit */}
               <button type="submit" disabled={loading} style={{
