@@ -2,6 +2,7 @@ import WaitlistNavbar from './WaitlistNavbar'
 import Footer from '../components/Footer'
 import FadingVideo from '../components/FadingVideo'
 import ScrollProgress from '../components/ScrollProgress'
+import EmailVerificationBanner from '../components/EmailVerificationBanner'
 
 export default function DashboardPage() {
   return (
@@ -14,6 +15,7 @@ export default function DashboardPage() {
       <div style={{ position: 'relative', zIndex: 1 }}>
         <ScrollProgress />
         <WaitlistNavbar />
+        <EmailVerificationBanner />
         <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8rem 2rem 4rem' }}>
           <div className="liquid-glass" style={{ borderRadius: '1.75rem', padding: '3rem', textAlign: 'center', maxWidth: 480 }}>
             <span style={{ fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', color: '#fff', fontSize: '1.25rem', letterSpacing: '-0.5px', display: 'block', marginBottom: '1rem' }}>TradeLikeMe</span>

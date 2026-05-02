@@ -17,6 +17,16 @@ export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3001",
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: false,
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      // In production, replace with a real email sender (Resend, SES, etc.)
+      // For now, log the link so it can be tested manually via server logs.
+      console.log(`[EMAIL VERIFICATION] To: ${user.email} | Link: ${url}`);
+    },
   },
   session: {
     expiresIn: 30 * 24 * 60 * 60,
