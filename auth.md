@@ -110,7 +110,7 @@ Goal: Auth server running on EC2 behind Traefik, accessible at `auth.tradelikeme
 - [x] **BA45** — Add Traefik label to auth service: route `auth.tradelikeme.xyz` → port 3001
 - [x] **BA46** — Add Cloudflare DNS A record: `auth.tradelikeme.xyz` → `54.179.141.76`
 - [x] **BA47** — Add all production env vars to Dokploy dashboard for `auth` service
-- [ ] **BA48** — Deploy + smoke test: `POST https://auth.tradelikeme.xyz/api/auth/sign-up/email` returns 200
+- [x] **BA48** — Deploy + smoke test: `POST https://auth.tradelikeme.xyz/api/auth/sign-up/email` returns 200
 
 ---
 
