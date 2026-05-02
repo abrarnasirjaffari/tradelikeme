@@ -59,11 +59,11 @@ Goal: Configure all auth features we need before touching the frontend.
 
 Goal: Wire the existing SignupPage + LoginPage UI to the auth server. No UI changes yet — just plumbing.
 
-- [ ] **BA23** — Install `better-auth` client package in `frontend/`: `npm install better-auth` (npm version, for the client SDK only)
-- [ ] **BA24** — Create `frontend/src/lib/auth-client.ts` — initialise BetterAuth client pointing to `http://localhost:3001/api/auth` (dev) / `https://auth.tradelikeme.xyz/api/auth` (prod)
-- [ ] **BA25** — Create `frontend/src/context/AuthContext.tsx` — React context that exposes `user`, `session`, `loading`, `signIn`, `signUp`, `signOut`
-- [ ] **BA26** — Wrap `frontend/src/main.tsx` with `<AuthProvider>`
-- [ ] **BA27** — Wire `SignupPage.tsx` form submit → `authClient.signUp.email()` — handle success (redirect to dashboard) + error (show message)
+- [x] **BA23** — Install `better-auth` client package in `frontend/`: `npm install better-auth` (npm version, for the client SDK only)
+- [x] **BA24** — Create `frontend/src/lib/auth-client.ts` — initialise BetterAuth client pointing to `http://localhost:3001/api/auth` (dev) / `https://auth.tradelikeme.xyz/api/auth` (prod)
+- [x] **BA25** — Create `frontend/src/context/AuthContext.tsx` — React context that exposes `user`, `session`, `loading`, `signIn`, `signUp`, `signOut`
+- [x] **BA26** — Wrap `frontend/src/main.tsx` with `<AuthProvider>`
+- [x] **BA27** — Wire `SignupPage.tsx` form submit → `authClient.signUp.email()` — handle success (redirect to dashboard) + error (show message)
 - [ ] **BA28** — Wire `LoginPage.tsx` form submit → `authClient.signIn.email()` — handle success + error
 - [ ] **BA29** — Add Google sign-in button handler → `authClient.signIn.social({ provider: 'google' })`
 - [ ] **BA30** — Add GitHub sign-in button handler → `authClient.signIn.social({ provider: 'github' })`

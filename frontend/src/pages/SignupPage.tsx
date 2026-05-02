@@ -1,13 +1,34 @@
-import { useState } from 'react'
+import { useState, FormEvent } from 'react'
 import { ArrowUpRight } from 'lucide-react'
 import FadingVideo from '../components/FadingVideo'
 import ScrollProgress from '../components/ScrollProgress'
 import WaitlistNavbar from './WaitlistNavbar'
 import Footer from '../components/Footer'
 import { inputStyle, labelStyle, fieldWrap } from './formStyles'
+import { useAuth } from '../context/AuthContext'
 
 export default function SignupPage() {
   const [tab, setTab] = useState<'signup' | 'login'>(window.location.pathname === '/login' ? 'login' : 'signup')
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const { signUp } = useAuth()
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    const result = await signUp(email, password, name)
+    setLoading(false)
+    if (result.error) {
+      setError(result.error)
+    } else {
+      window.location.pathname = '/dashboard'
+    }
+  }
 
   return (
     <div style={{ background: '#000' }}>
@@ -28,7 +49,7 @@ export default function SignupPage() {
             {/* tab switcher */}
             <div className="liquid-glass" style={{ borderRadius: 9999, padding: '4px', display: 'flex', gap: '4px' }}>
               {(['signup', 'login'] as const).map(t => (
-                <button key={t} type="button" onClick={() => setTab(t)} style={{
+                <button key={t} type="button" onClick={() => { setTab(t); setError('') }} style={{
                   flex: 1, borderRadius: 9999, padding: '8px 0',
                   fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: '13px',
                   border: 'none', cursor: 'pointer', transition: 'all 0.2s',
@@ -40,35 +61,45 @@ export default function SignupPage() {
               ))}
             </div>
 
-            <form style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
 
               {/* name — signup only */}
               {tab === 'signup' && (
                 <div style={fieldWrap}>
                   <label style={labelStyle}>Full Name</label>
-                  <input type="text" placeholder="Your name" className="liquid-glass" style={inputStyle} />
+                  <input type="text" placeholder="Your name" className="liquid-glass" style={inputStyle}
+                    value={name} onChange={e => setName(e.target.value)} required />
                 </div>
               )}
 
               {/* email */}
               <div style={fieldWrap}>
                 <label style={labelStyle}>Email</label>
-                <input type="email" placeholder="your@email.com" className="liquid-glass" style={inputStyle} />
+                <input type="email" placeholder="your@email.com" className="liquid-glass" style={inputStyle}
+                  value={email} onChange={e => setEmail(e.target.value)} required />
               </div>
 
               {/* password */}
               <div style={fieldWrap}>
                 <label style={labelStyle}>Password</label>
-                <input type="password" placeholder="••••••••" className="liquid-glass" style={inputStyle} />
+                <input type="password" placeholder="••••••••" className="liquid-glass" style={inputStyle}
+                  value={password} onChange={e => setPassword(e.target.value)} required />
               </div>
 
+              {/* error message */}
+              {error && (
+                <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: '13px', color: '#ff4d4f', margin: 0 }}>
+                  {error}
+                </p>
+              )}
+
               {/* submit */}
-              <button type="submit" style={{
+              <button type="submit" disabled={loading} style={{
                 marginTop: '0.25rem', fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: '15px',
-                background: '#0052FF', color: '#fff', borderRadius: 9999, padding: '13px 24px',
-                border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                background: loading ? 'rgba(0,82,255,0.5)' : '#0052FF', color: '#fff', borderRadius: 9999, padding: '13px 24px',
+                border: 'none', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               }}>
-                {tab === 'signup' ? 'Create Account' : 'Log In'} <ArrowUpRight size={15} />
+                {loading ? 'Please wait…' : <>{tab === 'signup' ? 'Create Account' : 'Log In'} <ArrowUpRight size={15} /></>}
               </button>
 
               {/* divider */}
