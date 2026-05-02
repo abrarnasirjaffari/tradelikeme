@@ -5,11 +5,7 @@ import { admin } from "./src/plugins/admin/index.js";
 import { twoFactor } from "./src/plugins/two-factor/index.js";
 import { phantom } from "./src/providers/phantom.js";
 
-const ADMIN_EMAILS = [
-  "abrarnasirjaffari@hacklikeme.com",
-  "abrarnasirjaffari@gmail.com",
-  "abrarnasirjaffari@tradelikeme.xyz",
-];
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "").split(",").map(e => e.trim()).filter(Boolean);
 
 const { Pool } = pg;
 
