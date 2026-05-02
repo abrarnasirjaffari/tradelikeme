@@ -1,0 +1,35 @@
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../.env
+    environment:
+      - FRONTEND_URL=https://tradelikeme.xyz
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`api.tradelikeme.xyz`)"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.backend.loadbalancer.server.port=8000"
+
+  agent:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.agent
+    env_file:
+      - ../.env
+    environment:
+      - STRATEGY_ID=sd_zones
+    volumes:
+      - agent_data:/app/data
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+volumes:
+  agent_data:

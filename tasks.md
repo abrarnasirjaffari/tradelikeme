@@ -393,14 +393,14 @@
 
 ## DOCKER & DEPLOYMENT (infra/)
 
-- [ ] DO1 — Create infra/docker-compose.yml
-- [ ] DO2 — Add FastAPI backend service to docker-compose
-- [ ] DO3 — Add sd_zones agent service to docker-compose
-- [ ] DO4 — Add SQLite volume mount to docker-compose
-- [ ] DO5 — Create Dockerfile for Python agent
-- [ ] DO6 — Create Dockerfile for FastAPI backend
-- [ ] DO7 — Install Dokploy on EC2 (`curl -sSL https://dokploy.com/install.sh | bash`)
-- [ ] DO8 — Configure Traefik routing in Dokploy (`api.tradelikeme.xyz` → FastAPI)
+- [x] DO1 — Create infra/docker-compose.yml
+- [x] DO2 — Add FastAPI backend service to docker-compose
+- [x] DO3 — Add sd_zones agent service to docker-compose
+- [x] DO4 — Add SQLite volume mount to docker-compose
+- [x] DO5 — Create Dockerfile for Python agent
+- [x] DO6 — Create Dockerfile for FastAPI backend
+- [x] DO7 — Install Dokploy on EC2 (`curl -sSL https://dokploy.com/install.sh | bash`) — already running v0.29.2, dokploy-traefik owns ports 80+443
+- [x] DO8 — Configure Traefik routing in Dokploy (`api.tradelikeme.xyz` → FastAPI) — dynamic config written to /etc/dokploy/traefik/dynamic/tradelikeme-api.yml on EC2
 - [ ] DO9 — Deploy via Dokploy — all services running
 - [ ] DO10 — Verify auto-SSL cert issued for api.tradelikeme.xyz
 
