@@ -64,9 +64,9 @@ Goal: Wire the existing SignupPage + LoginPage UI to the auth server. No UI chan
 - [x] **BA25** — Create `frontend/src/context/AuthContext.tsx` — React context that exposes `user`, `session`, `loading`, `signIn`, `signUp`, `signOut`
 - [x] **BA26** — Wrap `frontend/src/main.tsx` with `<AuthProvider>`
 - [x] **BA27** — Wire `SignupPage.tsx` form submit → `authClient.signUp.email()` — handle success (redirect to dashboard) + error (show message)
-- [ ] **BA28** — Wire `LoginPage.tsx` form submit → `authClient.signIn.email()` — handle success + error
-- [ ] **BA29** — Add Google sign-in button handler → `authClient.signIn.social({ provider: 'google' })`
-- [ ] **BA30** — Add GitHub sign-in button handler → `authClient.signIn.social({ provider: 'github' })`
+- [x] **BA28** — Wire `LoginPage.tsx` form submit → `authClient.signIn.email()` — handle success + error
+- [x] **BA29** — Add Google sign-in button handler → `authClient.signIn.social({ provider: 'google' })`
+- [x] **BA30** — Add GitHub sign-in button handler → `authClient.signIn.social({ provider: 'github' })`
 - [ ] **BA30b** — Add X/Twitter sign-in button handler → `authClient.signIn.social({ provider: 'twitter' })`
 - [ ] **BA30c** — Add Phantom sign-in button handler:
   - Install `@solana/wallet-adapter-react` + `@phantom/connect` in `frontend/`

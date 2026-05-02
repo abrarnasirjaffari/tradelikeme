@@ -6,6 +6,7 @@ import WaitlistNavbar from './WaitlistNavbar'
 import Footer from '../components/Footer'
 import { inputStyle, labelStyle, fieldWrap } from './formStyles'
 import { useAuth } from '../context/AuthContext'
+import { authClient } from '../lib/auth-client'
 
 export default function SignupPage() {
   const [tab, setTab] = useState<'signup' | 'login'>(window.location.pathname === '/login' ? 'login' : 'signup')
@@ -15,13 +16,15 @@ export default function SignupPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const { signUp } = useAuth()
+  const { signUp, signIn } = useAuth()
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const result = await signUp(email, password, name)
+    const result = tab === 'signup'
+      ? await signUp(email, password, name)
+      : await signIn(email, password)
     setLoading(false)
     if (result.error) {
       setError(result.error)
@@ -111,19 +114,26 @@ export default function SignupPage() {
 
               {/* social buttons */}
               <div style={{ display: 'flex', gap: '0.75rem' }}>
-                {[
-                  { label: 'Google', icon: 'G' },
-                  { label: 'GitHub', icon: '⌥' },
-                ].map(({ label, icon }) => (
-                  <button key={label} type="button" className="liquid-glass" style={{
+                <button type="button" className="liquid-glass"
+                  onClick={() => authClient.signIn.social({ provider: 'google', callbackURL: '/dashboard' })}
+                  style={{
                     flex: 1, borderRadius: '0.875rem', padding: '11px 0',
                     fontFamily: "'Barlow', sans-serif", fontWeight: 500, fontSize: '13px',
                     color: 'rgba(255,255,255,0.75)', border: 'none', cursor: 'pointer', background: 'transparent',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
                   }}>
-                    <span style={{ fontWeight: 700 }}>{icon}</span> {label}
-                  </button>
-                ))}
+                  <span style={{ fontWeight: 700 }}>G</span> Google
+                </button>
+                <button type="button" className="liquid-glass"
+                  onClick={() => authClient.signIn.social({ provider: 'github', callbackURL: '/dashboard' })}
+                  style={{
+                    flex: 1, borderRadius: '0.875rem', padding: '11px 0',
+                    fontFamily: "'Barlow', sans-serif", fontWeight: 500, fontSize: '13px',
+                    color: 'rgba(255,255,255,0.75)', border: 'none', cursor: 'pointer', background: 'transparent',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                  }}>
+                  <span style={{ fontWeight: 700 }}>⌥</span> GitHub
+                </button>
               </div>
 
             </form>
