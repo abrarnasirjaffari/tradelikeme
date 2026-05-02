@@ -68,7 +68,7 @@ Goal: Wire the existing SignupPage + LoginPage UI to the auth server. No UI chan
 - [x] **BA29** — Add Google sign-in button handler → `authClient.signIn.social({ provider: 'google' })`
 - [x] **BA30** — Add GitHub sign-in button handler → `authClient.signIn.social({ provider: 'github' })`
 - [x] **BA30b** — Add X/Twitter sign-in button handler → `authClient.signIn.social({ provider: 'twitter' })`
-- [ ] **BA30c** — Add Phantom sign-in button handler:
+- [x] **BA30c** — Add Phantom sign-in button handler:
   - Install `@solana/wallet-adapter-react` + `@phantom/connect` in `frontend/`
   - On click: fetch nonce from `GET /api/auth/phantom/nonce`, prompt Phantom to sign message, POST signature to `POST /api/auth/phantom/verify`, store returned session
   - Show wallet address (truncated: `AbCd...xYz`) in header after login

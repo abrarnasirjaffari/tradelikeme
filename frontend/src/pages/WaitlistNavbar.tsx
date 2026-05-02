@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ArrowUpRight, X } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
 
 function navigate(path: string) {
   window.history.pushState({}, '', path)
@@ -9,6 +10,10 @@ function navigate(path: string) {
 
 export default function WaitlistNavbar() {
   const [open, setOpen] = useState(false)
+  const { walletAddress } = useAuth()
+  const shortWallet = walletAddress
+    ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`
+    : null
 
   return (
     <>
@@ -36,16 +41,24 @@ export default function WaitlistNavbar() {
             >{label}</button>
           ))}
           <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.15)', margin: '0 6px', flexShrink: 0 }} />
-          <button onClick={() => navigate('/login')}
-            style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 400, padding: '8px 18px', fontSize: '14px', color: 'rgba(255,255,255,0.8)', whiteSpace: 'nowrap', borderRadius: 9999, border: 'none', background: 'transparent', cursor: 'pointer', transition: 'color 0.2s' }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.8)')}
-          >Log In</button>
-          <button onClick={() => navigate('/join-waitlist')}
-            style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 500, fontSize: '14px', background: '#0052FF', color: '#fff', borderRadius: 9999, padding: '8px 20px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', flexShrink: 0 }}
-          >
-            Join Waitlist <ArrowUpRight size={14} />
-          </button>
+          {shortWallet ? (
+            <span className="liquid-glass" style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 500, fontSize: '13px', color: '#AB9FF2', padding: '8px 16px', borderRadius: 9999, letterSpacing: '0.01em' }}>
+              {shortWallet}
+            </span>
+          ) : (
+            <>
+              <button onClick={() => navigate('/login')}
+                style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 400, padding: '8px 18px', fontSize: '14px', color: 'rgba(255,255,255,0.8)', whiteSpace: 'nowrap', borderRadius: 9999, border: 'none', background: 'transparent', cursor: 'pointer', transition: 'color 0.2s' }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.8)')}
+              >Log In</button>
+              <button onClick={() => navigate('/join-waitlist')}
+                style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 500, fontSize: '14px', background: '#0052FF', color: '#fff', borderRadius: 9999, padding: '8px 20px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', flexShrink: 0 }}
+              >
+                Join Waitlist <ArrowUpRight size={14} />
+              </button>
+            </>
+          )}
         </div>
 
         {/* Mobile hamburger (hidden on desktop via CSS) */}

@@ -16,7 +16,19 @@ export default function SignupPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const { signUp, signIn } = useAuth()
+  const { signUp, signIn, signInWithPhantom } = useAuth()
+
+  async function handlePhantom() {
+    setError('')
+    setLoading(true)
+    const result = await signInWithPhantom()
+    setLoading(false)
+    if (result.error) {
+      setError(result.error)
+    } else {
+      window.location.pathname = '/dashboard'
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -113,6 +125,7 @@ export default function SignupPage() {
               </div>
 
               {/* social buttons */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div style={{ display: 'flex', gap: '0.75rem' }}>
                 <button type="button" className="liquid-glass"
                   onClick={() => authClient.signIn.social({ provider: 'google', callbackURL: '/dashboard' })}
@@ -144,6 +157,20 @@ export default function SignupPage() {
                   }}>
                   <span style={{ fontWeight: 700 }}>𝕏</span> Twitter
                 </button>
+              </div>
+              <button type="button" className="liquid-glass" onClick={handlePhantom} disabled={loading}
+                style={{
+                  width: '100%', borderRadius: '0.875rem', padding: '11px 0',
+                  fontFamily: "'Barlow', sans-serif", fontWeight: 500, fontSize: '13px',
+                  color: 'rgba(255,255,255,0.75)', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', background: 'transparent',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                }}>
+                <svg width="14" height="14" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+                  <circle cx="64" cy="64" r="64" fill="#AB9FF2"/>
+                  <path d="M86 48c0-12-9.6-20-22-20S42 36 42 48c0 8 4.4 14.8 11 18.4V82l11 8 11-8V66.4C81.6 62.8 86 56 86 48z" fill="white"/>
+                </svg>
+                Phantom
+              </button>
               </div>
 
             </form>

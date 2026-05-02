@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { authClient } from '../lib/auth-client'
+import { signInWithPhantom as phantomSignIn } from '../lib/phantom-signin'
 
 type User = {
   id: string
@@ -9,6 +10,7 @@ type User = {
   image?: string | null
   createdAt: Date
   updatedAt: Date
+  walletAddress?: string | null
 }
 
 type Session = {
@@ -21,8 +23,10 @@ type AuthContextValue = {
   user: User | null
   session: Session | null
   loading: boolean
+  walletAddress: string | null
   signUp: (email: string, password: string, name: string) => Promise<{ error?: string }>
   signIn: (email: string, password: string) => Promise<{ error?: string }>
+  signInWithPhantom: () => Promise<{ error?: string }>
   signOut: () => Promise<void>
 }
 
@@ -32,6 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+
+  const walletAddress = user?.walletAddress ?? null
 
   useEffect(() => {
     authClient.getSession().then(({ data }) => {
@@ -57,6 +63,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return {}
   }
 
+  async function signInWithPhantom() {
+    const result = await phantomSignIn()
+    if ('error' in result) return { error: result.error }
+    // Refresh session from server (cookie was set by verify endpoint)
+    const { data } = await authClient.getSession()
+    setUser((data?.user as User) ?? null)
+    setSession((data?.session as Session) ?? null)
+    return {}
+  }
+
   async function signOut() {
     await authClient.signOut()
     setUser(null)
@@ -64,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, walletAddress, signUp, signIn, signInWithPhantom, signOut }}>
       {children}
     </AuthContext.Provider>
   )
