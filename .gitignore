@@ -68,7 +68,8 @@ yarn-debug.log*
 yarn-error.log*
 
 # ── Auth service (BetterAuth library source — not our code) ─
-auth/src/
+auth/src/*
+!auth/src/providers/
 auth/CHANGELOG.md
 auth/tsdown.config.ts
 auth/vitest.config.ts

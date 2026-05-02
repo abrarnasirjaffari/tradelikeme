@@ -38,11 +38,11 @@ Goal: Standalone Node.js auth server that BetterAuth runs on. Frontend calls thi
 
 Goal: Configure all auth features we need before touching the frontend.
 
-- [ ] **BA15** — Email + password auth (built-in) — enable in `auth/auth.ts`
-- [ ] **BA16** — Google OAuth — add `socialProviders.google` with env vars `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (covers all Gmail accounts too)
-- [ ] **BA17** — GitHub OAuth — add `socialProviders.github` with env vars `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`
-- [ ] **BA17b** — X/Twitter OAuth — add `socialProviders.twitter` with env vars `TWITTER_CLIENT_ID`, `TWITTER_CLIENT_SECRET` (OAuth 2.0, requires Twitter Developer App)
-- [ ] **BA17c** — Phantom (SIWS — Sign In With Solana) — add custom BetterAuth provider in `auth/src/providers/phantom.ts`:
+- [x] **BA15** — Email + password auth (built-in) — enable in `auth/auth.ts`
+- [x] **BA16** — Google OAuth — add `socialProviders.google` with env vars `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (covers all Gmail accounts too)
+- [x] **BA17** — GitHub OAuth — add `socialProviders.github` with env vars `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`
+- [x] **BA17b** — X/Twitter OAuth — add `socialProviders.twitter` with env vars `TWITTER_CLIENT_ID`, `TWITTER_CLIENT_SECRET` (OAuth 2.0, requires Twitter Developer App)
+- [x] **BA17c** — Phantom (SIWS — Sign In With Solana) — add custom BetterAuth provider in `auth/src/providers/phantom.ts`:
   - Server: verify Ed25519 signature + nonce, extract wallet address, create/find user account with `providerId: "phantom"`, `accountId: walletAddress`
   - Two endpoints: `GET /api/auth/phantom/nonce` (returns one-time nonce) + `POST /api/auth/phantom/verify` (verifies signed message, returns session)
   - User table: add `walletAddress` field (nullable — only set for Phantom users or users who link wallet)
