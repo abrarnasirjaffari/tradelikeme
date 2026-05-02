@@ -408,26 +408,15 @@
 
 ## END-TO-END TESTING (devnet)
 
-- [ ] ET1 — Full flow test: deposit USDC into vault on devnet
-- [ ] ET2 — Full flow test: agent detects zone, enters trade on Zeta Markets devnet
-- [ ] ET3 — Full flow test: sentinel fires TP1 hit, agent moves SL to entry
-- [ ] ET4 — Full flow test: sentinel fires 30m body-close SL, agent closes position
-- [ ] ET5 — Full flow test: settle_epoch() runs, 20% goes to platform wallet on-chain
-- [ ] ET6 — Full flow test: user calls withdraw(), receives 80% share
-- [ ] ET7 — Test Telegram notification received on all 9 event types
-- [ ] ET9 — Test 2 simultaneous strategies — verify zero overlap in state/positions
-- [ ] ET10 — Test MIN_BALANCE gate — trading stops below threshold
-
----
-
-## COLOSSEUM SUBMISSION
-
-- [ ] CS1 — Record demo video (~90 seconds)
-- [ ] CS2 — Write project description for Colosseum submission form
-- [ ] CS3 — Screenshot strategy dashboard with 89% win rate visible
-- [ ] CS4 — Screenshot Phantom Connect sign-in flow
-- [ ] CS5 — Screenshot vault deposit + delegation on devnet
-- [ ] CS6 — Submit on colosseum.com before May 11, 2026
+- [x] ET1 — Full flow test: deposit USDC into vault on devnet
+- [x] ET2 — Full flow test: agent detects zone, enters trade on Zeta Markets devnet
+- [x] ET3 — Full flow test: sentinel fires TP1 hit, agent moves SL to entry
+- [x] ET4 — Full flow test: sentinel fires 30m body-close SL, agent closes position
+- [x] ET5 — Full flow test: settle_epoch() runs, 20% goes to platform wallet on-chain
+- [x] ET6 — Full flow test: user calls withdraw(), receives 80% share
+- [x] ET7 — Test Telegram notification received on all 9 event types
+- [x] ET9 — Test 2 simultaneous strategies — verify zero overlap in state/positions
+- [x] ET10 — Test MIN_BALANCE gate — trading stops below threshold
 
 ---
 
