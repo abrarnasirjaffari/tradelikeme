@@ -23,6 +23,9 @@ services:
       - "3001:3001"
     env_file:
       - ../.env
+    environment:
+      - SUPABASE_DB_URL=postgresql://postgres:dbd282441d621e3563efdc079a0c3198@supabase-db:5432/postgres
+      - BETTER_AUTH_URL=https://auth.tradelikeme.xyz
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.auth.rule=Host(`auth.tradelikeme.xyz`)"
