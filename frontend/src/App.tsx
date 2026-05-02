@@ -29,6 +29,7 @@ import BlogPostPage from './pages/blog/BlogPostPage'
 import DashboardPage from './pages/DashboardPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
+import TwoFactorSetupPage from './pages/TwoFactorSetupPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import PublicOnlyRoute from './components/PublicOnlyRoute'
 
@@ -101,6 +102,7 @@ export default function App() {
         <Route path="/blog/:slug" element={<BlogPostPage />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+        <Route path="/2fa-setup" element={<ProtectedRoute><TwoFactorSetupPage /></ProtectedRoute>} />
       </Routes>
     </>
   )
