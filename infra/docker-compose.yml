@@ -4,11 +4,15 @@ services:
       context: ..
       dockerfile: infra/Dockerfile.backend
     ports:
-      - "8000:8000"
+      - "8001:8000"
     env_file:
       - ../.env
     environment:
       - FRONTEND_URL=https://tradelikeme.xyz
+      - SUPABASE_DATABASE_URL=postgresql://postgres:dbd282441d621e3563efdc079a0c3198@supabase-db:5432/postgres
+    networks:
+      - default
+      - supabase_default
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
@@ -27,9 +31,16 @@ services:
       - STRATEGY_ID=sd_zones
     volumes:
       - agent_data:/app/data
+    networks:
+      - default
     restart: unless-stopped
     depends_on:
       - backend
+
+networks:
+  default: {}
+  supabase_default:
+    external: true
 
 volumes:
   agent_data:
