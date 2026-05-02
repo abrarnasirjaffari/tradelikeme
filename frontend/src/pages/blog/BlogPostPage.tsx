@@ -1,17 +1,12 @@
 import { motion } from 'framer-motion'
 import { ArrowLeft, ArrowUpRight } from 'lucide-react'
+import { useParams, useNavigate } from 'react-router-dom'
 import { VIEW, fadeUp, stagger } from '../../lib/animate'
 import WaitlistNavbar from '../WaitlistNavbar'
 import Footer from '../../components/Footer'
 import FadingVideo from '../../components/FadingVideo'
 import ScrollProgress from '../../components/ScrollProgress'
 import { posts } from './blogData'
-
-function navigate(path: string) {
-  window.history.pushState({}, '', path)
-  window.scrollTo(0, 0)
-  window.dispatchEvent(new PopStateEvent('popstate'))
-}
 
 function renderBody(body: string) {
   const lines = body.split('\n')
@@ -53,7 +48,9 @@ function renderBody(body: string) {
   return elements
 }
 
-export default function BlogPostPage({ slug }: { slug: string }) {
+export default function BlogPostPage() {
+  const { slug } = useParams<{ slug: string }>()
+  const navigate = useNavigate()
   const post = posts.find(p => p.slug === slug)
   const related = posts.filter(p => p.slug !== slug).slice(0, 2)
 

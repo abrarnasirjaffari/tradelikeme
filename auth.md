@@ -81,7 +81,7 @@ Goal: Wire the existing SignupPage + LoginPage UI to the auth server. No UI chan
 Goal: Redirect unauthenticated users away from protected pages.
 
 - [x] **BA32** — Install `react-router-dom` v7 in `frontend/` (replace the current `window.location.pathname` routing)
-- [ ] **BA33** — Migrate `App.tsx` routing to React Router `<Routes>` + `<Route>` components
+- [x] **BA33** — Migrate `App.tsx` routing to React Router `<Routes>` + `<Route>` components
 - [ ] **BA34** — Create `frontend/src/components/ProtectedRoute.tsx` — redirects to `/login` if no session
 - [ ] **BA35** — Mark dashboard route as protected (placeholder page for now — content comes later)
 - [ ] **BA36** — Redirect already-logged-in users away from `/login` and `/signup` to dashboard
