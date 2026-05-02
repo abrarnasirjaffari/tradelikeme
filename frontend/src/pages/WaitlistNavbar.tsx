@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowUpRight, X } from 'lucide-react'
+import { ArrowUpRight, X, LogOut } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 function navigate(path: string) {
@@ -10,10 +10,21 @@ function navigate(path: string) {
 
 export default function WaitlistNavbar() {
   const [open, setOpen] = useState(false)
-  const { walletAddress } = useAuth()
+  const { user, walletAddress, signOut } = useAuth()
+
   const shortWallet = walletAddress
     ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`
     : null
+
+  const displayName = shortWallet
+    ?? (user?.name ? user.name.split(' ')[0] : null)
+    ?? (user?.email ? user.email.split('@')[0] : null)
+
+  async function handleSignOut() {
+    setOpen(false)
+    await signOut()
+    navigate('/')
+  }
 
   return (
     <>
@@ -41,10 +52,19 @@ export default function WaitlistNavbar() {
             >{label}</button>
           ))}
           <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.15)', margin: '0 6px', flexShrink: 0 }} />
-          {shortWallet ? (
-            <span className="liquid-glass" style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 500, fontSize: '13px', color: '#AB9FF2', padding: '8px 16px', borderRadius: 9999, letterSpacing: '0.01em' }}>
-              {shortWallet}
-            </span>
+          {displayName ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span className="liquid-glass" style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 500, fontSize: '13px', color: shortWallet ? '#AB9FF2' : 'rgba(255,255,255,0.85)', padding: '8px 16px', borderRadius: 9999, letterSpacing: '0.01em' }}>
+                {displayName}
+              </span>
+              <button onClick={handleSignOut} title="Sign out"
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.45)', display: 'flex', alignItems: 'center', padding: '8px 6px', borderRadius: 9999, transition: 'color 0.2s' }}
+                onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.85)')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.45)')}
+              >
+                <LogOut size={15} />
+              </button>
+            </div>
           ) : (
             <>
               <button onClick={() => navigate('/login')}
@@ -89,11 +109,19 @@ export default function WaitlistNavbar() {
             >{label}</button>
           ))}
           <div style={{ width: 48, height: 1, background: 'rgba(255,255,255,0.1)', margin: '0.5rem 0' }} />
-          <button onClick={() => { navigate('/join-waitlist'); setOpen(false) }}
-            style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: '15px', background: '#0052FF', color: '#fff', borderRadius: 9999, padding: '12px 32px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginTop: '0.5rem' }}
-          >
-            Join Waitlist <ArrowUpRight size={15} />
-          </button>
+          {displayName ? (
+            <button onClick={handleSignOut}
+              style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 500, fontSize: '15px', color: 'rgba(255,255,255,0.6)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, marginTop: '0.5rem' }}
+            >
+              <LogOut size={15} /> Sign Out ({displayName})
+            </button>
+          ) : (
+            <button onClick={() => { navigate('/join-waitlist'); setOpen(false) }}
+              style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: '15px', background: '#0052FF', color: '#fff', borderRadius: 9999, padding: '12px 32px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginTop: '0.5rem' }}
+            >
+              Join Waitlist <ArrowUpRight size={15} />
+            </button>
+          )}
         </div>
       )}
     </>

@@ -72,7 +72,7 @@ Goal: Wire the existing SignupPage + LoginPage UI to the auth server. No UI chan
   - Install `@solana/wallet-adapter-react` + `@phantom/connect` in `frontend/`
   - On click: fetch nonce from `GET /api/auth/phantom/nonce`, prompt Phantom to sign message, POST signature to `POST /api/auth/phantom/verify`, store returned session
   - Show wallet address (truncated: `AbCd...xYz`) in header after login
-- [ ] **BA31** — Add sign-out handler in nav/header (wherever the logout button will live)
+- [x] **BA31** — Add sign-out handler in nav/header (wherever the logout button will live)
 
 ---
 
