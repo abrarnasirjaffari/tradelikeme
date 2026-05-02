@@ -134,6 +134,16 @@ export default function SignupPage() {
                   }}>
                   <span style={{ fontWeight: 700 }}>⌥</span> GitHub
                 </button>
+                <button type="button" className="liquid-glass"
+                  onClick={() => authClient.signIn.social({ provider: 'twitter', callbackURL: '/dashboard' })}
+                  style={{
+                    flex: 1, borderRadius: '0.875rem', padding: '11px 0',
+                    fontFamily: "'Barlow', sans-serif", fontWeight: 500, fontSize: '13px',
+                    color: 'rgba(255,255,255,0.75)', border: 'none', cursor: 'pointer', background: 'transparent',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                  }}>
+                  <span style={{ fontWeight: 700 }}>𝕏</span> Twitter
+                </button>
               </div>
 
             </form>
