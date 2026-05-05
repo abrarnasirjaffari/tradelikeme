@@ -6,6 +6,7 @@ import { twoFactor } from "better-auth/plugins/two-factor";
 import { phantom } from "./src/providers/phantom.js";
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "").split(",").map(e => e.trim()).filter(Boolean);
+const TRUSTED_ORIGINS = (process.env.TRUSTED_ORIGINS ?? "http://localhost:5173").split(",").map(o => o.trim()).filter(Boolean);
 
 const { Pool } = pg;
 
@@ -15,6 +16,7 @@ export const auth = betterAuth({
   }),
   secret: process.env.BETTER_AUTH_SECRET!,
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3001",
+  trustedOrigins: TRUSTED_ORIGINS,
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
