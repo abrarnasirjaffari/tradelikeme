@@ -151,7 +151,8 @@ export default function SignupPage() {
                     color: 'rgba(255,255,255,0.75)', border: 'none', cursor: 'pointer', background: 'transparent',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
                   }}>
-                  <span style={{ fontWeight: 700 }}>G</span> Google
+                  <img src="/google-icon-logo-svgrepo-com (1).svg" width={16} height={16} alt="" style={{ flexShrink: 0 }} />
+                  Google
                 </button>
                 <button type="button" className="liquid-glass"
                   onClick={() => authClient.signIn.social({ provider: 'github', callbackURL: '/dashboard' })}
@@ -161,7 +162,8 @@ export default function SignupPage() {
                     color: 'rgba(255,255,255,0.75)', border: 'none', cursor: 'pointer', background: 'transparent',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
                   }}>
-                  <span style={{ fontWeight: 700 }}>⌥</span> GitHub
+                  <img src="/github-svgrepo-com (1).svg" width={16} height={16} alt="" style={{ flexShrink: 0, filter: 'invert(1)' }} />
+                  GitHub
                 </button>
                 <button type="button" className="liquid-glass"
                   onClick={() => authClient.signIn.social({ provider: 'twitter', callbackURL: '/dashboard' })}
@@ -171,7 +173,8 @@ export default function SignupPage() {
                     color: 'rgba(255,255,255,0.75)', border: 'none', cursor: 'pointer', background: 'transparent',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
                   }}>
-                  <span style={{ fontWeight: 700 }}>𝕏</span> Twitter
+                  <img src="/Twitter-X--Streamline-Bootstrap.svg" width={15} height={15} alt="" style={{ flexShrink: 0, filter: 'invert(1)' }} />
+                  X
                 </button>
               </div>
               <button type="button" className="liquid-glass" onClick={handlePhantom} disabled={loading}
@@ -187,9 +190,8 @@ export default function SignupPage() {
                     <path d="M12 2a10 10 0 0 1 10 10" stroke="rgba(255,255,255,0.7)" strokeWidth="3" strokeLinecap="round" />
                   </svg>
                 ) : (
-                  <svg width="14" height="14" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
-                    <circle cx="64" cy="64" r="64" fill="#AB9FF2"/>
-                    <path d="M86 48c0-12-9.6-20-22-20S42 36 42 48c0 8 4.4 14.8 11 18.4V82l11 8 11-8V66.4C81.6 62.8 86 56 86 48z" fill="white"/>
+                  <svg width="18" height="18" viewBox="0 0 269 224" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+                    <path d="M31.8292 224C66.1548 224 91.951 194.147 107.345 170.557C105.473 175.776 104.433 180.995 104.433 186.006C104.433 199.784 112.338 209.596 127.941 209.596C149.368 209.596 172.252 190.807 184.11 170.557C183.278 173.48 182.862 176.194 182.862 178.699C182.862 188.302 188.271 194.356 199.296 194.356C234.038 194.356 268.988 132.772 268.988 78.9115C268.988 36.9506 247.768 0 194.512 0C100.896 0 0 114.401 0 188.302C0 217.32 15.6025 224 31.8292 224ZM162.266 74.3187C162.266 63.8807 168.091 56.5741 176.621 56.5741C184.942 56.5741 190.767 63.8807 190.767 74.3187C190.767 84.7568 184.942 92.2721 176.621 92.2721C168.091 92.2721 162.266 84.7568 162.266 74.3187ZM206.786 74.3187C206.786 63.8807 212.611 56.5741 221.14 56.5741C229.461 56.5741 235.286 63.8807 235.286 74.3187C235.286 84.7568 229.461 92.2721 221.14 92.2721C212.611 92.2721 206.786 84.7568 206.786 74.3187Z" fill="#AB9FF2"/>
                   </svg>
                 )}
                 Phantom
