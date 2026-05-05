@@ -62,17 +62,6 @@ export default function Hero() {
           </motion.div>
         </div>
 
-        {/* Partners */}
-        <motion.div {...fadeUp(1.5)} className="partners-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.1)', flexWrap: 'wrap' }}>
-          <span style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 400, fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)' }}>Executing on</span>
-          <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.12)' }} />
-          {['Drift', 'Jupiter', 'Raydium', 'Pyth', 'Phantom'].map((name, i) => (
-            <span key={name} style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-              <span style={{ fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', color: 'rgba(255,255,255,0.5)', fontSize: '1.15rem', letterSpacing: '-0.5px' }}>{name}</span>
-              {i < 4 && <span style={{ color: 'rgba(255,255,255,0.18)', fontSize: '0.65rem' }}>●</span>}
-            </span>
-          ))}
-        </motion.div>
       </div>
     </section>
   )

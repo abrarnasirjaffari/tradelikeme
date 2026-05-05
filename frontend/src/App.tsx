@@ -32,6 +32,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage'
 import TwoFactorSetupPage from './pages/TwoFactorSetupPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import PublicOnlyRoute from './components/PublicOnlyRoute'
+import SubmitStrategyPage from './pages/SubmitStrategyPage'
 
 const HR = <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.07)', margin: '0 10rem' }} />
 
@@ -85,7 +86,7 @@ export default function App() {
     <>
       <ScrollToTop />
       <Routes>
-        <Route path="/" element={<Waitlist />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/waitlist" element={<Waitlist />} />
         <Route path="/join-waitlist" element={<JoinWaitlist />} />
         <Route path="/how-it-works" element={<HowItWorksPage />} />
@@ -101,6 +102,7 @@ export default function App() {
         <Route path="/blog" element={<BlogPage />} />
         <Route path="/blog/:slug" element={<BlogPostPage />} />
         <Route path="/home" element={<HomePage />} />
+        <Route path="/submit-strategy" element={<SubmitStrategyPage />} />
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="/2fa-setup" element={<ProtectedRoute><TwoFactorSetupPage /></ProtectedRoute>} />
       </Routes>

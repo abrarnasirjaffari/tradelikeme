@@ -1,6 +1,12 @@
 import { motion } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
 
+function navigate(path: string) {
+  window.history.pushState({}, '', path)
+  window.scrollTo(0, 0)
+  window.dispatchEvent(new PopStateEvent('popstate'))
+}
+
 export default function FinalCTA() {
   return (
     <section style={{ position: 'relative', overflow: 'hidden', background: '#0052FF' }}>
@@ -28,7 +34,7 @@ export default function FinalCTA() {
           <button style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: '16px', background: '#fff', color: '#0052FF', borderRadius: 9999, padding: '1rem 2rem', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
             Start Trading <ArrowUpRight size={16} />
           </button>
-          <button style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: '16px', background: 'transparent', color: '#fff', borderRadius: 9999, padding: '1rem 2rem', border: '1px solid rgba(255,255,255,0.4)', cursor: 'pointer' }}>
+          <button onClick={() => navigate('/submit-strategy')} style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: '16px', background: 'transparent', color: '#fff', borderRadius: 9999, padding: '1rem 2rem', border: '1px solid rgba(255,255,255,0.4)', cursor: 'pointer' }}>
             Submit Your Strategy
           </button>
         </motion.div>
