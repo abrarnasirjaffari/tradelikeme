@@ -49,10 +49,11 @@ export const auth = betterAuth({
       clientId: process.env.GITHUB_CLIENT_ID!,
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
     },
-    twitter: {
-      clientId: process.env.TWITTER_CLIENT_ID!,
-      clientSecret: process.env.TWITTER_CLIENT_SECRET!,
-    },
+    // twitter: disabled — add TWITTER_CLIENT_ID/SECRET to .env to re-enable
+    // twitter: {
+    //   clientId: process.env.TWITTER_CLIENT_ID!,
+    //   clientSecret: process.env.TWITTER_CLIENT_SECRET!,
+    // },
   },
   plugins: [
     admin(),

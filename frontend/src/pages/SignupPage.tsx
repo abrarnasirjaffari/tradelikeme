@@ -144,7 +144,7 @@ export default function SignupPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div style={{ display: 'flex', gap: '0.75rem' }}>
                 <button type="button" className="liquid-glass"
-                  onClick={() => authClient.signIn.social({ provider: 'google', callbackURL: '/dashboard' })}
+                  onClick={() => authClient.signIn.social({ provider: 'google', callbackURL: `${window.location.origin}/dashboard` })}
                   style={{
                     flex: 1, borderRadius: '0.875rem', padding: '11px 0',
                     fontFamily: "'Barlow', sans-serif", fontWeight: 500, fontSize: '13px',
@@ -155,7 +155,7 @@ export default function SignupPage() {
                   Google
                 </button>
                 <button type="button" className="liquid-glass"
-                  onClick={() => authClient.signIn.social({ provider: 'github', callbackURL: '/dashboard' })}
+                  onClick={() => authClient.signIn.social({ provider: 'github', callbackURL: `${window.location.origin}/dashboard` })}
                   style={{
                     flex: 1, borderRadius: '0.875rem', padding: '11px 0',
                     fontFamily: "'Barlow', sans-serif", fontWeight: 500, fontSize: '13px',
@@ -164,17 +164,6 @@ export default function SignupPage() {
                   }}>
                   <img src="/github-svgrepo-com (1).svg" width={16} height={16} alt="" style={{ flexShrink: 0, filter: 'invert(1)' }} />
                   GitHub
-                </button>
-                <button type="button" className="liquid-glass"
-                  onClick={() => authClient.signIn.social({ provider: 'twitter', callbackURL: '/dashboard' })}
-                  style={{
-                    flex: 1, borderRadius: '0.875rem', padding: '11px 0',
-                    fontFamily: "'Barlow', sans-serif", fontWeight: 500, fontSize: '13px',
-                    color: 'rgba(255,255,255,0.75)', border: 'none', cursor: 'pointer', background: 'transparent',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                  }}>
-                  <img src="/Twitter-X--Streamline-Bootstrap.svg" width={15} height={15} alt="" style={{ flexShrink: 0, filter: 'invert(1)' }} />
-                  X
                 </button>
               </div>
               <button type="button" className="liquid-glass" onClick={handlePhantom} disabled={loading}

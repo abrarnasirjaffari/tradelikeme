@@ -7,9 +7,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api/auth': {
-        target: 'https://auth.tradelikeme.xyz',
+        target: 'http://localhost:3001',
         changeOrigin: true,
-        secure: true,
+        secure: false,
       },
     },
   },

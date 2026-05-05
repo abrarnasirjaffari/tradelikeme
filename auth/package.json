@@ -6,9 +6,9 @@
   "license": "MIT",
   "sideEffects": false,
   "scripts": {
-    "start": "tsx server.ts",
+    "start": "tsx --env-file=.env server.ts",
     "build": "tsdown",
-    "dev": "tsx watch server.ts",
+    "dev": "tsx --env-file=.env --watch server.ts",
     "test": "vitest",
     "coverage": "vitest run --coverage --coverage.provider=istanbul",
     "lint:package": "publint run --strict --pack false",
