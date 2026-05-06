@@ -21,15 +21,13 @@ function useCountdown() {
 }
 
 function useLocalLaunchTime() {
-  const [label, setLabel] = useState('')
-  useEffect(() => {
-    const time = LAUNCH.toLocaleString(undefined, {
+  const [label] = useState(() =>
+    LAUNCH.toLocaleString(undefined, {
       month: 'short', day: 'numeric', year: 'numeric',
       hour: 'numeric', minute: '2-digit',
       timeZoneName: 'short',
     })
-    setLabel(time)
-  }, [])
+  )
   return label
 }
 

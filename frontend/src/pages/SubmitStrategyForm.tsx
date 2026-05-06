@@ -7,7 +7,7 @@ import { inputStyle, labelStyle, fieldWrap, chipBase } from './formStyles'
 const fade = {
   initial: { opacity: 0, y: 16 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.4, ease: 'easeOut' },
+  transition: { duration: 0.4, ease: 'easeOut' as const },
 }
 
 const TIMEFRAMES = ['1m','5m','15m','30m','1H','4H','1D','1W']
@@ -115,7 +115,7 @@ export default function SubmitStrategyForm() {
   // progressive reveal
   const show2 = f.name.trim().length > 0
   const usernameValid = /^[a-z0-9_]{3,20}$/.test(f.username) && usernameStatus !== 'taken'
-  const show25 = show2 && usernameStatus === 'available'
+  const show25 = show2 && usernameValid
   const show3 = show25 && emailValid
   const show4 = show3
   const show5 = f.experience !== ''
@@ -203,7 +203,6 @@ export default function SubmitStrategyForm() {
               <label style={labelStyle}>Contact <span style={{ color: '#0052FF' }}>*</span> <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>— at least one required</span></label>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 {(['telegram', 'whatsapp'] as const).map(ch => {
-                  const active = ch === 'telegram' ? f.telegram.trim().length > 0 || contactChannels.includes('telegram') : f.whatsapp.trim().length > 0 || contactChannels.includes('whatsapp')
                   const selected = contactChannels.includes(ch)
                   return (
                     <button key={ch} type="button"

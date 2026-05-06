@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, type TargetAndTransition } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
 import { VIEW, fadeUp, stagger } from '../../lib/animate'
 import WaitlistNavbar from '../WaitlistNavbar'
@@ -152,7 +152,7 @@ export default function BlogPage() {
                   border: '1px solid rgba(0,82,255,0.18)',
                   transition: 'border-color 0.2s, background 0.2s',
                 }}
-                whileHover={{ borderColor: 'rgba(0,82,255,0.35)', backgroundColor: 'rgba(0,82,255,0.09)' } as any}
+                whileHover={{ borderColor: 'rgba(0,82,255,0.35)', backgroundColor: 'rgba(0,82,255,0.09)' } as TargetAndTransition}
               >
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>

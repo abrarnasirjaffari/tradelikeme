@@ -10,7 +10,7 @@ import { useAuth } from '../context/AuthContext'
 export default function DashboardPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const twoFactorEnabled = (user as any)?.twoFactorEnabled ?? false
+  const twoFactorEnabled = user?.twoFactorEnabled ?? false
 
   return (
     <div style={{ background: '#000' }}>

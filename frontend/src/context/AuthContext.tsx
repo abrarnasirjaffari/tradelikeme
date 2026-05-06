@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { authClient } from '../lib/auth-client'
 import { signInWithPhantom as phantomSignIn } from '../lib/phantom-signin'
 
@@ -11,6 +11,7 @@ type User = {
   createdAt: Date
   updatedAt: Date
   walletAddress?: string | null
+  twoFactorEnabled?: boolean
 }
 
 type Session = {
@@ -51,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data, error } = await authClient.signUp.email({ email, password, name })
     if (error) return { error: error.message ?? 'Sign up failed' }
     setUser((data?.user as User) ?? null)
-    setSession((data?.session as Session) ?? null)
+    setSession(null)
     return {}
   }
 
@@ -59,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data, error } = await authClient.signIn.email({ email, password })
     if (error) return { error: error.message ?? 'Sign in failed' }
     setUser((data?.user as User) ?? null)
-    setSession((data?.session as Session) ?? null)
+    setSession(null)
     return {}
   }
 
@@ -86,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>')

@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion'
+import { motion, type TargetAndTransition } from 'framer-motion'
 import { ArrowLeft, ArrowUpRight } from 'lucide-react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { VIEW, fadeUp, stagger } from '../../lib/animate'
@@ -159,7 +159,7 @@ export default function BlogPostPage() {
                           background: 'rgba(255,255,255,0.02)',
                           transition: 'border-color 0.2s, background 0.2s',
                         }}
-                        whileHover={{ borderColor: 'rgba(255,255,255,0.15)', backgroundColor: 'rgba(255,255,255,0.04)' } as any}
+                        whileHover={{ borderColor: 'rgba(255,255,255,0.15)', backgroundColor: 'rgba(255,255,255,0.04)' } as TargetAndTransition}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                           <span style={{

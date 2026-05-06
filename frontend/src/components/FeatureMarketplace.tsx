@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { VIEW, fadeLeft, fadeRight, fadeUp, stagger } from '../lib/animate'
+import { VIEW, fadeRight, fadeUp, stagger } from '../lib/animate'
 
 const strategies = [
   { name: 'TradeLikeMe Strategy', type: 'Pure Price Action', wr: '89% WR', fee: '20% profit share' },

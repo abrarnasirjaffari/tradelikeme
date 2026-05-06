@@ -9,7 +9,7 @@ import { inputStyle, labelStyle, fieldWrap, chipBase } from './formStyles'
 const fadeIn = {
   initial: { opacity: 0, y: 16 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.4, ease: 'easeOut' },
+  transition: { duration: 0.4, ease: 'easeOut' as const },
 }
 
 interface SharedData { name: string; email: string; whatsapp: string; telegram: string; heardFrom: string }

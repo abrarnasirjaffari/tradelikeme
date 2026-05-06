@@ -72,7 +72,7 @@ export default function FadingVideo({ src, className = '', style }: Props) {
         muted
         playsInline
         preload="auto"
-        style={{ opacity: 0, width: '100%', height: '100%', objectFit: (objectFit as any) ?? 'cover', objectPosition: objectPosition ?? 'top' }}
+        style={{ opacity: 0, width: '100%', height: '100%', objectFit: (objectFit as React.CSSProperties['objectFit']) ?? 'cover', objectPosition: objectPosition ?? 'top' }}
       />
     </motion.div>
   )

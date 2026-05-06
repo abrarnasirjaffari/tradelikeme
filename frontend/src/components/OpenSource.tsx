@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { GitBranch } from 'lucide-react'
-import { VIEW, fadeLeft, fadeRight, stagger, fadeUp } from '../lib/animate'
+import { VIEW, fadeLeft, stagger, fadeUp } from '../lib/animate'
 
 const codeLines = [
   { text: '# TradeLikeMe — Open Source', dim: true },

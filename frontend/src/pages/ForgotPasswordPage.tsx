@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { ArrowUpRight, ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
@@ -18,7 +18,8 @@ export default function ForgotPasswordPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setLoading(true)
-    const { error } = await authClient.forgetPassword({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (authClient as any).forgetPassword({
       email,
       redirectTo: `${window.location.origin}/reset-password`,
     })
