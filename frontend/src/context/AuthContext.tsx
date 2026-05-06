@@ -44,8 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     authClient.getSession().then(({ data }) => {
       setUser((data?.user as User) ?? null)
       setSession((data?.session as Session) ?? null)
-      setLoading(false)
-    })
+    }).catch(() => {}).finally(() => setLoading(false))
   }, [])
 
   async function signUp(email: string, password: string, name: string) {

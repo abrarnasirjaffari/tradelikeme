@@ -89,8 +89,15 @@
 
 ### H8 — Environment
 
-- [ ] **H8.1** — Add `VITE_API_URL` to `.env.example` (default: `https://api.tradelikeme.xyz`)
-- [ ] **H8.2** — Verify `.env.local` is in `.gitignore`
+- [x] **H8.1** — Add `VITE_API_URL` to `.env.example` (default: `https://api.tradelikeme.xyz`)
+- [x] **H8.2** — Verify `.env.local` is in `.gitignore`
+
+### H9 — Auth (BLOCKED — fix before demo)
+
+- [ ] **H9.1** — Email login returns "failed login" even with correct credentials. Likely: auth server can't reach DB (tunnel not running or wrong port). Check: `ssh -L 5433:localhost:5432 ubuntu@54.179.141.76 -i telegram-windows-key.pem -N` must be running before starting auth server.
+- [ ] **H9.2** — Google / GitHub OAuth buttons do nothing. Likely: `GOOGLE_CLIENT_ID`/`GITHUB_CLIENT_ID` not set in `auth/.env`, or Google Console redirect URI mismatch (`http://localhost:3001/api/auth/callback/google` not whitelisted).
+- [ ] **H9.3** — Dashboard showing without login (auth guard temporarily removed for demo). Re-add `<ProtectedRoute>` wrapper in `App.tsx` once auth is fixed.
+- [ ] **H9.4** — Investigate: run `npm run dev` in `auth/` and watch console for errors when attempting login. If DB connection error → tunnel issue. If OAuth redirect mismatch → Google Console fix.
 
 ---
 

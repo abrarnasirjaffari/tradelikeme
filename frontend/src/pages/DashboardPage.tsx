@@ -25,7 +25,7 @@ import type { Vault, Trade, PnlSummary } from '../services/api'
 export default function DashboardPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const twoFactorEnabled = user?.twoFactorEnabled ?? false
+  const twoFactorEnabled = user?.twoFactorEnabled ?? true
 
   const [mode, setMode] = useState<'solana' | 'cex'>('solana')
   const [vaults, setVaults] = useState<Vault[]>(MOCK_VAULTS)
@@ -35,7 +35,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (!user) return
+    if (!user?.id) return
     setLoading(true)
     Promise.all([
       getVaults(user.id),
@@ -45,8 +45,7 @@ export default function DashboardPage() {
       setVaults(v.length ? v : MOCK_VAULTS)
       setTrades(t.length ? t : MOCK_TRADES)
       setPnl(p)
-    }).catch(() => {
-    }).finally(() => setLoading(false))
+    }).catch(() => {}).finally(() => setLoading(false))
   }, [user])
 
   void loading
