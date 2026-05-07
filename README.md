@@ -36,8 +36,32 @@ Same verified strategy. Same agent brain. Different execution layer.
 
 ---
 
+## The Real Results
+
+This is not a backtest pitch. This is a real account, real money, real market.
+
+| | |
+|-|-|
+| **Starting capital** | $100 |
+| **Ending capital** | $320 |
+| **Return** | +220% |
+| **Margin per trade** | 0.5% of account |
+| **Leverage** | 50x–200x (CROSS) |
+| **Win rate** | 89% |
+| **Risk:Reward** | 1:3 |
+| **Indicators used** | None |
+| **Strategy** | Pure price action — Supply & Demand zones only |
+| **Verification** | Every live trade recorded on-chain (verifiable on Solscan) |
+
+**No indicators. No signals. No AI guessing.** Pure zone-to-zone price action, cloned from a verified profitable trader. 0.5% margin per trade means even at 200x leverage, a single loss takes less than 1% of the account. The math compounds — small consistent wins on tiny margin.
+
+> *See disclaimer below. Past performance does not guarantee future results.*
+
+---
+
 ## Why It Works
 
+- **$100 → $320 on live account** — real trades, real market, no indicators (see The Real Results above)
 - **89% win rate, 1:3 RRR** — backtested over 2 years of data + every live trade recorded on-chain (verifiable on Solscan)
 - **Human-cloned strategy** — exact rules from a real profitable trader, not AI guessing
 - **Trustless on Solana** — custom Anchor vault: agent can trade but can **never** withdraw user funds

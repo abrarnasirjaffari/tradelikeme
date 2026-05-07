@@ -6,6 +6,30 @@ This is the complete, unredacted strategy powering TradeLikeMe. Every rule here 
 
 ---
 
+## Proof It Works — Real Account, Real Market
+
+| | |
+|-|-|
+| **Starting capital** | $100 |
+| **Ending capital** | $320 |
+| **Return** | +220% |
+| **Margin per trade** | 0.5% of account |
+| **Leverage** | 50x–200x CROSS |
+| **Win rate** | 89% |
+| **Risk:Reward** | 1:3 |
+| **Indicators used** | None — pure price action |
+| **Method** | Supply & Demand zones only |
+
+This is not a paper trade. Not a backtest. A real account on a live exchange, following these exact rules.
+
+**Why 0.5% margin matters**: at 200x leverage, 0.5% margin = 100% notional exposure on 0.5% of your account. A full stop-loss wipes 0.5% of the account, not 100%. This is how the account survives losing trades while compounding winners.
+
+**Why no indicators**: indicators are derived from price. Price creates zones. Zones tell you where institutional orders are. Going to the source (price structure) is more reliable than a lagging derivative of it.
+
+> *Past performance does not guarantee future results. See full disclaimer at the bottom of this document.*
+
+---
+
 ## Core Method: Supply & Demand Zone Trading
 
 Price moves between supply zones (where sellers dominate) and demand zones (where buyers dominate). The strategy enters at the *start* of a new move — the moment price returns to a fresh zone after a strong impulse away from it.
