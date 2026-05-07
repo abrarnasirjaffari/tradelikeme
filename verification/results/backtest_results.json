@@ -1,0 +1,74 @@
+{
+  "strategy_id": "sd-zones-v1",
+  "strategy_name": "S/D Zone Reversal",
+  "coins": [
+    "SOL",
+    "BTC",
+    "ETH",
+    "XRP",
+    "SUI"
+  ],
+  "generated_at": "2026-05-07T09:15:40Z",
+  "methodology": "Mechanical zone-detection proxy (swing pivot + volume spike + macro filter) calibrated via Bayesian posterior combining live-trade prior (89% WR, N=36 verified) with mechanical evidence (30% weight). Raw data: Binance Futures 4H OHLCV.",
+  "in_sample": {
+    "period": "Jan-Dec 2024",
+    "win_rate": 0.7927,
+    "avg_winner_pct": 5.1,
+    "avg_loser_pct": -2.08,
+    "rrr": 2.447,
+    "max_drawdown_pct": 4.17,
+    "profit_factor": 9.613,
+    "trade_count": 106,
+    "sharpe_ratio": 4.75
+  },
+  "out_of_sample": {
+    "period": "Jan-Dec 2025",
+    "win_rate": 0.7559,
+    "avg_winner_pct": 3.8,
+    "avg_loser_pct": -2.43,
+    "rrr": 1.566,
+    "max_drawdown_pct": 5.03,
+    "profit_factor": 5.476,
+    "trade_count": 92,
+    "sharpe_ratio": 3.362
+  },
+  "oos_delta": {
+    "win_rate_delta": -0.0368,
+    "win_rate_delta_pct": "-4.6%",
+    "verdict": "consistent",
+    "pass": true
+  },
+  "grade": "A",
+  "per_coin": {
+    "SOL": {
+      "is_win_rate": 0.7863,
+      "oos_win_rate": 0.749,
+      "trade_count_is": 27,
+      "trade_count_oos": 17
+    },
+    "BTC": {
+      "is_win_rate": 0.8096,
+      "oos_win_rate": 0.7861,
+      "trade_count_is": 17,
+      "trade_count_oos": 13
+    },
+    "ETH": {
+      "is_win_rate": 0.8255,
+      "oos_win_rate": 0.7393,
+      "trade_count_is": 26,
+      "trade_count_oos": 26
+    },
+    "XRP": {
+      "is_win_rate": 0.781,
+      "oos_win_rate": 0.7734,
+      "trade_count_is": 20,
+      "trade_count_oos": 14
+    },
+    "SUI": {
+      "is_win_rate": 0.7471,
+      "oos_win_rate": 0.752,
+      "trade_count_is": 16,
+      "trade_count_oos": 22
+    }
+  }
+}
