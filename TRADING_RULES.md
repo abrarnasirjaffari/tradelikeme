@@ -375,7 +375,7 @@ Grade computed from pipeline output. Platform cannot override this grade.
 
 ---
 
-*Strategy sourced from live analysis of real trading signals. All rules verified through 200+ trades, ongoing independent verification, and live account testing.*
+*Strategy sourced from live analysis of real trading signals. All rules verified through 200+ trades, 2-year backtest (IS 2024 + OOS 2025), and live account testing. Every live trade recorded on-chain — verifiable on Solscan.*
 
 ---
 

@@ -38,7 +38,7 @@ Same verified strategy. Same agent brain. Different execution layer.
 
 ## Why It Works
 
-- **89% win rate, 1:3 RRR** — independently verified across real trades, growing sample (see disclaimer)
+- **89% win rate, 1:3 RRR** — backtested over 2 years of data + every live trade recorded on-chain (verifiable on Solscan)
 - **Human-cloned strategy** — exact rules from a real profitable trader, not AI guessing
 - **Trustless on Solana** — custom Anchor vault: agent can trade but can **never** withdraw user funds
 - **Sentinel architecture** — WebSocket price watcher burns zero AI tokens, wakes agent only on events
@@ -206,7 +206,7 @@ Vault PDA seeds: `[b"vault", user_pubkey, strategy_id]` — one vault per (user 
 
 | Feature | TradeLikeMe | Every Competitor |
 |---------|------------|-----------------|
-| Proven strategy | 89% win rate, 1:3 RRR — independently verified, live P&L public | None — demos only |
+| Proven strategy | 89% win rate, 1:3 RRR — 2-year backtest + on-chain live trades (Solscan) | None — demos only |
 | Trustless custody | Anchor vault — agent can't withdraw | Custodial or manual |
 | Body-close SL | Wicks ignored, 70% wick survival rate | Exchange SL only |
 | 7-TF analysis | 1M → 1W → 1D → 4H → 1H → 30M → 15M | Single TF or none |
