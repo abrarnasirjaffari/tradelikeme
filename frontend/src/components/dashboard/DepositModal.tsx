@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
-import { deposit } from '../../services/api'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { buildDepositTx, confirmDeposit } from '../../services/api'
+import { signAndSubmitTx } from '../../services/solana'
 
 interface Props {
   vaultId: string
@@ -9,13 +11,24 @@ interface Props {
   onSuccess: (amount: number) => void
 }
 
+type Step = 'idle' | 'building' | 'signing' | 'confirming'
+
 const QUICK_AMOUNTS = [100, 500, 1000, 5000]
+
+const STEP_LABEL: Record<Step, string> = {
+  idle: '',
+  building: 'Building transaction...',
+  signing: 'Approve in Phantom wallet...',
+  confirming: 'Confirming on-chain...',
+}
 
 export default function DepositModal({ vaultId, onClose, onSuccess }: Props) {
   const [raw, setRaw] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [step, setStep] = useState<Step>('idle')
+  const wallet = useWallet()
 
   const amount = parseFloat(raw) || 0
+  const loading = step !== 'idle'
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -28,16 +41,35 @@ export default function DepositModal({ vaultId, onClose, onSuccess }: Props) {
       toast.error('Enter a valid amount')
       return
     }
-    setLoading(true)
+    if (!wallet.publicKey) {
+      toast.error('Connect your Phantom wallet first')
+      return
+    }
+
     try {
-      await deposit(vaultId, amount)
-      toast.success('Deposit submitted')
+      // Step 1: Get unsigned tx from backend
+      setStep('building')
+      const { serialized_tx } = await buildDepositTx(
+        vaultId,
+        amount,
+        wallet.publicKey.toString()
+      )
+
+      // Step 2: Sign with Phantom + submit to network
+      setStep('signing')
+      const txSignature = await signAndSubmitTx(wallet, serialized_tx)
+
+      // Step 3: Confirm with backend
+      setStep('confirming')
+      await confirmDeposit(vaultId, txSignature, amount)
+
+      toast.success(`Deposited $${amount.toLocaleString()} USDC — tx: ${txSignature.slice(0, 8)}...`)
       onSuccess(amount)
       onClose()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Deposit failed')
     } finally {
-      setLoading(false)
+      setStep('idle')
     }
   }
 
@@ -146,7 +178,7 @@ export default function DepositModal({ vaultId, onClose, onSuccess }: Props) {
             {loading ? (
               <>
                 <span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite', display: 'inline-block', flexShrink: 0 }} />
-                Processing...
+                {STEP_LABEL[step]}
               </>
             ) : (
               `Deposit${amount > 0 ? ` $${amount.toLocaleString()}` : ''} USDC`

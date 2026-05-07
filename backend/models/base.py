@@ -13,7 +13,7 @@ Base = declarative_base()
 
 
 def init_db():
-    from backend.models import user, strategy, subscription, notification_config  # noqa: F401
+    from backend.models import user, strategy, subscription, notification_config, vault_transaction  # noqa: F401
     Base.metadata.create_all(bind=engine)
 
 

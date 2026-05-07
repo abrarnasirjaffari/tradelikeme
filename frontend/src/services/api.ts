@@ -149,6 +149,56 @@ export async function withdraw(vaultId: string, amount: number): Promise<{ succe
   return res.json()
 }
 
+// ── 2-step Solana vault flows ──────────────────────────────────────────────
+
+export async function buildDepositTx(
+  vaultId: string,
+  amount: number,
+  userWalletPubkey: string
+): Promise<{ serialized_tx: string; vault_address: string }> {
+  const res = await fetchApi(`/vaults/${vaultId}/deposit`, {
+    method: 'POST',
+    body: JSON.stringify({ amount_usdc: amount, user_wallet_pubkey: userWalletPubkey }),
+  })
+  return res.json()
+}
+
+export async function confirmDeposit(
+  vaultId: string,
+  txSignature: string,
+  amount: number
+): Promise<{ success: boolean }> {
+  const res = await fetchApi(`/vaults/${vaultId}/deposit/confirm`, {
+    method: 'POST',
+    body: JSON.stringify({ tx_signature: txSignature, amount_usdc: amount }),
+  })
+  return res.json()
+}
+
+export async function buildWithdrawTx(
+  vaultId: string,
+  amount: number,
+  userWalletPubkey: string
+): Promise<{ serialized_tx: string; vault_address: string }> {
+  const res = await fetchApi(`/vaults/${vaultId}/withdraw`, {
+    method: 'POST',
+    body: JSON.stringify({ amount_usdc: amount, user_wallet_pubkey: userWalletPubkey }),
+  })
+  return res.json()
+}
+
+export async function confirmWithdraw(
+  vaultId: string,
+  txSignature: string,
+  amount: number
+): Promise<{ success: boolean }> {
+  const res = await fetchApi(`/vaults/${vaultId}/withdraw/confirm`, {
+    method: 'POST',
+    body: JSON.stringify({ tx_signature: txSignature, amount_usdc: amount }),
+  })
+  return res.json()
+}
+
 export async function getPositions(userId: string): Promise<Position[]> {
   const res = await fetchApi(`/users/${userId}/positions`)
   return res.json()
