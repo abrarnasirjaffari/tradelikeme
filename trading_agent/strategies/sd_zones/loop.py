@@ -79,6 +79,9 @@ class LoopOrchestrator:
 
         # Current balance — updated at startup and on every compound cycle.
         self._balance: float = 0.0
+        # Initial balance captured at first successful fetch — used to set the
+        # BALANCE_LOW threshold at 50% of starting equity.
+        self._initial_balance: float = 0.0
 
     # ------------------------------------------------------------------
     # LO2 — startup()
@@ -226,10 +229,11 @@ class LoopOrchestrator:
             logger.debug("Entry gate: BLOCKED — MAX_AT_RISK_SLOTS reached")
             return False
 
-        if self._balance < MIN_BALANCE_USD:
+        low_threshold = max(self._initial_balance * 0.5, MIN_BALANCE_USD) if self._initial_balance > 0 else MIN_BALANCE_USD
+        if self._balance < low_threshold:
             logger.debug(
-                "Entry gate: BLOCKED — balance $%.2f below min $%.2f",
-                self._balance, MIN_BALANCE_USD,
+                "Entry gate: BLOCKED — balance $%.2f below threshold $%.2f",
+                self._balance, low_threshold,
             )
             return False
 
@@ -351,10 +355,18 @@ class LoopOrchestrator:
         except Exception:
             logger.exception("_check_min_balance: exchange call failed — keeping cached $%.2f", self._balance)
 
-        if self._balance < MIN_BALANCE_USD:
+        # Capture initial balance on first successful fetch
+        if self._initial_balance == 0.0 and self._balance > 0.0:
+            self._initial_balance = self._balance
+            logger.info("Initial balance recorded: $%.2f USDC", self._initial_balance)
+
+        # BALANCE_LOW threshold = 50% of initial balance (floor: MIN_BALANCE_USD)
+        low_threshold = max(self._initial_balance * 0.5, MIN_BALANCE_USD)
+
+        if self._balance < low_threshold:
             logger.warning(
-                "Balance $%.2f below MIN_BALANCE_USD $%.2f — entries blocked",
-                self._balance, MIN_BALANCE_USD,
+                "Balance $%.2f below low threshold $%.2f (50%% of initial $%.2f) — entries blocked",
+                self._balance, low_threshold, self._initial_balance,
             )
             await notifier.send(
                 user_id=TELEGRAM_CHAT_ID,

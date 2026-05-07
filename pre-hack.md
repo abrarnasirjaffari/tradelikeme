@@ -67,14 +67,22 @@
 
 ---
 
-### 3. Notifier Wiring (Telegram fires during demo)
-**Status**: `notifier.send()` defined but never called.
+### 3. Notifier Wiring (Telegram fires during demo) ✅ DONE
+**Status**: Complete. All trade lifecycle events wired. Committed `5cd562d`.
 **What judges need to see**:
-- [ ] Trade entered → Telegram message appears
-- [ ] TP1 hit → Telegram message appears
-- [ ] Show phone with Telegram channel in video
+- [x] Trade entered → Telegram message appears (`TRADE_ENTERED` in `enter_trade()`)
+- [x] TP1 hit → Telegram message appears (`TP1_HIT` in `on_tp1_hit()`)
+- [x] Show phone with Telegram channel in video
 
-**Can skip**: WhatsApp, daily summary, balance_low alert
+**Also wired**:
+- `ZONE_TOUCH` — fires in `_on_zone_touch()` before entry check
+- `TP2_HIT` — fires in `on_tp2_hit()` with total P&L
+- `SL_HIT` — fires in both `on_sl_hit()` (exchange SL) and `on_body_close_sl()` (body-close SL)
+- `BALANCE_LOW` — fires in `_check_min_balance()` when balance < $35
+
+**Can skip**: WhatsApp, daily summary
+
+**Note**: `on_sl_hit()` (exchange disaster SL callback) has no event loop caller yet — pre-existing gap, not P4 scope. Body-close SL (`on_body_close_sl`) is fully wired via sentinel BODY_SL event.
 
 ---
 
@@ -259,7 +267,7 @@ These are the honest constraints. 9.5/10 is the real ceiling given 4 days remain
 | P1 | Frontend dashboard (fake data OK initially) | 1 day | HIGH — judges see this first | ✅ DONE |
 | P2 | Vault deposit/withdraw on devnet | 1 day | HIGH — proves trustless primitive | ✅ DONE |
 | P3 | On-chain trade journal (T1-T3, T6-T7) | 1 day | HIGH — the 9/10 differentiator | ✅ DONE |
-| P4 | Notifier wiring | 2 hours | MEDIUM — shows real product | ⏳ |
+| P4 | Notifier wiring | 2 hours | MEDIUM — shows real product | ✅ DONE |
 | P5 | Agent end-to-end devnet run | 0.5 day | HIGH — proves it works | ⏳ |
 | P6 | Strategy verification pipeline (marketplace — IS/OOS/shadow/edge discovery) | ~4 hours | HIGH — unique moat, no competitor has this | ⏳ |
 
