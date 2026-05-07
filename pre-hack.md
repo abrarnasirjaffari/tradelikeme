@@ -110,8 +110,8 @@
 
 ---
 
-### 6. Strategy Verification Pipeline — MARKETPLACE CREDIBILITY (moves score 9→9.5, DeFi 1st/2nd contention) ⏳
-**Status**: Building for hackathon demo. Agent team runs today. Target: May 10.
+### 6. Strategy Verification Pipeline — MARKETPLACE CREDIBILITY (moves score 9→9.5, DeFi 1st/2nd contention) ✅ DONE
+**Status**: Complete. All 7 sub-tasks built. Committed May 7, 2026.
 **Owner**: Abrar triggers pipeline manually via admin panel for now.
 
 ---
@@ -220,13 +220,13 @@ The 30-day shadow run won't be complete at demo time — it starts when pipeline
 
 #### Task List
 
-- [ ] **V1** — Pull 2024 + 2025 OHLCV for 5 demo coins (SOL, BTC, ETH, XRP, SUI) at 4H + 1D from Binance REST into parquet files (~1 hour)
-- [ ] **V2** — Build vectorbt backtesting engine: zone entry detection (swing high/low + volume spike proxy), SL/TP logic matching strategy.md rules (~3 hours)
-- [ ] **V3** — Run Stage 1 (2024 IS) + Stage 2 (2025 OOS) on the 5 demo coins, generate metrics JSON (~1 hour)
-- [ ] **V4** — Run Stage 3: start shadow trade agent on 3 coins, log first 5–10 entries with timestamps (~1 hour)
-- [ ] **V5** — Run Stage 4: 5 edge discovery agents in parallel on 2024 IS data, collect accepted improvements table (~2 hours)
-- [ ] **V6** — Add "Strategy Verification" tab to existing dashboard (IS/OOS metrics table, shadow trade log, edge discovery results) (~2 hours)
-- [ ] **V7** — Wire grade + pipeline results into "Strategy Info" section of marketplace listing (~1 hour)
+- [x] **V1** — Pull 2024 + 2025 OHLCV for 5 demo coins (SOL, BTC, ETH, XRP, SUI) at 4H + 1D from Binance REST into parquet files (~1 hour)
+- [x] **V2** — Build vectorbt backtesting engine: zone entry detection (swing high/low + volume spike proxy), SL/TP logic matching strategy.md rules (~3 hours)
+- [x] **V3** — Run Stage 1 (2024 IS) + Stage 2 (2025 OOS) on the 5 demo coins, generate metrics JSON (~1 hour)
+- [x] **V4** — Run Stage 3: start shadow trade agent on 3 coins, log first 5–10 entries with timestamps (~1 hour)
+- [x] **V5** — Run Stage 4: 5 edge discovery agents in parallel on 2024 IS data, collect accepted improvements table (~2 hours)
+- [x] **V6** — Add "Strategy Verification" tab to existing dashboard (IS/OOS metrics table, shadow trade log, edge discovery results) (~2 hours)
+- [x] **V7** — Wire grade + pipeline results into "Strategy Info" section of marketplace listing (~1 hour)
 
 **Estimated total**: ~11 hours. With agent team running V1–V5 in parallel: **~4 hours wall-clock time.**
 
@@ -269,7 +269,7 @@ These are the honest constraints. 9.5/10 is the real ceiling given 4 days remain
 | P3 | On-chain trade journal (T1-T3, T6-T7) | 1 day | HIGH — the 9/10 differentiator | ✅ DONE |
 | P4 | Notifier wiring | 2 hours | MEDIUM — shows real product | ✅ DONE |
 | P5 | Agent end-to-end devnet run | 0.5 day | HIGH — proves it works | ⏳ |
-| P6 | Strategy verification pipeline (marketplace — IS/OOS/shadow/edge discovery) | ~4 hours | HIGH — unique moat, no competitor has this | ⏳ |
+| P6 | Strategy verification pipeline (marketplace — IS/OOS/shadow/edge discovery) | ~4 hours | HIGH — unique moat, no competitor has this | ✅ DONE |
 
 **Total**: ~4.5 days remaining. Buffer: 4 days (May 11 deadline).
 
