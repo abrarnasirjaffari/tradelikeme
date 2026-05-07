@@ -55,13 +55,13 @@
 
 ---
 
-### 2. Vault Deposit Flow — End-to-End on Devnet
-**Status**: Backend returns mock responses. No actual Solana tx.
+### 2. Vault Deposit Flow — End-to-End on Devnet ✅ DONE
+**Status**: Complete. Real Solana txs. Phantom signs. DB records history. Committed `cafa6a1`.
 **What judges need to see**:
-- [ ] User clicks "Deposit" → Phantom wallet pops up → signs tx
-- [ ] USDC transfers to vault PDA on devnet
-- [ ] Balance updates on dashboard
-- [ ] "Withdraw" button works same way (reverse)
+- [x] User clicks "Deposit" → Phantom wallet pops up → signs tx
+- [x] USDC transfers to vault PDA on devnet
+- [x] Balance updates on dashboard
+- [x] "Withdraw" button works same way (reverse)
 
 **Can skip**: CASH stablecoin (just use devnet USDC), mainnet
 
@@ -124,7 +124,7 @@
 | Priority | Task | Effort | Demo Impact | Status |
 |----------|------|--------|-------------|--------|
 | P1 | Frontend dashboard (fake data OK initially) | 1 day | HIGH — judges see this first | ✅ DONE |
-| P2 | Vault deposit/withdraw on devnet | 1 day | HIGH — proves trustless primitive | ⏳ |
+| P2 | Vault deposit/withdraw on devnet | 1 day | HIGH — proves trustless primitive | ✅ DONE |
 | P3 | On-chain trade journal (T1-T3, T6-T7) | 1 day | HIGH — the 9/10 differentiator | ⏳ |
 | P4 | Notifier wiring | 2 hours | MEDIUM — shows real product | ⏳ |
 | P5 | Agent end-to-end devnet run | 0.5 day | HIGH — proves it works | ⏳ |
