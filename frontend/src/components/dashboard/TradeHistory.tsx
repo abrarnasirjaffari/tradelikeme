@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { BarChart2 } from 'lucide-react'
+import { BarChart2, ExternalLink } from 'lucide-react'
 
 type Trade = {
   id: string
@@ -9,6 +9,8 @@ type Trade = {
   entryPrice: number
   exitPrice: number | null
   pnl: number | null
+  pnlPct: number | null
+  txSignature: string | null
   status: 'open' | 'closed' | 'sl_hit' | 'tp1_hit' | 'tp2_hit'
   openedAt: string
   closedAt: string | null
@@ -19,6 +21,15 @@ interface Props {
 }
 
 const PAGE_SIZE = 20
+
+function formatDuration(start: string, end: string | null): string {
+  if (!end) return '—'
+  const ms = new Date(end).getTime() - new Date(start).getTime()
+  const h = Math.floor(ms / 3600000)
+  const m = Math.floor((ms % 3600000) / 60000)
+  if (h >= 24) return `${Math.floor(h/24)}d ${h%24}h`
+  return `${h}h ${m}m`
+}
 
 function formatDate(iso: string): string {
   const d = new Date(iso)
@@ -123,21 +134,20 @@ export default function TradeHistory({ trades }: Props) {
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 480 }}>
             <thead>
               <tr>
-                {(['Date', 'Coin', 'Dir', 'Entry', 'Exit', 'P&L', 'Status'] as const).map((col) => (
+                {(['Date', 'Closed', 'Coin', 'Dir', 'Entry', 'Exit', 'P&L$', 'P&L%', 'Duration', 'Status'] as const).map((col) => (
                   <th
                     key={col}
-                    data-hide-mobile={col === 'Entry' || col === 'Exit' ? 'true' : undefined}
                     style={{
                       fontFamily: "'Barlow', sans-serif",
                       fontWeight: 500,
                       fontSize: '11px',
                       color: 'rgba(255,255,255,0.35)',
-                      textAlign: col === 'P&L' ? 'right' : 'left',
+                      textAlign: col === 'P&L$' || col === 'P&L%' ? 'right' : 'left',
                       padding: '0 8px 10px',
                       borderBottom: '1px solid rgba(255,255,255,0.06)',
                       whiteSpace: 'nowrap',
                     }}
-                    className={col === 'Entry' || col === 'Exit' ? 'hide-mobile' : ''}
+                    className={col === 'Closed' || col === 'Entry' || col === 'Exit' || col === 'Duration' ? 'hide-mobile' : ''}
                   >{col}</th>
                 ))}
               </tr>
@@ -168,6 +178,10 @@ export default function TradeHistory({ trades }: Props) {
                     borderBottom: '1px solid rgba(255,255,255,0.04)',
                     whiteSpace: 'nowrap',
                   }}>{formatDate(trade.openedAt)}</td>
+
+                  <td className="hide-mobile" style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 300, fontSize: '12px', color: 'rgba(255,255,255,0.5)', padding: '9px 8px', borderBottom: '1px solid rgba(255,255,255,0.04)', whiteSpace: 'nowrap' }}>
+                    {trade.closedAt ? formatDate(trade.closedAt) : <span style={{ color: 'rgba(255,255,255,0.3)' }}>—</span>}
+                  </td>
 
                   <td style={{
                     fontFamily: "'Barlow', sans-serif",
@@ -228,8 +242,30 @@ export default function TradeHistory({ trades }: Props) {
                     )}
                   </td>
 
+                  <td style={{ padding: '9px 8px', borderBottom: '1px solid rgba(255,255,255,0.04)', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                    {trade.pnlPct !== null ? (
+                      <span style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 500, fontSize: '12px', color: trade.pnlPct >= 0 ? '#22c55e' : '#ef4444' }}>
+                        {trade.pnlPct >= 0 ? '+' : ''}{trade.pnlPct.toFixed(2)}%
+                      </span>
+                    ) : <span style={{ color: 'rgba(255,255,255,0.3)', fontFamily: "'Barlow', sans-serif", fontSize: '13px' }}>—</span>}
+                  </td>
+
+                  <td className="hide-mobile" style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 300, fontSize: '12px', color: 'rgba(255,255,255,0.5)', padding: '9px 8px', borderBottom: '1px solid rgba(255,255,255,0.04)', whiteSpace: 'nowrap' }}>
+                    {formatDuration(trade.openedAt, trade.closedAt)}
+                  </td>
+
                   <td style={{ padding: '9px 8px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                     <StatusBadge status={trade.status} />
+                    {trade.txSignature && (
+                      <a href={`https://solscan.io/tx/${trade.txSignature}`} target="_blank" rel="noopener noreferrer"
+                        style={{ marginLeft: 6, color: 'rgba(255,255,255,0.3)', verticalAlign: 'middle', display: 'inline-flex' }}
+                        onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.7)')}
+                        onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.3)')}
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <ExternalLink size={11} />
+                      </a>
+                    )}
                   </td>
                 </motion.tr>
               ))}
