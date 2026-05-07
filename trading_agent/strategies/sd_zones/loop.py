@@ -22,7 +22,9 @@ import logging
 from typing import Literal
 
 from trading_agent.base.exchange_base import ExchangeBase
+from trading_agent.base.config import TELEGRAM_CHAT_ID
 from trading_agent.exchanges.solana.pyth_ws import PythPriceFeed
+import trading_agent.base.notifier as notifier
 from trading_agent.strategies.sd_zones.sentinel import Sentinel, SentinelEvent, WatchType
 from trading_agent.strategies.sd_zones.trade_agent import TradeAgent
 from trading_agent.strategies.sd_zones.zones import scan_tf_stack, find_tp_levels, find_sl_level, apply_btc_gate
@@ -354,6 +356,11 @@ class LoopOrchestrator:
                 "Balance $%.2f below MIN_BALANCE_USD $%.2f — entries blocked",
                 self._balance, MIN_BALANCE_USD,
             )
+            await notifier.send(
+                user_id=TELEGRAM_CHAT_ID,
+                event=notifier.BALANCE_LOW,
+                data={"balance": self._balance},
+            )
             return False
         return True
 
@@ -468,6 +475,12 @@ class LoopOrchestrator:
             return
 
         direction: Literal["long", "short"] = touching_zone.get("direction", "long")
+
+        await notifier.send(
+            user_id=TELEGRAM_CHAT_ID,
+            event=notifier.ZONE_TOUCH,
+            data={"symbol": symbol, "price": price},
+        )
 
         should_enter = await self.check_entry(symbol, zones, direction)
         if not should_enter:

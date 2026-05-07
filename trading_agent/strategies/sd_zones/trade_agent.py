@@ -18,6 +18,8 @@ from dataclasses import dataclass, field
 from typing import Literal
 
 from trading_agent.base.exchange_base import ExchangeBase
+from trading_agent.base.config import TELEGRAM_CHAT_ID
+import trading_agent.base.notifier as notifier
 
 logger = logging.getLogger(__name__)
 
@@ -116,6 +118,13 @@ class TradeAgent:
             "Trade open: %s %s entry=%.4f tp1=%.4f tp2=%.4f sl=%.4f disaster_sl=%.4f",
             symbol, side, entry_price, tp1_price, tp2_price, sl_price, disaster_sl,
         )
+
+        await notifier.send(
+            user_id=TELEGRAM_CHAT_ID,
+            event=notifier.TRADE_ENTERED,
+            data={"symbol": symbol, "side": side, "price": entry_price,
+                  "tp1": tp1_price, "tp2": tp2_price, "sl": sl_price},
+        )
         return trade
 
     # ------------------------------------------------------------------
@@ -174,6 +183,12 @@ class TradeAgent:
 
         logger.info("SL moved to break-even for %s: %.4f", symbol, trade.entry_price)
 
+        await notifier.send(
+            user_id=TELEGRAM_CHAT_ID,
+            event=notifier.TP1_HIT,
+            data={"symbol": symbol, "price": trade.tp1_price},
+        )
+
     # ------------------------------------------------------------------
     # TA8 — on_sl_hit: log trade as stopped out
     # ------------------------------------------------------------------
@@ -193,6 +208,12 @@ class TradeAgent:
         logger.info(
             "SL HIT: %s %s entry=%.4f exit=%.4f pnl=%.4f",
             symbol, trade.side, trade.entry_price, exit_price, pnl,
+        )
+
+        await notifier.send(
+            user_id=TELEGRAM_CHAT_ID,
+            event=notifier.SL_HIT,
+            data={"symbol": symbol, "price": exit_price, "pnl": pnl},
         )
 
     # ------------------------------------------------------------------
@@ -217,6 +238,12 @@ class TradeAgent:
         logger.info(
             "TRADE COMPLETE: %s %s tp1_pnl=%.4f tp2_pnl=%.4f total=%.4f",
             symbol, trade.side, pnl_tp1, pnl_tp2, total_pnl,
+        )
+
+        await notifier.send(
+            user_id=TELEGRAM_CHAT_ID,
+            event=notifier.TP2_HIT,
+            data={"symbol": symbol, "price": trade.tp2_price, "pnl": total_pnl},
         )
 
     # ------------------------------------------------------------------
@@ -247,6 +274,12 @@ class TradeAgent:
         logger.info(
             "Position closed (body-SL): %s %s entry=%.4f close=%.4f pnl=%.4f",
             symbol, trade.side, trade.entry_price, body_close_price, pnl,
+        )
+
+        await notifier.send(
+            user_id=TELEGRAM_CHAT_ID,
+            event=notifier.SL_HIT,
+            data={"symbol": symbol, "price": body_close_price, "pnl": pnl},
         )
 
     # ------------------------------------------------------------------
