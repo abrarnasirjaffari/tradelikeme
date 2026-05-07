@@ -216,8 +216,21 @@ class Sentinel:
           ZONE_TOUCH → zone_top, zone_bottom, direction
           TP1_HIT    → tp1_price, direction
           BODY_SL    → sl_price, direction
+
+        If *symbol* has no Pyth feed mapping (e.g. a coin not supported by Zeta
+        on devnet), the watch descriptor is still stored — the sentinel will track
+        the zone internally — but no Pyth WebSocket subscription is created.  On
+        devnet this is the correct behaviour: zones are found for all 14 watchlist
+        coins but Pyth/Zeta only support SOL/BTC/ETH/APT/ARB.
         """
         pyth_symbol = _to_pyth_symbol(symbol)
+
+        if pyth_symbol is None:
+            logger.warning(
+                "add_watch: no Pyth feed for '%s' — watch registered but no WS subscription "
+                "(symbol not supported on this network)",
+                symbol,
+            )
 
         if watch_type == WatchType.ZONE_TOUCH:
             self._zone_watches[symbol] = ZoneWatch(
@@ -240,7 +253,7 @@ class Sentinel:
             now = time.time()
             # Align candle open time to the nearest 30-min boundary
             candle_start = now - (now % _30M_SECONDS)
-            current_price = self._pyth.get_price(pyth_symbol) or 0.0
+            current_price = (self._pyth.get_price(pyth_symbol) if pyth_symbol else None) or 0.0
             self._body_sl_watches[symbol] = BodySLWatch(
                 symbol=symbol,
                 sl_price=sl_price,
@@ -259,7 +272,8 @@ class Sentinel:
         # Subscribe to Pyth feed exactly once per symbol regardless of how many
         # watch types are registered for it. Duplicate subscriptions would fire
         # _on_price_tick multiple times per tick.
-        if pyth_symbol not in self._subscribed_symbols:
+        # Skip subscription entirely if there is no Pyth feed for this symbol.
+        if pyth_symbol is not None and pyth_symbol not in self._subscribed_symbols:
             await self._pyth.subscribe(pyth_symbol, self._on_price_tick)
             self._subscribed_symbols.add(pyth_symbol)
             logger.debug("Pyth feed subscribed: %s", pyth_symbol)
@@ -287,7 +301,8 @@ class Sentinel:
             )
             if not still_watching:
                 pyth_symbol = _to_pyth_symbol(symbol)
-                self._subscribed_symbols.discard(pyth_symbol)
+                if pyth_symbol is not None:
+                    self._subscribed_symbols.discard(pyth_symbol)
         else:
             logger.warning("remove_watch: no watches found for %s", symbol)
 
@@ -496,12 +511,22 @@ _SYMBOL_MAP: dict[str, str] = {
 _REVERSE_MAP: dict[str, str] = {v: k for k, v in _SYMBOL_MAP.items()}
 
 
-def _to_pyth_symbol(symbol: str) -> str:
+def _to_pyth_symbol(symbol: str) -> str | None:
+    """
+    Convert a strategy symbol (e.g. 'SOLUSDT') to a Pyth feed symbol ('SOL/USD').
+
+    Returns None (instead of raising) for unmapped symbols so that zone watches
+    can be registered for any coin — only coins with a Pyth feed get a live WS
+    subscription.  Callers that receive None should skip the Pyth call.
+    """
     mapped = _SYMBOL_MAP.get(symbol.upper())
     if not mapped:
-        raise ValueError(
-            f"No Pyth feed mapping for '{symbol}'. Add it to _SYMBOL_MAP in sentinel.py."
+        logger.warning(
+            "_to_pyth_symbol: no Pyth feed mapping for '%s' — "
+            "add it to _SYMBOL_MAP in sentinel.py if live WS prices are needed",
+            symbol,
         )
+        return None
     return mapped
 
 

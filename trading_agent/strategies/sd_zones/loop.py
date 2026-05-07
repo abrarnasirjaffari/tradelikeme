@@ -19,6 +19,7 @@ Usage:
 """
 import asyncio
 import logging
+import os
 from typing import Literal
 
 from trading_agent.base.exchange_base import ExchangeBase
@@ -49,6 +50,14 @@ WATCHLIST: list[str] = [
     "XRPUSDT", "LINKUSDT", "DOTUSDT", "LTCUSDT", "DOGEUSDT",
     "ADAUSDT", "UNIUSDT", "ENAUSDT", "AAVEUSDT",
 ]
+
+# Devnet watchlist — restricted to Zeta Markets supported coins only
+DEVNET_WATCHLIST: list[str] = ["SOLUSDT", "BTCUSDT", "ETHUSDT"]
+
+# Active watchlist: devnet mode uses the restricted list, mainnet uses the full list.
+_ACTIVE_WATCHLIST: list[str] = (
+    DEVNET_WATCHLIST if os.getenv("DEVNET_MODE") == "1" else WATCHLIST
+)
 
 
 class LoopOrchestrator:
@@ -115,7 +124,7 @@ class LoopOrchestrator:
         #    Entries remain blocked (scan_complete == False) until this finishes.
         logger.info(
             "Running initial zone scan across %d coins — entries blocked until complete",
-            len(WATCHLIST),
+            len(_ACTIVE_WATCHLIST),
         )
         await self._run_zone_scan()
 
@@ -147,7 +156,7 @@ class LoopOrchestrator:
         never aborts the whole scan.
         """
         scanned = 0
-        for symbol in WATCHLIST:
+        for symbol in _ACTIVE_WATCHLIST:
             try:
                 zones = await scan_tf_stack(symbol)
                 self._zones[symbol] = zones
@@ -157,14 +166,14 @@ class LoopOrchestrator:
 
                 for zone in zones:
                     direction: Literal["long", "short"] = (
-                        "long" if zone.get("type") == "demand" else "short"
+                        "long" if zone.type == "demand" else "short"
                     )
                     try:
                         await self._sentinel.add_watch(
                             symbol=symbol,
                             watch_type=WatchType.ZONE_TOUCH,
-                            zone_top=float(zone["top"]),
-                            zone_bottom=float(zone["bottom"]),
+                            zone_top=float(zone.top),
+                            zone_bottom=float(zone.bottom),
                             direction=direction,
                         )
                     except Exception:
@@ -178,7 +187,7 @@ class LoopOrchestrator:
             except Exception:
                 logger.exception("Zone scan failed for %s — skipping", symbol)
 
-        logger.info("Zone scan pass complete: %d/%d coins scanned", scanned, len(WATCHLIST))
+        logger.info("Zone scan pass complete: %d/%d coins scanned", scanned, len(_ACTIVE_WATCHLIST))
 
     # ------------------------------------------------------------------
     # LO3 — zone refresh cycle
@@ -291,9 +300,10 @@ class LoopOrchestrator:
             try:
                 from trading_agent.strategies.sd_zones.sentinel import _to_pyth_symbol
                 pyth_sym = _to_pyth_symbol(symbol)
-                live_price = self._pyth.get_price(pyth_sym) or await self._pyth.get_price_rest(pyth_sym)
-                if live_price:
-                    tp1, _tp2 = find_tp_levels(live_price, direction, filtered)
+                if pyth_sym:
+                    live_price = self._pyth.get_price(pyth_sym) or await self._pyth.get_price_rest(pyth_sym)
+                    if live_price:
+                        tp1, _tp2 = find_tp_levels(live_price, direction, filtered)
             except Exception:
                 logger.debug("check_entry: %s — could not fetch live price for TP check", symbol)
 
@@ -306,9 +316,10 @@ class LoopOrchestrator:
         try:
             from trading_agent.strategies.sd_zones.sentinel import _to_pyth_symbol
             pyth_sym = _to_pyth_symbol(symbol)
-            live_price = self._pyth.get_price(pyth_sym) or await self._pyth.get_price_rest(pyth_sym)
-            if live_price:
-                sl = find_sl_level(live_price, direction, filtered)
+            if pyth_sym:
+                live_price = self._pyth.get_price(pyth_sym) or await self._pyth.get_price_rest(pyth_sym)
+                if live_price:
+                    sl = find_sl_level(live_price, direction, filtered)
         except Exception:
             logger.debug("check_entry: %s — could not fetch live price for SL check", symbol)
 
@@ -506,7 +517,18 @@ class LoopOrchestrator:
             logger.warning("Cannot compute TP/SL for %s — skipping entry", symbol)
             return
 
-        tp1, tp2 = tp_levels
+        tp1_zone, tp2_zone = tp_levels
+
+        if tp1_zone is None:
+            logger.warning("No TP1 zone found for %s — skipping entry", symbol)
+            return
+
+        # Extract float price from Zone dataclass.
+        # For longs: target is the TOP of a supply zone (resistance ceiling).
+        # For shorts: target is the BOTTOM of a demand zone (support floor).
+        tp1_price = _zone_to_tp_price(tp1_zone, direction)
+        tp2_price = _zone_to_tp_price(tp2_zone, direction) if tp2_zone is not None else tp1_price
+
         balance = self._balance
         size = _calc_position_size(balance, price, MARGIN_PCT, LEVERAGE)
 
@@ -515,8 +537,8 @@ class LoopOrchestrator:
             side=direction,
             entry_price=price,
             size=size,
-            tp1_price=tp1,
-            tp2_price=tp2,
+            tp1_price=tp1_price,
+            tp2_price=tp2_price,
             sl_price=sl_level,
             leverage=LEVERAGE,
         )
@@ -525,7 +547,7 @@ class LoopOrchestrator:
         await self._sentinel.add_watch(
             symbol=symbol,
             watch_type=WatchType.TP1_HIT,
-            tp1_price=tp1,
+            tp1_price=tp1_price,
             direction=direction,
         )
         await self._sentinel.add_watch(
@@ -540,12 +562,45 @@ class LoopOrchestrator:
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _find_touched_zone(price: float, zones: list[dict]) -> dict | None:
-    """Return the first zone whose range contains *price*, or None."""
+def _find_touched_zone(price: float, zones: list) -> dict | None:
+    """Return the first zone whose range contains *price*, or None.
+
+    Handles both Zone dataclass objects (from scan_tf_stack) and plain dicts.
+    Always returns a plain dict with keys: bottom, top, direction, type.
+    """
     for zone in zones:
-        if zone.get("bottom", 0) <= price <= zone.get("top", 0):
+        if hasattr(zone, "bottom"):
+            # Zone dataclass
+            bottom = zone.bottom
+            top = zone.top
+            direction = "long" if zone.type == "demand" else "short"
+        else:
+            # plain dict fallback
+            bottom = zone.get("bottom", 0)
+            top = zone.get("top", 0)
+            direction = zone.get("direction", "long")
+
+        if bottom <= price <= top:
+            if hasattr(zone, "bottom"):
+                return {"bottom": bottom, "top": top, "direction": direction, "type": zone.type}
             return zone
     return None
+
+
+def _zone_to_tp_price(zone, direction: str) -> float:
+    """
+    Extract the TP float price from a Zone dataclass (or dict).
+
+    Strategy rules:
+    - LONG trade: price rises into supply zone → TP is the zone's TOP (resistance ceiling).
+    - SHORT trade: price falls into demand zone → TP is the zone's BOTTOM (support floor).
+    """
+    if hasattr(zone, "top"):
+        # Zone dataclass
+        return zone.top if direction == "long" else zone.bottom
+    else:
+        # plain dict fallback
+        return zone.get("top", 0.0) if direction == "long" else zone.get("bottom", 0.0)
 
 
 def _calc_position_size(
