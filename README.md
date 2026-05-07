@@ -1,6 +1,6 @@
 # TradeLikeMe
 
-**Autonomous crypto trading agent on Solana — Supply & Demand zone strategy, trustless Anchor vault, body-close stop loss.**
+**Marketplace for Verified AI Trading Strategies on Solana.**
 
 [tradelikeme.xyz](https://tradelikeme.xyz) · [Live Demo](https://tradelikeme.xyz/dashboard)
 
