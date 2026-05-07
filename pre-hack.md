@@ -102,8 +102,8 @@
 
 ---
 
-### 6. Strategy Verification Pipeline — FOR MARKETPLACE TRADERS (post-hackathon build, plan only)
-**Status**: Plan only — NOT building for hackathon demo. Mention verbally in demo video.
+### 6. Strategy Verification Pipeline — FOR MARKETPLACE TRADERS ⏳
+**Status**: Building for hackathon demo. Agent team runs today.
 **Owner**: Abrar (admin triggers pipeline manually for now)
 
 **What this is**: Automated verification system that runs when a trader submits their strategy via the submission form. Admin reviews the submission and triggers the pipeline. Output determines the grade (S/A/B/C) and fee tier assigned to the trader on the marketplace.
@@ -167,7 +167,8 @@ Stage 4 — Edge Discovery Agent Team
 ---
 
 #### Build When
-After hackathon submission (May 11). First trader onboarding target: June 2026.
+**Now. Target: May 10 (day before submission deadline).**
+Estimated effort: ~4 hours with agent team running in parallel.
 
 ---
 
@@ -197,7 +198,7 @@ After hackathon submission (May 11). First trader onboarding target: June 2026.
 | P3 | On-chain trade journal (T1-T3, T6-T7) | 1 day | HIGH — the 9/10 differentiator | ✅ DONE |
 | P4 | Notifier wiring | 2 hours | MEDIUM — shows real product | ⏳ |
 | P5 | Agent end-to-end devnet run | 0.5 day | HIGH — proves it works | ⏳ |
-| P6 | Strategy verification pipeline (marketplace, plan only — mention in demo) | post-hackathon | HIGH — unique moat, mention verbally | 📋 PLANNED |
+| P6 | Strategy verification pipeline (marketplace — IS/OOS/shadow/edge discovery) | ~4 hours | HIGH — unique moat, no competitor has this | ⏳ |
 
 **Total**: ~4.5 days remaining. Buffer: 4 days (May 11 deadline).
 
