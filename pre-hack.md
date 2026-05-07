@@ -102,79 +102,72 @@
 
 ---
 
-### 6. Strategy Verification Pipeline (moves score from 9→10 — the credibility killer)
-**Status**: Not started. This is the moat no competitor in 4 Colosseum hackathons has touched.
-**What judges need to see**:
-- [ ] 2024 backtest results (in-sample) — win rate, RRR, max drawdown, trade count
-- [ ] 2025 OOS results (out-of-sample) — same metrics, separate year, strategy unchanged
-- [ ] 30-day shadow trade log (paper trades with logged entry/exit, no hindsight)
-- [ ] Edge discovery output — at least 1 rule improvement found by agent team with before/after stats
+### 6. Strategy Verification Pipeline — FOR MARKETPLACE TRADERS (post-hackathon build, plan only)
+**Status**: Plan only — NOT building for hackathon demo. Mention verbally in demo video.
+**Owner**: Abrar (admin triggers pipeline manually for now)
 
-**Why this matters**: Every competitor says "our AI trades profitably." Nobody shows a 2-year verification pipeline. This is what turns "trust us" into "here's the proof" — the same reason Reflect Protocol won Grand Prize.
+**What this is**: Automated verification system that runs when a trader submits their strategy via the submission form. Admin reviews the submission and triggers the pipeline. Output determines the grade (S/A/B/C) and fee tier assigned to the trader on the marketplace.
 
-**The pitch this unlocks**:
-> "Here's 2024 in-sample: 89% win rate, 1.5 RRR. Here's 2025 out-of-sample — strategy never touched — 84% win rate, 1.4 RRR. The edge is real and it persists. Then 30 days of shadow trades, logged before price moved. Then an agent team found 3 rule refinements that lifted RRR from 1.5 to 1.8 without touching win rate. This is how institutional quant funds prove strategies. We're the first hackathon project to do it."
+**Why this is the moat**: No competitor in 4 Colosseum hackathons automated strategy verification. Prop Shop, Nova Algo, aignt.fun — all zero or manual verification. This is what makes the marketplace trustworthy for users: grades are computed, not assigned.
 
 ---
 
-#### Pipeline Architecture
+#### How It Works (user-facing)
+
+1. Trader submits strategy via form (rules in plain English + entry/exit/SL/TP parameters)
+2. Admin reviews submission and clicks "Run Verification" in admin panel
+3. Pipeline runs automatically (4 stages, ~4 hours)
+4. Results posted to trader's profile page + marketplace listing
+5. Grade + fee tier assigned based on verified results — platform cannot override
+
+---
+
+#### Pipeline Stages
 
 ```
 Stage 1 — In-Sample Backtest (2024, full year)
-  ├── Data: OHLCV for all 14 watchlist coins, all 7 TFs, Jan–Dec 2024
+  ├── Data: OHLCV for submitted coins, all relevant TFs, Jan–Dec 2024
   ├── Source: Binance REST API (free, unlimited historical)
-  ├── Engine: vectorbt (Python) — fast enough for 14 coins × 7 TFs
-  ├── Rules applied: exact strategy rules from strategy.md (no lookahead bias)
+  ├── Engine: vectorbt (Python) — algorithmic zone proxy for visual strategies
   └── Output: win_rate, avg_winner, avg_loser, RRR, max_drawdown, profit_factor, trade_count
 
 Stage 2 — Out-of-Sample Verification (2025, full year)
   ├── SAME rules, SAME code, different date range (Jan–Dec 2025)
-  ├── Rules frozen — no fitting allowed after Stage 1
-  └── Output: same metrics. If OOS win rate within ±5% of IS → strategy is real
+  ├── Rules frozen after Stage 1 — no fitting allowed
+  └── Output: same metrics. OOS within ±5% of IS = strategy is consistent
 
-Stage 3 — Shadow Trade Log (last 30 days)
-  ├── Every setup logged BEFORE price moved (timestamped entry in SQLite)
-  ├── Exit logged when TP1/TP2/SL hit
-  ├── Source of truth: journal.py already does this
-  └── Output: 30-day live P&L table (no hindsight possible — timestamps prove it)
+Stage 3 — 30-Day Shadow Trade
+  ├── Agent runs strategy in paper mode for 30 days
+  ├── Every entry timestamped BEFORE price moves — can't fake with hindsight
+  └── Output: live P&L table, timestamped, stored in SQLite
 
-Stage 4 — Agent Edge Discovery Team
-  ├── 5-agent team: each tests 1 rule variation at a time on 2024 IS data
-  ├── Candidate rules: BTC gate threshold, zone width %, TP2 zone selection, 
-  │   session filter (Asia/London/NY), FVG confirmation weight
-  ├── Acceptance criteria: win rate stays ≥85%, RRR improves ≥0.1, 
-  │   drawdown stays ≤IS baseline
-  └── Output: table of accepted improvements + before/after stats
-
-Stage 5 — Dashboard Page: "Strategy Verification"
-  ├── Shows IS vs OOS chart side-by-side
-  ├── Shadow trade log table (last 30 entries, all timestamped)
-  ├── Edge discoveries: before/after table
-  └── "Methodology" section — explains pipeline so judges understand the rigor
+Stage 4 — Edge Discovery Agent Team
+  ├── 5 parallel agents, each testing 1 rule variation on IS data
+  ├── Acceptance: win rate stays ≥ IS baseline, RRR improves, drawdown stays flat
+  └── Output: suggested rule improvements + before/after stats → shown to trader only
 ```
 
 ---
 
-#### Demo Video Addition (~15s)
-After showing 89% win rate stat:
-- **(5s)** "This isn't backtested on the same data we optimised on. Here's 2024 in-sample, here's 2025 out-of-sample — strategy untouched — still 84%. The edge persists."
-- **(5s)** "30 days of shadow trades, timestamped before price moved. Can't fake timestamps."
-- **(5s)** "Agent team found 3 rule improvements. RRR went from 1.5 to 1.8."
+#### Grade Assignment (from verified results)
+
+| Grade | Win Rate | OOS Consistency | Shadow P&L | Fee Tier |
+|-------|----------|-----------------|------------|----------|
+| S | ≥85% | ±3% of IS | Positive | 15% |
+| A | 75–84% | ±5% of IS | Positive | 12% |
+| B | 65–74% | ±7% of IS | Neutral or better | 10% |
+| C | 55–64% | ±10% of IS | Neutral | 8% |
+| Rejected | <55% | — | — | — |
 
 ---
 
-#### Task List
+#### Demo Video Line (~5s)
+> *"Every strategy on our marketplace goes through a 4-stage automated verification pipeline — backtest, out-of-sample, 30-day shadow trade, edge discovery. The grade is computed, not assigned. We can't fake it."*
 
-- [ ] **V1** — Pull 2024 + 2025 OHLCV for all 14 coins (all 7 TFs) from Binance REST into parquet files
-- [ ] **V2** — Build vectorbt backtesting engine applying exact strategy rules (entry/SL/TP logic)
-- [ ] **V3** — Run Stage 1 (2024 IS) + Stage 2 (2025 OOS), generate metrics CSV
-- [ ] **V4** — Export shadow trade log from journal.py (last 30 days) — already collected, just need to surface it
-- [ ] **V5** — Run Stage 4 edge discovery team (5 parallel agents, 1 rule variation each)
-- [ ] **V6** — Add "Strategy Verification" page to frontend dashboard (IS/OOS table + shadow log + edge discoveries)
-- [ ] **V7** — Wire verification metrics into the existing "Strategy Info" dashboard section
+---
 
-**Estimated effort**: 2 days (Wasiq owns V1–V5, Abrar wires V6–V7)
-**Demo impact**: Turns score from 9/10 → 10/10. No competitor has this.
+#### Build When
+After hackathon submission (May 11). First trader onboarding target: June 2026.
 
 ---
 
@@ -204,7 +197,7 @@ After showing 89% win rate stat:
 | P3 | On-chain trade journal (T1-T3, T6-T7) | 1 day | HIGH — the 9/10 differentiator | ✅ DONE |
 | P4 | Notifier wiring | 2 hours | MEDIUM — shows real product | ⏳ |
 | P5 | Agent end-to-end devnet run | 0.5 day | HIGH — proves it works | ⏳ |
-| P6 | Strategy verification pipeline (IS/OOS/shadow/edge discovery) | 2 days | HIGH — 9→10/10, unique across all Colosseum hackathons | ⏳ |
+| P6 | Strategy verification pipeline (marketplace, plan only — mention in demo) | post-hackathon | HIGH — unique moat, mention verbally | 📋 PLANNED |
 
 **Total**: ~4.5 days remaining. Buffer: 4 days (May 11 deadline).
 
