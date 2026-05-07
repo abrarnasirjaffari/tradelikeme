@@ -102,73 +102,136 @@
 
 ---
 
-### 6. Strategy Verification Pipeline — FOR MARKETPLACE TRADERS ⏳
-**Status**: Building for hackathon demo. Agent team runs today.
-**Owner**: Abrar (admin triggers pipeline manually for now)
-
-**What this is**: Automated verification system that runs when a trader submits their strategy via the submission form. Admin reviews the submission and triggers the pipeline. Output determines the grade (S/A/B/C) and fee tier assigned to the trader on the marketplace.
-
-**Why this is the moat**: No competitor in 4 Colosseum hackathons automated strategy verification. Prop Shop, Nova Algo, aignt.fun — all zero or manual verification. This is what makes the marketplace trustworthy for users: grades are computed, not assigned.
+### 6. Strategy Verification Pipeline — MARKETPLACE CREDIBILITY (moves score 9→9.5, DeFi 1st/2nd contention) ⏳
+**Status**: Building for hackathon demo. Agent team runs today. Target: May 10.
+**Owner**: Abrar triggers pipeline manually via admin panel for now.
 
 ---
 
-#### How It Works (user-facing)
+#### Honest Score Impact
 
-1. Trader submits strategy via form (rules in plain English + entry/exit/SL/TP parameters)
-2. Admin reviews submission and clicks "Run Verification" in admin panel
-3. Pipeline runs automatically (4 stages, ~4 hours)
-4. Results posted to trader's profile page + marketplace listing
-5. Grade + fee tier assigned based on verified results — platform cannot override
+**Without P6 (P3+P4+P5 done)**: 9/10 — competitive for DeFi 3rd/4th ($10–15k)
+**With P6 done**: 9.5/10 — competitive for DeFi 1st/2nd ($20–25k)
+
+The half-point ceiling exists because: (1) verification pipeline runs off-chain (vectorbt on EC2, not on Solana), (2) vault is unaudited, (3) 30-day shadow trade can only be "in progress" not complete at demo time. These are hard structural constraints that can't be fixed in 4 days.
+
+What P6 actually moves is the **Novelty** and **Business Plan** judging criteria from 9→10. No competitor in 4 Colosseum hackathons automated strategy verification. The marketplace grade is computed by a pipeline, not assigned by us — that's a genuinely new primitive.
 
 ---
 
-#### Pipeline Stages
+#### Competitor Comparison — Why This Specific Feature Wins
+
+| Project | How They Handle Trader Quality | Result |
+|---------|-------------------------------|--------|
+| Prop Shop (Radar, no prize) | No verification at all. Traders just post. | Lost — judges asked "how do you know these traders are good?" |
+| Nova Algo (Radar, no prize) | Claims institutional quant background. No proof. | Lost — résumé is not evidence |
+| aignt.fun (Breakout + Cypherpunk, 0 prizes both times) | ML agents "learn" — zero verification of anything | Lost twice |
+| Agent Arc (Breakout AI 3rd, $15k) | Non-custodial, no vault, no verification | Won AI track only, not DeFi |
+| GLAM (Renaissance DeFi 2nd, $20k) | On-chain asset management, no strategy verification | Won on execution quality, not verification |
+| Reflect Protocol (Radar Grand Prize, $50k) | Delta-neutral math was publicly readable + audited | Won because the math was verifiable — CLOSEST ANALOGY |
+| **TradeLikeMe with P6** | **4-stage automated pipeline: IS backtest → OOS → shadow → edge discovery. Grade computed, not assigned.** | **First marketplace in 4 hackathons to automate this** |
+
+**The Reflect Protocol parallel is exact**: they won Grand Prize because their math was readable and verifiable, not because they claimed good returns. P6 is TradeLikeMe's equivalent — "the grade isn't our opinion, it's the output of a pipeline anyone can inspect."
+
+---
+
+#### What This Is
+
+Trader submits strategy via the existing submission form → admin clicks "Run Verification" → pipeline runs automatically across 4 stages (~4 hours) → results posted to marketplace listing → grade (S/A/B/C) and fee tier assigned from computed results. Platform cannot override the grade — it comes from the pipeline output.
+
+---
+
+#### Pipeline Architecture
 
 ```
 Stage 1 — In-Sample Backtest (2024, full year)
-  ├── Data: OHLCV for submitted coins, all relevant TFs, Jan–Dec 2024
-  ├── Source: Binance REST API (free, unlimited historical)
-  ├── Engine: vectorbt (Python) — algorithmic zone proxy for visual strategies
-  └── Output: win_rate, avg_winner, avg_loser, RRR, max_drawdown, profit_factor, trade_count
+  ├── Data: OHLCV for trader's submitted coins, 4H + 1D TF, Jan–Dec 2024
+  ├── Source: Binance REST API (free, unlimited historical, reproducible)
+  ├── Engine: vectorbt (Python) — fast vectorised backtesting
+  ├── Rules: trader's submitted entry/exit/SL/TP parameters encoded as Python config
+  └── Output: win_rate, avg_winner%, avg_loser%, RRR, max_drawdown%, 
+              profit_factor, trade_count, sharpe_ratio
 
 Stage 2 — Out-of-Sample Verification (2025, full year)
-  ├── SAME rules, SAME code, different date range (Jan–Dec 2025)
-  ├── Rules frozen after Stage 1 — no fitting allowed
-  └── Output: same metrics. OOS within ±5% of IS = strategy is consistent
+  ├── SAME rules, SAME code, SAME coins — only date range changes (Jan–Dec 2025)
+  ├── Rules frozen after Stage 1 — no refitting allowed
+  ├── Pass condition: OOS win_rate within ±8% of IS win_rate
+  └── Output: same metrics + IS vs OOS delta table
+              "Strategy consistent" or "Strategy overfit" verdict
 
-Stage 3 — 30-Day Shadow Trade
-  ├── Agent runs strategy in paper mode for 30 days
-  ├── Every entry timestamped BEFORE price moves — can't fake with hindsight
-  └── Output: live P&L table, timestamped, stored in SQLite
+Stage 3 — Shadow Trade (30-day paper mode)
+  ├── Agent runs strategy in paper mode, entries logged BEFORE price moves
+  ├── Timestamp set at signal time — impossible to backfill with hindsight
+  ├── Stored in SQLite journal.py (same schema as live trades)
+  └── Output: 30-day timestamped P&L table, win rate, RRR
+              Shown on marketplace listing as "Live Shadow Track Record"
 
 Stage 4 — Edge Discovery Agent Team
-  ├── 5 parallel agents, each testing 1 rule variation on IS data
-  ├── Acceptance: win rate stays ≥ IS baseline, RRR improves, drawdown stays flat
-  └── Output: suggested rule improvements + before/after stats → shown to trader only
+  ├── 5 parallel agents test 1 rule variation each on 2024 IS data:
+  │     Agent 1: BTC macro gate threshold (strict vs loose)
+  │     Agent 2: Zone width tolerance (±2% vs ±5%)
+  │     Agent 3: TP2 zone selection (zone 2 vs zone 3)
+  │     Agent 4: Session filter (Asia / London / NY hours only)
+  │     Agent 5: FVG confluence requirement (required vs optional)
+  ├── Acceptance: win_rate stays ≥ IS baseline AND (RRR improves ≥0.1 OR drawdown reduces ≥1%)
+  └── Output: accepted improvements table → shown to trader privately
+              Platform takes no action — trader decides whether to adopt
 ```
 
 ---
 
-#### Grade Assignment (from verified results)
+#### Grade Assignment (computed from pipeline, not assigned by platform)
 
-| Grade | Win Rate | OOS Consistency | Shadow P&L | Fee Tier |
-|-------|----------|-----------------|------------|----------|
-| S | ≥85% | ±3% of IS | Positive | 15% |
-| A | 75–84% | ±5% of IS | Positive | 12% |
-| B | 65–74% | ±7% of IS | Neutral or better | 10% |
-| C | 55–64% | ±10% of IS | Neutral | 8% |
-| Rejected | <55% | — | — | — |
+| Grade | IS Win Rate | OOS Consistency | Shadow P&L | Fee Tier | Platform Takes |
+|-------|-------------|-----------------|------------|----------|----------------|
+| S | ≥85% | ±3% of IS | Positive | 15% | 4.5% |
+| A | 75–84% | ±5% of IS | Positive | 12% | 3.6% |
+| B | 65–74% | ±8% of IS | Neutral or better | 10% | 3.0% |
+| C | 55–64% | ±10% of IS | Neutral | 8% | 2.4% |
+| Rejected | <55% | — | — | Rejected | — |
 
----
-
-#### Demo Video Line (~5s)
-> *"Every strategy on our marketplace goes through a 4-stage automated verification pipeline — backtest, out-of-sample, 30-day shadow trade, edge discovery. The grade is computed, not assigned. We can't fake it."*
+Grade is stored in `StrategyRecord` on-chain (already built in P3 via `register_strategy()`). Platform cannot downgrade a trader's grade without re-running the pipeline.
 
 ---
 
-#### Build When
-**Now. Target: May 10 (day before submission deadline).**
-Estimated effort: ~4 hours with agent team running in parallel.
+#### What Judges See in the Demo (~20s addition to demo video)
+
+Show the "Strategy Marketplace" page with one verified trader listing:
+- **(5s)** "Trader submits their strategy. We run a 4-stage automated verification pipeline — 2 years of data, out-of-sample test, 30-day shadow trade."
+- **(5s)** Show IS vs OOS table side-by-side. "2024: 81% win rate. 2025 — strategy untouched — 78%. Consistent. Grade: A-tier."
+- **(5s)** Show shadow trade log. "Every entry timestamped before price moved. Can't fake it."
+- **(5s)** "Grade is computed. We can't change it. The trader can't pay for a better grade."
+
+---
+
+#### What the Shadow Trade Demo Looks Like
+
+The 30-day shadow run won't be complete at demo time — it starts when pipeline triggers. Show it as "in progress" with the first 5–10 trades logged (real entries, real timestamps, real outcomes where price already moved). This is honest and actually more compelling than a finished result — judges see it running live.
+
+---
+
+#### Task List
+
+- [ ] **V1** — Pull 2024 + 2025 OHLCV for 5 demo coins (SOL, BTC, ETH, XRP, SUI) at 4H + 1D from Binance REST into parquet files (~1 hour)
+- [ ] **V2** — Build vectorbt backtesting engine: zone entry detection (swing high/low + volume spike proxy), SL/TP logic matching strategy.md rules (~3 hours)
+- [ ] **V3** — Run Stage 1 (2024 IS) + Stage 2 (2025 OOS) on the 5 demo coins, generate metrics JSON (~1 hour)
+- [ ] **V4** — Run Stage 3: start shadow trade agent on 3 coins, log first 5–10 entries with timestamps (~1 hour)
+- [ ] **V5** — Run Stage 4: 5 edge discovery agents in parallel on 2024 IS data, collect accepted improvements table (~2 hours)
+- [ ] **V6** — Add "Strategy Verification" tab to existing dashboard (IS/OOS metrics table, shadow trade log, edge discovery results) (~2 hours)
+- [ ] **V7** — Wire grade + pipeline results into "Strategy Info" section of marketplace listing (~1 hour)
+
+**Estimated total**: ~11 hours. With agent team running V1–V5 in parallel: **~4 hours wall-clock time.**
+
+---
+
+#### Why This Doesn't Hit 10/10
+
+Being honest:
+- Verification pipeline runs on EC2, not on Solana — results are off-chain. A judge can ask "how do I know you didn't change the backtest after seeing the results?" Answer: the strategy rules hash is on-chain via `register_strategy()` (already built in P3) — but the backtest output itself is not committed on-chain. This is the gap.
+- The 30-day shadow trade will be "in progress" not complete — only 5–10 trades shown.
+- Vault is unaudited. Grand Prize projects (Reflect Protocol) were security-audited.
+
+These are the honest constraints. 9.5/10 is the real ceiling given 4 days remaining.
 
 ---
 
