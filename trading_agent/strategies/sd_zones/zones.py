@@ -2,10 +2,12 @@
 Zone scanner for S/D zone strategy.
 Uses KLineChart MCP server (primary) or TradingView MCP (fallback).
 """
+import asyncio
 import base64
 import json
 import logging
 import os
+import re
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -170,6 +172,8 @@ DATA_READY_TIMEOUT_MS = 20_000
 # Module-level browser singleton — reused across multiple render_chart calls
 _browser: Browser | None = None
 _page: Page | None = None
+# Semaphore to prevent concurrent access to the shared Playwright page (H12 fix)
+_render_lock = asyncio.Semaphore(1)
 
 
 async def _get_page() -> Page:
@@ -202,7 +206,9 @@ async def render_chart(symbol: str, tf: str) -> Page:
     if tf not in _TF_TO_BINANCE:
         raise ValueError(f"Unknown timeframe '{tf}'. Valid: {list(_TF_TO_BINANCE)}")
 
-    url = f"{CHART_SERVER_URL}?symbol={symbol}&tf={tf}"
+    # M9 fix: sanitize symbol — only allow alphanumeric characters
+    safe_symbol = re.sub(r"[^A-Za-z0-9]", "", symbol)
+    url = f"{CHART_SERVER_URL}?symbol={safe_symbol}&tf={tf}"
     page = await _get_page()
 
     await page.goto(url, wait_until="domcontentloaded")
@@ -315,13 +321,20 @@ class Zone:
     notes: str = field(default="")
 
 
+# M18 fix: lazily-initialized module-level boto3 Bedrock client singleton
+_bedrock_client_instance = None
+
+
 def _bedrock_client():
-    return boto3.client(
-        "bedrock-runtime",
-        region_name=BEDROCK_REGION,
-        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-    )
+    global _bedrock_client_instance
+    if _bedrock_client_instance is None:
+        _bedrock_client_instance = boto3.client(
+            "bedrock-runtime",
+            region_name=BEDROCK_REGION,
+            aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+            aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+        )
+    return _bedrock_client_instance
 
 
 async def analyze_zones(png_path: str, symbol: str, tf: str) -> list[Zone]:
@@ -337,8 +350,6 @@ async def analyze_zones(png_path: str, symbol: str, tf: str) -> list[Zone]:
     Returns:
         List of Zone objects. Empty list if Claude finds no zones or on error.
     """
-    import asyncio
-
     with open(png_path, "rb") as f:
         image_b64 = base64.standard_b64encode(f.read()).decode()
 
@@ -458,8 +469,6 @@ async def scan_tf_stack(symbol: str) -> list[Zone]:
     Returns:
         All Zone objects found across all TFs, ordered TF-stack top → bottom.
     """
-    import os
-
     await assert_chart_server()
 
     all_zones: list[Zone] = []
@@ -468,8 +477,10 @@ async def scan_tf_stack(symbol: str) -> list[Zone]:
         logger.info("scan_tf_stack: %s %s — rendering chart", symbol, tf)
         png_path: str | None = None
         try:
-            page = await render_chart(symbol, tf)
-            png_path = await screenshot_chart(page, symbol, tf)
+            # H12 fix: acquire semaphore to prevent concurrent Playwright access
+            async with _render_lock:
+                page = await render_chart(symbol, tf)
+                png_path = await screenshot_chart(page, symbol, tf)
             zones = await analyze_zones(png_path, symbol, tf)
             logger.info(
                 "scan_tf_stack: %s %s — %d zone(s) found", symbol, tf, len(zones)

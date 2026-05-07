@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import { ShieldCheck } from 'lucide-react'
 import FadingVideo from '../components/FadingVideo'
 import EmailVerificationBanner from '../components/EmailVerificationBanner'
@@ -72,31 +73,48 @@ export default function DashboardPage() {
   const [withdrawOpen, setWithdrawOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
+  const loadDashboardData = useCallback(async () => {
     if (!user?.id) return
     setLoading(true)
-    Promise.all([
-      getVaults(user.id),
-      getTrades(user.id),
-      getPnl(user.id),
-    ]).then(([v, t, p]) => {
+    try {
+      const [v, t, p] = await Promise.all([
+        getVaults(user.id),
+        getTrades(user.id),
+        getPnl(user.id),
+      ])
       setVaults(v.length ? v : MOCK_VAULTS)
       setTrades(t.length ? t : MOCK_TRADES)
       setPnl(p)
-    }).catch(() => {}).finally(() => setLoading(false))
+    } catch (err) {
+      toast.error('Failed to load dashboard data')
+      console.error('[Dashboard] Primary data load failed:', err)
+    } finally {
+      setLoading(false)
+    }
 
-    getPositions(user.id).then(p => { if (p.length) setPositions(p) }).catch(() => {})
-    getAgentStatus().then(s => setAgentStatus(s)).catch(() => {})
-    getStrategyInfo('sd-zones-v1').then(s => setStrategyInfo(s)).catch(() => {})
-    getRiskMode(user.id).then(m => setRiskModeState(m)).catch(() => {})
+    // Secondary data — load independently, show toast on failure
+    getPositions(user.id).then(p => { if (p.length) setPositions(p) }).catch((err) => {
+      console.error('[Dashboard] Positions load failed:', err)
+    })
+    getAgentStatus().then(s => setAgentStatus(s)).catch((err) => {
+      console.error('[Dashboard] Agent status load failed:', err)
+    })
+    getStrategyInfo('sd-zones-v1').then(s => setStrategyInfo(s)).catch((err) => {
+      console.error('[Dashboard] Strategy info load failed:', err)
+    })
+    getRiskMode(user.id).then(m => setRiskModeState(m)).catch((err) => {
+      console.error('[Dashboard] Risk mode load failed:', err)
+    })
   }, [user])
+
+  useEffect(() => {
+    loadDashboardData()
+  }, [loadDashboardData])
 
   useEffect(() => {
     if (!user?.id || !vaults[0]?.id) return
     getVaultHistory(vaults[0].id).then(h => { if (h.length) setVaultHistory(h) }).catch(() => {})
   }, [user, vaults])
-
-  void loading
 
   async function handleRiskModeChange(newMode: RiskMode) {
     if (!user?.id) return
@@ -226,7 +244,14 @@ export default function DashboardPage() {
 
         <main style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}>
           <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {renderPage()}
+            {loading ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4rem 0' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ animation: 'spin 0.75s linear infinite' }}>
+                  <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.15)" strokeWidth="3" />
+                  <path d="M12 2a10 10 0 0 1 10 10" stroke="rgba(255,255,255,0.6)" strokeWidth="3" strokeLinecap="round" />
+                </svg>
+              </div>
+            ) : renderPage()}
           </div>
         </main>
 

@@ -15,11 +15,13 @@ import asyncio
 import logging
 import time
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from typing import Literal
 
 from trading_agent.base.exchange_base import ExchangeBase
 from trading_agent.base.config import TELEGRAM_CHAT_ID
 import trading_agent.base.notifier as notifier
+from trading_agent.strategies.sd_zones import journal
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +45,7 @@ class Trade:
     close_time: float = 0.0
     close_price: float = 0.0
     pnl: float = 0.0
+    journal_id: int = 0             # SQLite row ID from journal.log_trade_open()
 
 
 class TradeAgent:
@@ -118,6 +121,20 @@ class TradeAgent:
             "Trade open: %s %s entry=%.4f tp1=%.4f tp2=%.4f sl=%.4f disaster_sl=%.4f",
             symbol, side, entry_price, tp1_price, tp2_price, sl_price, disaster_sl,
         )
+
+        # L3 fix: persist trade open to SQLite journal
+        try:
+            trade.journal_id = journal.log_trade_open(
+                symbol=symbol,
+                side=side,
+                entry=entry_price,
+                sl=sl_price,
+                tp1=tp1_price,
+                tp2=tp2_price,
+                open_time=datetime.now(timezone.utc).isoformat(),
+            )
+        except Exception as exc:
+            logger.error("journal.log_trade_open failed for %s: %s", symbol, exc)
 
         await notifier.send(
             user_id=TELEGRAM_CHAT_ID,
@@ -210,6 +227,19 @@ class TradeAgent:
             symbol, trade.side, trade.entry_price, exit_price, pnl,
         )
 
+        # L3 fix: persist trade close to SQLite journal
+        if trade.journal_id:
+            try:
+                journal.log_trade_close(
+                    trade_id=trade.journal_id,
+                    exit_price=exit_price,
+                    pnl=pnl,
+                    close_time=datetime.now(timezone.utc).isoformat(),
+                    status="sl_hit",
+                )
+            except Exception as exc:
+                logger.error("journal.log_trade_close failed for %s: %s", symbol, exc)
+
         await notifier.send(
             user_id=TELEGRAM_CHAT_ID,
             event=notifier.SL_HIT,
@@ -239,6 +269,19 @@ class TradeAgent:
             "TRADE COMPLETE: %s %s tp1_pnl=%.4f tp2_pnl=%.4f total=%.4f",
             symbol, trade.side, pnl_tp1, pnl_tp2, total_pnl,
         )
+
+        # L3 fix: persist trade close to SQLite journal
+        if trade.journal_id:
+            try:
+                journal.log_trade_close(
+                    trade_id=trade.journal_id,
+                    exit_price=trade.tp2_price,
+                    pnl=total_pnl,
+                    close_time=datetime.now(timezone.utc).isoformat(),
+                    status="tp2_hit",
+                )
+            except Exception as exc:
+                logger.error("journal.log_trade_close failed for %s: %s", symbol, exc)
 
         await notifier.send(
             user_id=TELEGRAM_CHAT_ID,
@@ -275,6 +318,19 @@ class TradeAgent:
             "Position closed (body-SL): %s %s entry=%.4f close=%.4f pnl=%.4f",
             symbol, trade.side, trade.entry_price, body_close_price, pnl,
         )
+
+        # L3 fix: persist trade close to SQLite journal
+        if trade.journal_id:
+            try:
+                journal.log_trade_close(
+                    trade_id=trade.journal_id,
+                    exit_price=body_close_price,
+                    pnl=pnl,
+                    close_time=datetime.now(timezone.utc).isoformat(),
+                    status="body_sl",
+                )
+            except Exception as exc:
+                logger.error("journal.log_trade_close failed for %s: %s", symbol, exc)
 
         await notifier.send(
             user_id=TELEGRAM_CHAT_ID,

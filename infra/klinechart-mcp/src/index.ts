@@ -33,6 +33,13 @@ function startStaticServer(): Promise<void> {
     const srv = http.createServer((req, res) => {
       const urlPath = req.url?.split("?")[0] ?? "/";
       const filePath = path.join(INFRA_ROOT, urlPath);
+      const resolvedPath = path.resolve(filePath);
+      // Prevent path traversal — resolved path must stay within INFRA_ROOT
+      if (!resolvedPath.startsWith(INFRA_ROOT)) {
+        res.writeHead(403);
+        res.end("Forbidden");
+        return;
+      }
       const ext = path.extname(filePath);
       fs.readFile(filePath, (err, data) => {
         if (err) {

@@ -18,17 +18,21 @@ export default function ForgotPasswordPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setLoading(true)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (authClient as any).forgetPassword({
-      email,
-      redirectTo: `${window.location.origin}/reset-password`,
-    })
-    setLoading(false)
-    if (error) {
-      toast.error(error.message ?? 'Failed to send reset email')
-    } else {
-      setSent(true)
-      toast.success('Reset link sent — check your inbox')
+    try {
+      const { error } = await authClient.requestPasswordReset({
+        email,
+        redirectTo: `${window.location.origin}/reset-password`,
+      })
+      if (error) {
+        toast.error(error.message ?? 'Failed to send reset email')
+      } else {
+        setSent(true)
+        toast.success('Reset link sent — check your inbox')
+      }
+    } catch {
+      toast.error('Failed to send reset email')
+    } finally {
+      setLoading(false)
     }
   }
 

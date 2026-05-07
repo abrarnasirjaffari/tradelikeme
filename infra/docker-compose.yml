@@ -4,32 +4,52 @@ services:
       context: ..
       dockerfile: infra/Dockerfile.backend
     ports:
-      - "8001:8000"
+      - "127.0.0.1:8001:8000"
     env_file:
       - ../.env
     environment:
       - FRONTEND_URL=https://tradelikeme.xyz
-      - SUPABASE_DATABASE_URL=postgresql://postgres:dbd282441d621e3563efdc079a0c3198@supabase-db:5432/postgres
+      - SUPABASE_DATABASE_URL=${SUPABASE_DATABASE_URL}
     networks:
       - default
       - supabase_default
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 512m
 
   auth:
     build:
       context: ../auth
       dockerfile: Dockerfile
     ports:
-      - "3002:3001"
+      - "127.0.0.1:3002:3001"
     env_file:
       - ../.env
     environment:
-      - SUPABASE_DB_URL=postgresql://postgres:dbd282441d621e3563efdc079a0c3198@supabase-db:5432/postgres
+      - SUPABASE_DB_URL=${SUPABASE_DATABASE_URL}
       - BETTER_AUTH_URL=https://auth.tradelikeme.xyz
     networks:
       - default
       - supabase_default
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256m
 
   agent:
     build:
@@ -45,7 +65,18 @@ services:
       - default
     restart: unless-stopped
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "trading_agent"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 2g
 
 networks:
   default: {}

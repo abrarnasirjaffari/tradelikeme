@@ -28,7 +28,7 @@ export default function SignupPage() {
       toast.error(result.error)
     } else {
       toast.success('Signed in with Phantom')
-      window.location.pathname = '/dashboard'
+      navigate('/dashboard')
     }
   }
 
@@ -43,7 +43,7 @@ export default function SignupPage() {
       toast.error(result.error)
     } else {
       toast.success(tab === 'signup' ? 'Account created!' : 'Signed in!')
-      window.location.pathname = '/dashboard'
+      navigate('/dashboard')
     }
   }
 

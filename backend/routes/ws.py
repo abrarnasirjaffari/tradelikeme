@@ -12,8 +12,9 @@ Events pushed:
   BALANCE_UPDATE — vault balance changed
   ping/pong      — keepalive
 
-Auth: Bearer token passed as ?token=<value> query param (browsers cannot
-      set custom Authorization headers on WebSocket upgrades).
+Auth: Client obtains a short-lived one-time-use ticket via POST /ws/ticket
+      (authenticated), then connects WS with ?ticket=<value>. This avoids
+      exposing session tokens in URL query strings (server/proxy logs).
 
 Usage from agent/sentinel code:
     from backend.routes.ws import manager
@@ -24,16 +25,26 @@ Usage from agent/sentinel code:
 import asyncio
 import json
 import logging
+import secrets
+import time
 from datetime import datetime, timezone
 from typing import Any
 
-import httpx
-from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
+from pydantic import BaseModel
 
-from backend.auth import BETTER_AUTH_URL
+from backend.auth import CurrentUser, require_auth
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["websocket"])
+
+# Maximum WebSocket connections per user
+_MAX_CONNECTIONS_PER_USER = 5
+
+# Ticket store: ticket -> (user_id, created_at)
+# Tickets expire after 30 seconds and are single-use.
+_TICKET_STORE: dict[str, tuple[str, float]] = {}
+_TICKET_TTL_SECONDS = 30
 
 
 class ConnectionManager:
@@ -41,6 +52,9 @@ class ConnectionManager:
 
     def __init__(self) -> None:
         self._connections: dict[str, list[WebSocket]] = {}
+
+    def connection_count(self, user_id: str) -> int:
+        return len(self._connections.get(user_id, []))
 
     async def connect(self, websocket: WebSocket, user_id: str) -> None:
         await websocket.accept()
@@ -93,33 +107,61 @@ def _pack(event: str, data: Any) -> str:
     return json.dumps({"event": event, "data": data, "ts": datetime.now(timezone.utc).isoformat()})
 
 
-async def _validate_token(token: str) -> str | None:
-    """Return user_id if the BetterAuth session token is valid, else None."""
-    try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            resp = await client.get(
-                f"{BETTER_AUTH_URL}/api/auth/get-session",
-                headers={"Authorization": f"Bearer {token}"},
-            )
-        if not resp.is_success:
-            return None
-        user_data = resp.json().get("user") or {}
-        return user_data.get("id") or None
-    except Exception as exc:
-        logger.warning("WS token validation error: %s", exc)
+def _cleanup_expired_tickets() -> None:
+    """Remove expired tickets from the store."""
+    now = time.time()
+    expired = [k for k, (_, ts) in _TICKET_STORE.items() if now - ts > _TICKET_TTL_SECONDS]
+    for k in expired:
+        del _TICKET_STORE[k]
+
+
+def _consume_ticket(ticket: str) -> str | None:
+    """Validate and consume a one-time-use ticket. Returns user_id or None."""
+    _cleanup_expired_tickets()
+    entry = _TICKET_STORE.pop(ticket, None)
+    if entry is None:
         return None
+    user_id, created_at = entry
+    if time.time() - created_at > _TICKET_TTL_SECONDS:
+        return None
+    return user_id
+
+
+class TicketResponse(BaseModel):
+    ticket: str
+
+
+@router.post("/ws/ticket", response_model=TicketResponse)
+async def create_ws_ticket(current_user: CurrentUser = Depends(require_auth)):
+    """
+    Issue a short-lived one-time-use ticket for WebSocket authentication.
+
+    The client calls this authenticated endpoint, receives a ticket, then
+    connects to /ws/live?ticket=<ticket>. The ticket expires in 30 seconds
+    and can only be used once.
+    """
+    _cleanup_expired_tickets()
+    ticket = secrets.token_urlsafe(32)
+    _TICKET_STORE[ticket] = (current_user.id, time.time())
+    return TicketResponse(ticket=ticket)
 
 
 @router.websocket("/ws/live")
-async def ws_live(websocket: WebSocket, token: str = Query(...)):
+async def ws_live(websocket: WebSocket, ticket: str = Query(...)):
     """
     WebSocket endpoint for real-time dashboard updates.
 
-    Connect: ws://api.tradelikeme.xyz/ws/live?token=<bearer-token>
+    Connect: ws://api.tradelikeme.xyz/ws/live?ticket=<one-time-ticket>
+    Obtain ticket via POST /ws/ticket (authenticated).
     """
-    user_id = await _validate_token(token)
+    user_id = _consume_ticket(ticket)
     if not user_id:
         await websocket.close(code=4001, reason="Unauthorized")
+        return
+
+    # M10: Enforce max connections per user
+    if manager.connection_count(user_id) >= _MAX_CONNECTIONS_PER_USER:
+        await websocket.close(code=4008, reason="Too many connections")
         return
 
     await manager.connect(websocket, user_id)

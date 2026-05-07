@@ -1,4 +1,5 @@
-FROM python:3.11-slim
+# Stage 1: Install dependencies
+FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
@@ -10,7 +11,24 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+# Stage 2: Runtime
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+COPY backend/ ./backend/
+COPY requirements.txt .
+
+RUN useradd -m appuser
+USER appuser
 
 EXPOSE 8000
 

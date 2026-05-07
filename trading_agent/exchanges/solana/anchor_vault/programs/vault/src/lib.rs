@@ -1,7 +1,10 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Approve, Token, TokenAccount, Transfer};
+use anchor_spl::token::{self, Approve, CloseAccount, Token, TokenAccount, Transfer};
 
 declare_id!("rGMTq8sS5GUJ7q1ei9x75dnZ3kM2QCn5YRKYGHbwdSd");
+
+/// Minimum epoch duration in seconds (7 days)
+const MIN_EPOCH_DURATION: i64 = 7 * 24 * 60 * 60;
 
 #[program]
 pub mod vault {
@@ -13,6 +16,7 @@ pub mod vault {
         ctx: Context<InitializeVault>,
         strategy_id: [u8; 32],
         platform_wallet: Pubkey,
+        mint: Pubkey,
     ) -> Result<()> {
         let vault = &mut ctx.accounts.vault;
         vault.user_pubkey = ctx.accounts.user.key();
@@ -25,6 +29,17 @@ pub mod vault {
         vault.bump = ctx.bumps.vault;
         vault.risk_mode = 1; // default: Medium
         vault.trade_count = 0;
+        vault.mint = mint;
+        vault.last_settle_ts = 0;
+        vault.active_trades = 0;
+
+        emit!(VaultCreated {
+            user: ctx.accounts.user.key(),
+            strategy_id,
+            platform_wallet,
+            mint,
+        });
+
         Ok(())
     }
 
@@ -50,6 +65,12 @@ pub mod vault {
             .checked_add(amount)
             .ok_or(VaultError::Overflow)?;
 
+        emit!(Deposited {
+            vault: ctx.accounts.vault.key(),
+            user: ctx.accounts.user.key(),
+            amount,
+        });
+
         msg!("Deposited {} USDC into vault", amount);
         Ok(())
     }
@@ -68,6 +89,12 @@ pub mod vault {
         require!(
             ctx.accounts.user.key() == ctx.accounts.vault.user_pubkey,
             VaultError::Unauthorized
+        );
+
+        // H8: prevent re-delegation while trades are active
+        require!(
+            ctx.accounts.vault.active_trades == 0,
+            VaultError::ActiveTrades
         );
 
         // Record the agent so settle_epoch can verify the caller
@@ -90,6 +117,12 @@ pub mod vault {
         );
         token::approve(cpi_ctx, amount)?;
 
+        emit!(Delegated {
+            vault: ctx.accounts.vault.key(),
+            agent: ctx.accounts.agent.key(),
+            amount,
+        });
+
         msg!(
             "Delegated {} USDC trading authority to agent {}",
             amount,
@@ -101,6 +134,10 @@ pub mod vault {
     /// Settle the current epoch: calculate profit, send 20% to platform wallet.
     /// Called by the agent monthly. If no profit, resets opening_balance and returns.
     /// After settlement vault.balance reflects the user's 80% share only.
+    ///
+    /// C4 FIX: Uses vault_token_account.amount (on-chain truth) for profit calculation
+    /// instead of the manually tracked vault.balance field. This ensures trading P&L
+    /// is captured and deposits are not counted as profit.
     pub fn settle_epoch(ctx: Context<SettleEpoch>) -> Result<()> {
         // V11: only the registered agent keypair may call this
         require!(
@@ -108,23 +145,38 @@ pub mod vault {
             VaultError::AgentMismatch
         );
 
-        // Extract all read values before any mutable borrow (borrow-checker requirement)
-        let balance = ctx.accounts.vault.balance;
+        // M11: enforce minimum epoch duration (7 days)
+        let clock = Clock::get()?;
+        let now = clock.unix_timestamp;
+        if ctx.accounts.vault.last_settle_ts > 0 {
+            let elapsed = now
+                .checked_sub(ctx.accounts.vault.last_settle_ts)
+                .ok_or(VaultError::Overflow)?;
+            require!(elapsed >= MIN_EPOCH_DURATION, VaultError::EpochTooShort);
+        }
+
+        // C4 FIX: Read the actual on-chain token balance for profit calculation.
+        // This captures trading P&L that vault.balance cannot track.
+        let actual_balance = ctx.accounts.vault_token_account.amount;
         let opening_balance = ctx.accounts.vault.opening_balance;
+
+        let vault_key = ctx.accounts.vault.key();
         let user_key = ctx.accounts.vault.user_pubkey;
         let strategy_id = ctx.accounts.vault.strategy_id;
         let bump = ctx.accounts.vault.bump;
 
         // No profit this epoch — just roll the opening balance forward
-        if balance <= opening_balance {
+        if actual_balance <= opening_balance {
             let vault = &mut ctx.accounts.vault;
             vault.epoch_profit = 0;
-            vault.opening_balance = balance;
+            vault.opening_balance = actual_balance;
+            vault.balance = actual_balance;
+            vault.last_settle_ts = now;
             msg!("Epoch settled with no profit");
             return Ok(());
         }
 
-        let profit = balance
+        let profit = actual_balance
             .checked_sub(opening_balance)
             .ok_or(VaultError::Overflow)?;
 
@@ -151,13 +203,21 @@ pub mod vault {
         }
 
         // Mutable update after CPI is complete
-        let new_balance = balance
+        let new_balance = actual_balance
             .checked_sub(platform_fee)
             .ok_or(VaultError::Overflow)?;
         let vault = &mut ctx.accounts.vault;
         vault.balance = new_balance;
         vault.epoch_profit = profit;
         vault.opening_balance = new_balance;
+        vault.last_settle_ts = now;
+
+        emit!(EpochSettled {
+            vault: vault_key,
+            profit,
+            platform_fee,
+            new_balance,
+        });
 
         msg!(
             "Epoch settled: profit={}, platform_fee={}, user_balance={}",
@@ -199,6 +259,12 @@ pub mod vault {
         ctx.accounts.vault.balance = ctx.accounts.vault.balance
             .checked_sub(amount)
             .ok_or(VaultError::Overflow)?;
+
+        emit!(Withdrawn {
+            vault: ctx.accounts.vault.key(),
+            user: ctx.accounts.user.key(),
+            amount,
+        });
 
         msg!("Withdrew {} USDC from vault", amount);
         Ok(())
@@ -256,6 +322,11 @@ pub mod vault {
             .checked_add(1)
             .ok_or(VaultError::Overflow)?;
 
+        // Increment active trades counter
+        ctx.accounts.vault.active_trades = ctx.accounts.vault.active_trades
+            .checked_add(1)
+            .ok_or(VaultError::Overflow)?;
+
         emit!(TradeOpened {
             trade_id,
             vault_pubkey: trade_record.vault_pubkey,
@@ -303,6 +374,10 @@ pub mod vault {
 
         let trade_id = trade_record.trade_id;
         let vault_pubkey = trade_record.vault_pubkey;
+
+        // Decrement active trades counter
+        let vault = &mut ctx.accounts.vault;
+        vault.active_trades = vault.active_trades.saturating_sub(1);
 
         emit!(TradeClosed {
             trade_id,
@@ -361,10 +436,73 @@ pub mod vault {
             ctx.accounts.user.key() == ctx.accounts.vault.user_pubkey,
             VaultError::Unauthorized
         );
+        // H10: validate risk_mode is within valid range
+        require!(risk_mode <= 2, VaultError::InvalidRiskMode);
 
         ctx.accounts.vault.risk_mode = risk_mode;
 
         msg!("Risk mode set to {} for vault", risk_mode);
+        Ok(())
+    }
+
+    /// H9: Update the platform wallet address.
+    /// Only the current platform wallet holder can call this.
+    pub fn update_platform_wallet(
+        ctx: Context<UpdatePlatformWallet>,
+        new_platform_wallet: Pubkey,
+    ) -> Result<()> {
+        ctx.accounts.vault.platform_wallet = new_platform_wallet;
+
+        msg!(
+            "Platform wallet updated to {}",
+            new_platform_wallet
+        );
+        Ok(())
+    }
+
+    /// M12: Close a vault account and return rent to the user.
+    /// Only allowed when balance is 0 and no active trades.
+    pub fn close_vault(ctx: Context<CloseVault>) -> Result<()> {
+        let vault = &ctx.accounts.vault;
+        require!(vault.balance == 0, VaultError::VaultNotEmpty);
+        require!(vault.active_trades == 0, VaultError::ActiveTrades);
+
+        // Close the vault token account, returning rent to user
+        let user_key = vault.user_pubkey;
+        let strategy_id = vault.strategy_id;
+        let bump = vault.bump;
+        let seeds: &[&[u8]] = &[b"vault", user_key.as_ref(), &strategy_id, &[bump]];
+        let signer_seeds = &[seeds];
+
+        let cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            CloseAccount {
+                account: ctx.accounts.vault_token_account.to_account_info(),
+                destination: ctx.accounts.user.to_account_info(),
+                authority: ctx.accounts.vault.to_account_info(),
+            },
+            signer_seeds,
+        );
+        token::close_account(cpi_ctx)?;
+
+        msg!("Vault closed, rent returned to user");
+        Ok(())
+    }
+
+    /// M13: Close a trade record account and return rent to the payer.
+    /// Only allowed when the trade is closed (status == 1).
+    /// Only the agent can call this.
+    pub fn close_trade_record(ctx: Context<CloseTradeRecord>) -> Result<()> {
+        require!(
+            ctx.accounts.agent.key() == ctx.accounts.vault.agent_pubkey,
+            VaultError::AgentMismatch
+        );
+        require!(
+            ctx.accounts.trade_record.status == 1,
+            VaultError::TradeNotClosed
+        );
+
+        msg!("Trade record closed, rent returned to agent");
         Ok(())
     }
 }
@@ -402,11 +540,22 @@ pub struct SettleEpoch<'info> {
     )]
     pub vault: Account<'info, Vault>,
 
-    #[account(mut)]
+    /// C2: vault_token_account must be owned by the vault PDA
+    /// H7: vault_token_account must use the expected mint
+    #[account(
+        mut,
+        constraint = vault_token_account.owner == vault.key() @ VaultError::InvalidTokenAccount,
+        constraint = vault_token_account.mint == vault.mint @ VaultError::InvalidTokenAccount,
+    )]
     pub vault_token_account: Account<'info, TokenAccount>,
 
-    /// Platform wallet's token account — receives 20% profit share
-    #[account(mut)]
+    /// C3: platform_token_account must be owned by vault.platform_wallet
+    /// H7: platform_token_account must use the expected mint
+    #[account(
+        mut,
+        constraint = platform_token_account.owner == vault.platform_wallet @ VaultError::InvalidTokenAccount,
+        constraint = platform_token_account.mint == vault.mint @ VaultError::InvalidTokenAccount,
+    )]
     pub platform_token_account: Account<'info, TokenAccount>,
 
     /// The agent calling this instruction
@@ -427,7 +576,13 @@ pub struct DelegateToProtocol<'info> {
     )]
     pub vault: Account<'info, Vault>,
 
-    #[account(mut)]
+    /// C2: vault_token_account must be owned by the vault PDA
+    /// H7: vault_token_account must use the expected mint
+    #[account(
+        mut,
+        constraint = vault_token_account.owner == vault.key() @ VaultError::InvalidTokenAccount,
+        constraint = vault_token_account.mint == vault.mint @ VaultError::InvalidTokenAccount,
+    )]
     pub vault_token_account: Account<'info, TokenAccount>,
 
     /// The agent keypair that receives trading delegation
@@ -455,10 +610,19 @@ pub struct Withdraw<'info> {
     )]
     pub vault: Account<'info, Vault>,
 
-    #[account(mut)]
+    /// C2: vault_token_account must be owned by the vault PDA
+    /// H7: vault_token_account must use the expected mint
+    #[account(
+        mut,
+        constraint = vault_token_account.owner == vault.key() @ VaultError::InvalidTokenAccount,
+        constraint = vault_token_account.mint == vault.mint @ VaultError::InvalidTokenAccount,
+    )]
     pub vault_token_account: Account<'info, TokenAccount>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        constraint = user_token_account.mint == vault.mint @ VaultError::InvalidTokenAccount,
+    )]
     pub user_token_account: Account<'info, TokenAccount>,
 
     #[account(mut)]
@@ -481,13 +645,19 @@ pub struct Deposit<'info> {
     )]
     pub vault: Account<'info, Vault>,
 
-    /// CHECK: vault_token_account is the vault's associated USDC token account.
-    /// Validated by matching mint + ownership in tests; not enforced on-chain
-    /// to keep the instruction generic (supports USDC and CASH).
-    #[account(mut)]
+    /// C2: vault_token_account must be owned by the vault PDA
+    /// H7: vault_token_account must use the expected mint
+    #[account(
+        mut,
+        constraint = vault_token_account.owner == vault.key() @ VaultError::InvalidTokenAccount,
+        constraint = vault_token_account.mint == vault.mint @ VaultError::InvalidTokenAccount,
+    )]
     pub vault_token_account: Account<'info, TokenAccount>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        constraint = user_token_account.mint == vault.mint @ VaultError::InvalidTokenAccount,
+    )]
     pub user_token_account: Account<'info, TokenAccount>,
 
     #[account(mut)]
@@ -545,6 +715,7 @@ pub struct RecordTrade<'info> {
 #[derive(Accounts)]
 pub struct CloseTrade<'info> {
     #[account(
+        mut,
         seeds = [b"vault", vault.user_pubkey.as_ref(), &vault.strategy_id],
         bump = vault.bump,
         constraint = agent.key() == vault.agent_pubkey @ VaultError::AgentMismatch,
@@ -595,6 +766,69 @@ pub struct SetRiskMode<'info> {
     pub user: Signer<'info>,
 }
 
+/// H9: Update platform wallet. Only the current platform wallet holder can call this.
+#[derive(Accounts)]
+pub struct UpdatePlatformWallet<'info> {
+    #[account(
+        mut,
+        seeds = [b"vault", vault.user_pubkey.as_ref(), &vault.strategy_id],
+        bump = vault.bump,
+        constraint = platform_wallet_signer.key() == vault.platform_wallet @ VaultError::Unauthorized,
+    )]
+    pub vault: Account<'info, Vault>,
+
+    /// Must be the current platform_wallet
+    pub platform_wallet_signer: Signer<'info>,
+}
+
+/// M12: Close a vault account and return rent to the user.
+#[derive(Accounts)]
+pub struct CloseVault<'info> {
+    #[account(
+        mut,
+        seeds = [b"vault", user.key().as_ref(), &vault.strategy_id],
+        bump = vault.bump,
+        constraint = user.key() == vault.user_pubkey @ VaultError::Unauthorized,
+        close = user,
+    )]
+    pub vault: Account<'info, Vault>,
+
+    /// C2 + H7: vault_token_account must be owned by vault PDA and use expected mint
+    #[account(
+        mut,
+        constraint = vault_token_account.owner == vault.key() @ VaultError::InvalidTokenAccount,
+        constraint = vault_token_account.mint == vault.mint @ VaultError::InvalidTokenAccount,
+    )]
+    pub vault_token_account: Account<'info, TokenAccount>,
+
+    #[account(mut)]
+    pub user: Signer<'info>,
+
+    pub token_program: Program<'info, Token>,
+}
+
+/// M13: Close a trade record account and return rent to the agent.
+#[derive(Accounts)]
+pub struct CloseTradeRecord<'info> {
+    #[account(
+        seeds = [b"vault", vault.user_pubkey.as_ref(), &vault.strategy_id],
+        bump = vault.bump,
+        constraint = agent.key() == vault.agent_pubkey @ VaultError::AgentMismatch,
+    )]
+    pub vault: Account<'info, Vault>,
+
+    #[account(
+        mut,
+        seeds = [b"trade", vault.key().as_ref(), &trade_record.trade_id.to_le_bytes()],
+        bump = trade_record.bump,
+        close = agent,
+    )]
+    pub trade_record: Account<'info, TradeRecord>,
+
+    #[account(mut)]
+    pub agent: Signer<'info>,
+}
+
 // ── Account structs ────────────────────────────────────────────────────────
 
 #[account]
@@ -616,15 +850,22 @@ pub struct Vault {
     pub risk_mode: u8,
     /// Sequential counter for trade IDs — incremented by record_trade()
     pub trade_count: u64,
+    /// H7: Expected token mint (USDC) — set during create_vault, validated on all token ops
+    pub mint: Pubkey,
+    /// M11: Timestamp of last epoch settlement — enforces min 7-day epoch
+    pub last_settle_ts: i64,
+    /// H8: Number of currently active (open) trades — prevents re-delegation
+    pub active_trades: u64,
 }
 
 impl Vault {
     // 8 discriminator
     // + 32 (user_pubkey) + 32 (strategy_id) + 8 (balance) + 8 (opening_balance)
     // + 8 (epoch_profit) + 32 (platform_wallet) + 32 (agent_pubkey) + 1 (bump)
-    // + 1 (risk_mode) + 8 (trade_count)
-    // = 8 + 32 + 32 + 8 + 8 + 8 + 32 + 32 + 1 + 1 + 8 = 170
-    pub const LEN: usize = 8 + 32 + 32 + 8 + 8 + 8 + 32 + 32 + 1 + 1 + 8;
+    // + 1 (risk_mode) + 8 (trade_count) + 32 (mint) + 8 (last_settle_ts)
+    // + 8 (active_trades)
+    // = 8 + 32 + 32 + 8 + 8 + 8 + 32 + 32 + 1 + 1 + 8 + 32 + 8 + 8 = 218
+    pub const LEN: usize = 8 + 32 + 32 + 8 + 8 + 8 + 32 + 32 + 1 + 1 + 8 + 32 + 8 + 8;
 }
 
 /// On-chain record of a single trade opened by the agent.
@@ -708,6 +949,43 @@ impl StrategyRecord {
 // ── Events ─────────────────────────────────────────────────────────────────
 
 #[event]
+pub struct VaultCreated {
+    pub user: Pubkey,
+    pub strategy_id: [u8; 32],
+    pub platform_wallet: Pubkey,
+    pub mint: Pubkey,
+}
+
+#[event]
+pub struct Deposited {
+    pub vault: Pubkey,
+    pub user: Pubkey,
+    pub amount: u64,
+}
+
+#[event]
+pub struct Withdrawn {
+    pub vault: Pubkey,
+    pub user: Pubkey,
+    pub amount: u64,
+}
+
+#[event]
+pub struct Delegated {
+    pub vault: Pubkey,
+    pub agent: Pubkey,
+    pub amount: u64,
+}
+
+#[event]
+pub struct EpochSettled {
+    pub vault: Pubkey,
+    pub profit: u64,
+    pub platform_fee: u64,
+    pub new_balance: u64,
+}
+
+#[event]
 pub struct TradeOpened {
     pub trade_id: u64,
     pub vault_pubkey: Pubkey,
@@ -749,4 +1027,16 @@ pub enum VaultError {
     InvalidOutcome,
     #[msg("trade_id does not match vault.trade_count")]
     InvalidTradeId,
+    #[msg("Token account does not belong to the expected owner or mint")]
+    InvalidTokenAccount,
+    #[msg("Cannot re-delegate while trades are active")]
+    ActiveTrades,
+    #[msg("Risk mode must be 0 (Conservative), 1 (Medium), or 2 (Aggressive)")]
+    InvalidRiskMode,
+    #[msg("Epoch settlement too soon — minimum 7 days between settlements")]
+    EpochTooShort,
+    #[msg("Vault balance must be zero before closing")]
+    VaultNotEmpty,
+    #[msg("Trade must be closed before closing the record account")]
+    TradeNotClosed,
 }

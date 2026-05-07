@@ -103,7 +103,7 @@ export default function App() {
         <Route path="/blog/:slug" element={<BlogPostPage />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/submit-strategy" element={<SubmitStrategyPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="/2fa-setup" element={<ProtectedRoute><TwoFactorSetupPage /></ProtectedRoute>} />
       </Routes>
     </>

@@ -2,21 +2,33 @@
 Platform-wide configuration.
 All env vars are loaded here once. Import constants directly from this module.
 """
+import logging
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
+_logger = logging.getLogger(__name__)
+
 # ---------------------------------------------------------------------------
 # CF2 — Environment variables
 # ---------------------------------------------------------------------------
 
+
+def _require_env(key: str, default: str = "") -> str:
+    """Get env var with fallback. Log a warning if a critical var is missing."""
+    value = os.getenv(key, default)
+    if not value:
+        _logger.warning("Environment variable %s is not set — using empty default", key)
+    return value
+
+
 # Helius RPC
-HELIUS_RPC_URL: str = os.environ["HELIUS_RPC_URL"]
+HELIUS_RPC_URL: str = _require_env("HELIUS_RPC_URL")
 
 # Solana
 SOLANA_NETWORK: str = os.getenv("SOLANA_NETWORK", "devnet")
-PHANTOM_PRIVATE_KEY: str = os.environ["PHANTOM_PRIVATE_KEY"]
+PHANTOM_PRIVATE_KEY: str = _require_env("PHANTOM_PRIVATE_KEY")
 DEVNET_AGENT_KEYPAIR_PATH: str = os.getenv(
     "DEVNET_AGENT_KEYPAIR_PATH", "~/.config/solana/devnet-agent.json"
 )
@@ -28,13 +40,13 @@ USDC_MINT_DEVNET: str = os.getenv(
 )
 
 # AWS Bedrock (Claude Opus 4.6)
-AWS_ACCESS_KEY_ID: str = os.environ["AWS_ACCESS_KEY_ID"]
-AWS_SECRET_ACCESS_KEY: str = os.environ["AWS_SECRET_ACCESS_KEY"]
+AWS_ACCESS_KEY_ID: str = _require_env("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY: str = _require_env("AWS_SECRET_ACCESS_KEY")
 AWS_REGION: str = os.getenv("AWS_REGION", "us-east-1")
 
 # Telegram
-TELEGRAM_BOT_TOKEN: str = os.environ["TELEGRAM_BOT_TOKEN"]
-TELEGRAM_CHAT_ID: str = os.environ["TELEGRAM_CHAT_ID"]
+TELEGRAM_BOT_TOKEN: str = _require_env("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID: str = _require_env("TELEGRAM_CHAT_ID")
 
 # WEEX (Phase 2 — CEX)
 WEEX_API_KEY: str = os.getenv("WEEX_API_KEY", "")

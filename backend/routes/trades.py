@@ -41,6 +41,12 @@ class PnlSummary(BaseModel):
     avg_loser: float
 
 
+def _enforce_ownership(user_id: UUID, current_user: CurrentUser) -> None:
+    """Raise 403 if the authenticated user does not own this resource."""
+    if str(user_id) != str(current_user.id):
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+
 def _require_user(user_id: UUID, db: Session):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -48,20 +54,25 @@ def _require_user(user_id: UUID, db: Session):
 
 
 @router.get("/users/{user_id}/trades", response_model=list[TradeOut])
-def list_trades(user_id: UUID, db: Session = Depends(get_db), _: CurrentUser = Depends(require_auth)):
+def list_trades(user_id: UUID, db: Session = Depends(get_db), current_user: CurrentUser = Depends(require_auth)):
+    _enforce_ownership(user_id, current_user)
     _require_user(user_id, db)
 
     if not DB_PATH.exists():
         return []
 
     conn = _get_conn()
-    rows = conn.execute("SELECT * FROM trades ORDER BY open_time DESC").fetchall()
+    rows = conn.execute(
+        "SELECT * FROM trades WHERE user_id = ? ORDER BY open_time DESC",
+        (str(user_id),),
+    ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
 
 @router.get("/users/{user_id}/pnl", response_model=PnlSummary)
-def get_pnl(user_id: UUID, db: Session = Depends(get_db), _: CurrentUser = Depends(require_auth)):
+def get_pnl(user_id: UUID, db: Session = Depends(get_db), current_user: CurrentUser = Depends(require_auth)):
+    _enforce_ownership(user_id, current_user)
     _require_user(user_id, db)
 
     if not DB_PATH.exists():
@@ -72,7 +83,7 @@ def get_pnl(user_id: UUID, db: Session = Depends(get_db), _: CurrentUser = Depen
         )
 
     conn = _get_conn()
-    rows = conn.execute("SELECT * FROM trades").fetchall()
+    rows = conn.execute("SELECT * FROM trades WHERE user_id = ?", (str(user_id),)).fetchall()
     conn.close()
 
     trades = [dict(r) for r in rows]

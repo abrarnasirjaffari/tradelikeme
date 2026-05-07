@@ -23,9 +23,7 @@ import os
 import sys
 import time
 
-# Load .env from repo root before importing anything that reads env vars.
-from dotenv import load_dotenv
-load_dotenv()
+# L6 fix: load_dotenv() is called once in trading_agent.base.config — no need here.
 
 # ---------------------------------------------------------------------------
 # Logging setup — timestamps + INFO level

@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -11,6 +11,11 @@ from backend.models.user import User
 from trading_agent.channels.telegram import send_telegram
 
 router = APIRouter(tags=["notifications"])
+
+
+def _get_limiter():
+    from backend.main import limiter
+    return limiter
 
 
 class NotificationConfigOut(BaseModel):
@@ -52,6 +57,12 @@ class TestNotificationRequest(BaseModel):
     channel: str = "telegram"
 
 
+def _enforce_ownership(user_id: UUID, current_user: CurrentUser) -> None:
+    """Raise 403 if the authenticated user does not own this resource."""
+    if str(user_id) != str(current_user.id):
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+
 def _require_user(user_id: UUID, db: Session) -> User:
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -70,7 +81,8 @@ def _get_or_create_config(user_id: UUID, db: Session) -> NotificationConfig:
 
 
 @router.get("/notifications/config", response_model=NotificationConfigOut)
-def get_notification_config(user_id: UUID, db: Session = Depends(get_db), _: CurrentUser = Depends(require_auth)):
+def get_notification_config(user_id: UUID, db: Session = Depends(get_db), current_user: CurrentUser = Depends(require_auth)):
+    _enforce_ownership(user_id, current_user)
     _require_user(user_id, db)
     return _get_or_create_config(user_id, db)
 
@@ -80,8 +92,9 @@ def update_notification_config(
     user_id: UUID,
     body: NotificationConfigUpdate,
     db: Session = Depends(get_db),
-    _: CurrentUser = Depends(require_auth),
+    current_user: CurrentUser = Depends(require_auth),
 ):
+    _enforce_ownership(user_id, current_user)
     _require_user(user_id, db)
     config = _get_or_create_config(user_id, db)
 
@@ -94,12 +107,15 @@ def update_notification_config(
 
 
 @router.post("/notifications/test", status_code=200)
+@_get_limiter().limit("10/minute")
 async def test_notification(
+    request: Request,
     user_id: UUID,
     body: TestNotificationRequest,
     db: Session = Depends(get_db),
-    _: CurrentUser = Depends(require_auth),
+    current_user: CurrentUser = Depends(require_auth),
 ):
+    _enforce_ownership(user_id, current_user)
     _require_user(user_id, db)
     config = _get_or_create_config(user_id, db)
 

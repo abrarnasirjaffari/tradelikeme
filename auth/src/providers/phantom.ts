@@ -68,13 +68,19 @@ export const phantom = (): BetterAuthPlugin =>
     endpoints: {
       phantomNonce: createAuthEndpoint(
         "/phantom/nonce",
-        { method: "GET" },
+        {
+          method: "POST",
+          body: z.object({
+            walletAddress: z.string().regex(BASE58_REGEX),
+          }),
+        },
         async (ctx) => {
+          const { walletAddress } = ctx.body;
           const nonce = crypto.randomUUID().replace(/-/g, "");
-          // Store nonce for 15 minutes
+          // Store nonce bound to this specific wallet address (15 min expiry)
           await ctx.context.internalAdapter.createVerificationValue({
-            identifier: `phantom:nonce:${nonce}`,
-            value: nonce,
+            identifier: `phantom:nonce:${walletAddress}:${nonce}`,
+            value: walletAddress,
             expiresAt: new Date(Date.now() + 15 * 60 * 1000),
           });
           return ctx.json({ nonce });
@@ -97,10 +103,10 @@ export const phantom = (): BetterAuthPlugin =>
           const { walletAddress, signature, message, nonce } = ctx.body;
 
           try {
-            // Verify nonce is valid and unexpired
+            // Verify nonce is valid, unexpired, and bound to this wallet address
             const verification =
               await ctx.context.internalAdapter.findVerificationValue(
-                `phantom:nonce:${nonce}`,
+                `phantom:nonce:${walletAddress}:${nonce}`,
               );
 
             if (!verification || new Date() > verification.expiresAt) {
@@ -108,6 +114,15 @@ export const phantom = (): BetterAuthPlugin =>
                 message: "Invalid or expired nonce",
                 status: 401,
                 code: "PHANTOM_INVALID_NONCE",
+              });
+            }
+
+            // Verify nonce was issued for this specific wallet address
+            if (verification.value !== walletAddress) {
+              throw APIError.fromStatus("UNAUTHORIZED", {
+                message: "Nonce not issued for this wallet",
+                status: 401,
+                code: "PHANTOM_WALLET_MISMATCH",
               });
             }
 
@@ -130,9 +145,9 @@ export const phantom = (): BetterAuthPlugin =>
               });
             }
 
-            // Consume the nonce
+            // Consume the nonce (single-use)
             await ctx.context.internalAdapter.deleteVerificationByIdentifier(
-              `phantom:nonce:${nonce}`,
+              `phantom:nonce:${walletAddress}:${nonce}`,
             );
 
             // Find existing account for this wallet
@@ -156,7 +171,7 @@ export const phantom = (): BetterAuthPlugin =>
               // Create new user + account for this wallet
               const newUser = await ctx.context.internalAdapter.createUser({
                 name: `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`,
-                email: `${walletAddress}@phantom.wallet`,
+                email: `${walletAddress}@phantom.invalid`,
                 emailVerified: false,
                 walletAddress,
               });

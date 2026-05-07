@@ -1,6 +1,6 @@
 import os
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -17,7 +17,15 @@ def init_db():
     Base.metadata.create_all(bind=engine)
 
 
-def get_db():
+def get_db() -> Session:  # type: ignore[misc]
+    """
+    Yield a synchronous SQLAlchemy session.
+
+    Routes that use this dependency MUST be declared as `def` (not `async def`)
+    so FastAPI runs them in a threadpool — avoiding blocking the event loop.
+    The only exception is routes that also perform async I/O (e.g. vault
+    deposit/withdraw), which use `run_in_executor` or call async code separately.
+    """
     db = SessionLocal()
     try:
         yield db

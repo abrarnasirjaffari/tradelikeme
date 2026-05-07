@@ -3,10 +3,31 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { auth } from "./auth.js";
 
-const TRUSTED_ORIGINS = (process.env.TRUSTED_ORIGINS ?? "http://localhost:5173")
-  .split(",")
-  .map((o) => o.trim())
-  .filter(Boolean);
+const DEFAULT_ORIGIN = "http://localhost:5173";
+
+function parseOrigins(raw: string): string[] {
+  const validated = raw
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean)
+    .filter((origin) => {
+      try {
+        const url = new URL(origin);
+        return url.protocol === "http:" || url.protocol === "https:";
+      } catch {
+        console.warn(`[CORS] Invalid origin ignored: "${origin}"`);
+        return false;
+      }
+    });
+
+  if (validated.length === 0) {
+    console.warn(`[CORS] No valid origins configured, falling back to ${DEFAULT_ORIGIN}`);
+    return [DEFAULT_ORIGIN];
+  }
+  return validated;
+}
+
+const TRUSTED_ORIGINS = parseOrigins(process.env.TRUSTED_ORIGINS ?? DEFAULT_ORIGIN);
 
 const app = new Hono();
 

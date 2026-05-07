@@ -11,11 +11,7 @@ import asyncio
 import logging
 import os
 
-from dotenv import load_dotenv
-
-# Load .env from repo root before importing any modules that read env vars.
-load_dotenv()
-
+# L6 fix: load_dotenv() is called once in trading_agent.base.config — no need here.
 from trading_agent.exchanges.solana.zeta_client import ZetaClient
 from trading_agent.exchanges.solana.pyth_ws import PythPriceFeed
 from trading_agent.strategies.sd_zones.agent import SDZoneStrategy

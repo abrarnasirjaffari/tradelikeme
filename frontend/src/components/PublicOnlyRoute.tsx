@@ -3,11 +3,11 @@ import { Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 export default function PublicOnlyRoute({ children }: { children: ReactNode }) {
-  const { session, loading } = useAuth()
+  const { user, loading } = useAuth()
 
   if (loading) return null
 
-  if (session) {
+  if (user) {
     return <Navigate to="/dashboard" replace />
   }
 

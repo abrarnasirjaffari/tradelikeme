@@ -29,6 +29,7 @@ import trading_agent.base.notifier as notifier
 from trading_agent.strategies.sd_zones.sentinel import Sentinel, SentinelEvent, WatchType
 from trading_agent.strategies.sd_zones.trade_agent import TradeAgent
 from trading_agent.strategies.sd_zones.zones import scan_tf_stack, find_tp_levels, find_sl_level, apply_btc_gate
+from trading_agent.strategies.sd_zones import journal
 
 logger = logging.getLogger(__name__)
 
@@ -113,6 +114,9 @@ class LoopOrchestrator:
 
         logger.info("LoopOrchestrator starting up…")
         self._running = True
+
+        # L3 fix: ensure journal DB tables exist before any trade can be recorded.
+        journal.init_db()
 
         # 1. Fetch initial balance — needed for position sizing before first compound cycle.
         await self._check_min_balance()

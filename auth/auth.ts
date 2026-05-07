@@ -19,9 +19,10 @@ export const auth = betterAuth({
   trustedOrigins: TRUSTED_ORIGINS,
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: false,
+    requireEmailVerification: true,
     sendResetPassword: async ({ user, url }) => {
-      console.log(`[PASSWORD RESET] To: ${user.email} | Link: ${url}`);
+      // TODO: Replace with real email sender (Resend, SES, etc.) before production.
+      // Do NOT log the reset link — send via email only.
     },
   },
   emailVerification: {
@@ -34,7 +35,7 @@ export const auth = betterAuth({
     },
   },
   session: {
-    expiresIn: 30 * 24 * 60 * 60,
+    expiresIn: 7 * 24 * 60 * 60, // 7 days — shorter for financial app security
     updateAge: 24 * 60 * 60,
   },
   rateLimit: {

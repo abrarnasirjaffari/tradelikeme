@@ -1,0 +1,9 @@
+.env
+.env.*
+.git
+*.pem
+venv/
+__pycache__/
+*.db
+node_modules/
+.claude/

@@ -1,10 +1,14 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
-from sqlalchemy import Column, String, Float, DateTime, ForeignKey
+from sqlalchemy import Column, String, Numeric, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
 from backend.models.base import Base
+
+
+def _utcnow():
+    return datetime.now(timezone.utc)
 
 
 class VaultTransaction(Base):
@@ -18,7 +22,7 @@ class VaultTransaction(Base):
         index=True,
     )
     type = Column(String, nullable=False)          # "deposit" or "withdraw"
-    amount_usdc = Column(Float, nullable=False)
+    amount_usdc = Column(Numeric(precision=18, scale=6), nullable=False)
     tx_signature = Column(String, nullable=True)   # set on /confirm
     status = Column(String, nullable=False, default="pending")  # pending / confirmed / failed
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=_utcnow)

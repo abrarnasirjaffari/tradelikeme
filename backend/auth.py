@@ -28,6 +28,13 @@ logger = logging.getLogger(__name__)
 BETTER_AUTH_URL = os.getenv("BETTER_AUTH_URL", "http://localhost:3000")
 _bearer = HTTPBearer(auto_error=False)
 
+# Module-level shared httpx client with connection pooling.
+# Reused across all auth validation requests to avoid per-request overhead.
+_http_client = httpx.AsyncClient(
+    timeout=5.0,
+    limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
+)
+
 
 class CurrentUser:
     def __init__(self, id: str, email: str, role: str = "user") -> None:
@@ -56,11 +63,10 @@ async def require_auth(
     session_url = f"{BETTER_AUTH_URL}/api/auth/get-session"
 
     try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            resp = await client.get(
-                session_url,
-                headers={"Authorization": f"Bearer {token}"},
-            )
+        resp = await _http_client.get(
+            session_url,
+            headers={"Authorization": f"Bearer {token}"},
+        )
     except httpx.RequestError as exc:
         logger.error("BetterAuth unreachable at %s: %s", session_url, exc)
         raise HTTPException(status_code=503, detail="Auth service unavailable")

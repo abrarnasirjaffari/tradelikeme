@@ -30,8 +30,16 @@ class SubscriptionOut(BaseModel):
         from_attributes = True
 
 
+def _enforce_ownership(user_id: UUID, current_user: CurrentUser) -> None:
+    """Raise 403 if the authenticated user does not own this resource."""
+    if str(user_id) != str(current_user.id):
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+
 @router.post("", response_model=SubscriptionOut, status_code=201)
-def create_subscription(body: SubscriptionCreate, db: Session = Depends(get_db), _: CurrentUser = Depends(require_auth)):
+def create_subscription(body: SubscriptionCreate, db: Session = Depends(get_db), current_user: CurrentUser = Depends(require_auth)):
+    _enforce_ownership(body.user_id, current_user)
+
     user = db.query(User).filter(User.id == body.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -64,10 +72,11 @@ def create_subscription(body: SubscriptionCreate, db: Session = Depends(get_db),
 
 
 @router.delete("/{subscription_id}", status_code=204)
-def cancel_subscription(subscription_id: UUID, db: Session = Depends(get_db), _: CurrentUser = Depends(require_auth)):
+def cancel_subscription(subscription_id: UUID, db: Session = Depends(get_db), current_user: CurrentUser = Depends(require_auth)):
     sub = db.query(Subscription).filter(Subscription.id == subscription_id).first()
     if not sub:
         raise HTTPException(status_code=404, detail="Subscription not found")
+    _enforce_ownership(sub.user_id, current_user)
     if sub.status == "cancelled":
         raise HTTPException(status_code=409, detail="Subscription already cancelled")
 
