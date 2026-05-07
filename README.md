@@ -1,8 +1,8 @@
 # TradeLikeMe
 
-**Verified-strategy trading vaults on Solana. Users deposit, our proven agent trades. 20% profit share, zero fees.**
+**Autonomous crypto trading agent on Solana — Supply & Demand zone strategy, trustless Anchor vault, body-close stop loss.**
 
-[tradelikeme.xyz](https://tradelikeme.xyz) · [Solana Frontier Hackathon 2026](https://colosseum.org) · [Live Demo](https://tradelikeme.xyz/dashboard)
+[tradelikeme.xyz](https://tradelikeme.xyz) · [Live Demo](https://tradelikeme.xyz/dashboard)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Solana](https://img.shields.io/badge/Solana-devnet%20live-9945FF)](https://solscan.io)
@@ -11,143 +11,9 @@
 
 ---
 
-## The Problem
+## About
 
-43+ "AI trading" projects in Solana hackathons — zero have shown verified results.
-
-Every platform says "AI picks trades" — none show win rates, backtests, or live P&L. Users deposit into black-box AI with no accountability. Copy trading platforms expose the strategy (trades are visible) and require manual work from the trader.
-
-**TradeLikeMe solves all three**: verified results, trustless custody, automated execution.
-
----
-
-## The Solution
-
-A verified-strategy trading marketplace. Strategies are human-cloned, independently verified, and run 24/7 by an autonomous agent — without exposing the exact rules to users or competitors.
-
-**Two execution modes:**
-
-| Mode | Auth | Markets | Custody |
-|------|------|---------|---------|
-| **Solana Vault** | Phantom wallet or email | Zeta Markets + Jupiter Perps (Solana devnet/mainnet) | Trustless — Anchor smart contract, agent can never withdraw |
-| **Multi-CEX** *(Phase 2)* | Paste trade-only API key | WEEX + Bybit + Binance (600+ pairs) | API key is trade-only, no withdrawal rights |
-
-Same verified strategy. Same agent brain. Different execution layer.
-
----
-
-## The Real Results
-
-This is not a backtest pitch. This is a real account, real money, real market.
-
-| | |
-|-|-|
-| **Starting capital** | $100 |
-| **Ending capital** | $320 |
-| **Return** | +220% |
-| **Margin per trade** | 0.5% of account |
-| **Leverage** | 50x–200x (CROSS) |
-| **Win rate** | 89% |
-| **Risk:Reward** | 1:3 |
-| **Indicators used** | None |
-| **Strategy** | Pure price action — Supply & Demand zones only |
-| **Verification** | Every live trade recorded on-chain (verifiable on Solscan) |
-
-**No indicators. No signals. No AI guessing.** Pure zone-to-zone price action, cloned from a verified profitable trader. 0.5% margin per trade means even at 200x leverage, a single loss takes less than 1% of the account. The math compounds — small consistent wins on tiny margin.
-
-> *See disclaimer below. Past performance does not guarantee future results.*
-
----
-
-## Why It Works
-
-- **$100 → $320 on live account** — real trades, real market, no indicators (see The Real Results above)
-- **89% win rate, 1:3 RRR** — backtested over 2 years of data + every live trade recorded on-chain (verifiable on Solscan)
-- **Human-cloned strategy** — exact rules from a real profitable trader, not AI guessing
-- **Trustless on Solana** — custom Anchor vault: agent can trade but can **never** withdraw user funds
-- **Sentinel architecture** — WebSocket price watcher burns zero AI tokens, wakes agent only on events
-- **Body-close stop loss** — wicks past SL are treated as stop hunts and ignored (70% wick survival rate, saved +2192% on one verified trade)
-- **7-timeframe analysis** — `1M → 1W → 1D → 4H → 1H → 30M → 15M`
-- **On-chain trade journal** — every trade recorded to Solana, verifiable on Solscan
-- **4-stage verification pipeline** — automated IS/OOS backtest + shadow trading grades every marketplace strategy
-
----
-
-## For Users
-
-Deposit once. The agent trades 24/7. You earn 80% of all profit. We take 20% — only when you profit.
-
-| Deposit | Monthly Return | Your Share (80%) | Platform Fee (20%) |
-|---------|---------------|------------------|--------------------|
-| $1,000 | 8% | $80 | $20 |
-| $10,000 | 8% | $800 | $200 |
-| $100,000 | 8% | $8,000 | $2,000 |
-
-**No subscriptions. No flat fees. Zero cost if you don't profit.**
-
-### Risk Modes
-
-You choose a preset — the agent handles position sizing, leverage, and margin automatically:
-
-| Mode | Leverage | Margin/Trade | Buffer Before Liquidation | Who It's For |
-|------|---------|--------------|--------------------------|-------------|
-| Conservative | 50–100x | 0.25–0.5% | 20+ trades | New users, large deposits |
-| Medium | 50–200x | 0.5–1% | 8–10 trades | Experienced users |
-| Aggressive | 50–300x | 1–2% | 4–5 trades | Risk-tolerant, small deposits |
-
-**Withdrawals** available anytime via smart contract — no human approval, no delay on Solana.
-
----
-
-## For Traders
-
-Submit your verified strategy to the marketplace. We build and run the agent. You earn from every user deposit — without risking your own capital or trading manually.
-
-**Qualification requirements:**
-- 50+ verified trades (exchange statements or independently audited records)
-- 55%+ win rate minimum
-- Clear written rules — entry, exit, SL, TP (the agent needs explicit rules)
-- 30-minute strategy interview
-- 2-week paper test on devnet before going live
-
-**Quality-based fee tiers — grade is computed by our pipeline, not assigned by us:**
-
-| Tier | IS Win Rate | OOS Consistency | Total Fee | You Earn (70%) | User Keeps |
-|------|-------------|-----------------|-----------|----------------|-----------|
-| S | ≥85% | ±3% of IS | 15% | 10.5% | 85% |
-| A | 75–84% | ±5% of IS | 12% | 8.4% | 88% |
-| B | 65–74% | ±8% of IS | 10% | 7.0% | 90% |
-| C | 55–64% | ±10% of IS | 8% | 5.6% | 92% |
-| Rejected | <55% | — | — | — | — |
-
-**Example**: B-tier strategy, $500k user deposits → **$3,500/month** for zero work. At $2M → **$14,000/month**.
-
----
-
-## Strategy Verification Pipeline
-
-No competitor in four Colosseum hackathons has automated trader verification. Our 4-stage pipeline computes grades — the platform cannot override them.
-
-```
-Stage 1 — In-Sample Backtest (2024, full year)
-  Engine: vectorbt · Data: Binance REST API (reproducible)
-  Output: win_rate, avg_winner%, avg_loser%, RRR, max_drawdown%, sharpe_ratio
-
-Stage 2 — Out-of-Sample Verification (2025, full year)
-  Same rules, same code, same coins — only date range changes
-  Pass condition: OOS win_rate within ±8% of IS win_rate
-  Output: "Strategy consistent" or "Strategy overfit"
-
-Stage 3 — Shadow Trade (30-day live paper mode)
-  Entries timestamped BEFORE price moves — cannot be backfilled
-  Stored in trade journal with same schema as live trades
-
-Stage 4 — Edge Discovery (5 parallel agents)
-  Each agent tests one rule variation on IS data
-  Accepted improvements shared privately with trader — platform takes no action
-```
-
-Grade stored on-chain via `register_strategy()`. Cannot be changed without re-running the pipeline.
+TradeLikeMe is a marketplace for verified AI trading strategies on Solana. Traders submit strategies, we verify them through an automated pipeline, and autonomous agents execute them 24/7 on-chain via a trustless Anchor vault — the agent can trade but can never withdraw user funds.
 
 ---
 
@@ -165,7 +31,7 @@ User
               │     └── KLineChart Pro (self-hosted) → Claude Opus 4.6 (AWS Bedrock)
               ├── Sentinel (sentinel.py)  ← zero AI tokens, WebSocket only
               └── Trade Agent (trade_agent.py)
-                    │         └── 4 orders: market + TP1 + TP2 + disaster SL
+                        └── 4 orders: market + TP1 + TP2 + disaster SL
                     │
           ┌─────────┴──────────────┐
      SQLite Journal         On-Chain Journal (Anchor)
@@ -179,65 +45,71 @@ User
 
 ### Sentinel — Zero-AI Price Watcher
 
-Sentinel runs 24/7 via Pyth WebSocket, consuming zero AI tokens. Three watch types:
+Runs 24/7 via Pyth WebSocket, consuming zero AI tokens. Three watch types:
 
 1. **Zone touch** → Telegram alert → agent wakes → places 4 orders atomically
 2. **TP1 hit** → Telegram alert → agent wakes → moves SL to break-even
 3. **30m body-close SL** → checks every 30-min candle close → wick past SL = ignored, body close = exit
 
-The body-close SL is TradeLikeMe's core edge: exchange hard SL at structural + 3% buffer fires only if sentinel dies.
+### Anchor Vault
 
-### Anchor Vault — Trustless Profit Split
-
-Custom Solana smart contract. Deployed on devnet (Program ID: `rGMTq8sS5GUJ7q1ei9x75dnZ3kM2QCn5YRKYGHbwdSd`).
+Custom Solana smart contract deployed on devnet (`rGMTq8sS5GUJ7q1ei9x75dnZ3kM2QCn5YRKYGHbwdSd`).
 
 Four instructions:
 - `deposit()` — user sends USDC to vault PDA
 - `delegate_to_protocol()` — vault authorizes agent keypair to trade (never withdraw)
-- `settle_epoch()` — called monthly by agent, auto-splits 20% profit on-chain
+- `settle_epoch()` — called monthly by agent, computes and splits profit on-chain
 - `withdraw()` — user pulls balance anytime, no human approval needed
 
-Vault PDA seeds: `[b"vault", user_pubkey, strategy_id]` — one vault per (user × strategy). 20% profit split is computed and executed on-chain, not by the platform.
+Vault PDA seeds: `[b"vault", user_pubkey, strategy_id]` — one vault per (user × strategy).
+
+---
+
+## Strategy Verification Pipeline
+
+Automated 4-stage pipeline that grades every strategy. Grade is stored on-chain via `register_strategy()` and cannot be changed without re-running the pipeline.
+
+```
+Stage 1 — In-Sample Backtest (2024, full year)
+  Engine: vectorbt · Data: Binance REST API (reproducible)
+  Output: win_rate, avg_winner%, avg_loser%, RRR, max_drawdown%, sharpe_ratio
+
+Stage 2 — Out-of-Sample Verification (2025, full year)
+  Same rules, same code, same coins — only date range changes
+  Pass condition: OOS win_rate within ±8% of IS win_rate
+  Output: "Strategy consistent" or "Strategy overfit"
+
+Stage 3 — Shadow Trade (30-day live paper mode)
+  Entries timestamped BEFORE price moves — cannot be backfilled
+  Stored in trade journal with same schema as live trades
+
+Stage 4 — Edge Discovery (5 parallel agents)
+  Each agent tests one rule variation on IS data
+  Accepted improvements shared privately with the strategy author
+```
 
 ---
 
 ## Tech Stack
 
-| Layer | Tool | Status |
-|-------|------|--------|
-| Runtime | Python 3.11 asyncio | Live |
-| Solana wallet | Phantom Connect + `@solana/wallet-adapter` | Live |
-| Stablecoin | USDC (+ CASH stablecoin) | Live |
-| Solana vault | Custom Anchor program (Rust) | Devnet deployed |
-| Perps (primary) | Zeta Markets (`zetamarkets-py`) | Devnet live |
-| Perps (fallback) | Jupiter Perps (`@jup-ag/perps-sdk`) | Mainnet live |
-| Price oracle | Pyth Network WebSocket + REST fallback | Live |
-| RPC | Helius (free tier) | Live |
-| Chart rendering | KLineChart Pro (self-hosted, headless Playwright) | Live |
-| Zone analysis | Claude Opus 4.6 via AWS Bedrock | Live |
-| Auth | BetterAuth v1.6.9 (Hono, Google/GitHub OAuth + Phantom SIWS) | Live |
-| Frontend | React 19 + Vite + React Router + Tailwind | Live |
-| Backend | FastAPI + SQLAlchemy + Supabase (PostgreSQL) | Live |
-| Database | Supabase PostgreSQL (platform) + SQLite (per-strategy journal) | Live |
-| Notifications | Telegram (WhatsApp — Phase 2) | Live |
-| Server | AWS EC2 t3.large, Ubuntu 22.04, Singapore | Running |
-| Deployment | Docker Compose (3 services) — Dokploy planned | Live |
-| CEX | WEEX + Bybit + Binance | Phase 2 |
-
----
-
-## Competitive Edge
-
-| Feature | TradeLikeMe | Every Competitor |
-|---------|------------|-----------------|
-| Proven strategy | 89% win rate, 1:3 RRR — 2-year backtest + on-chain live trades (Solscan) | None — demos only |
-| Trustless custody | Anchor vault — agent can't withdraw | Custodial or manual |
-| Body-close SL | Wicks ignored, 70% wick survival rate | Exchange SL only |
-| 7-TF analysis | 1M → 1W → 1D → 4H → 1H → 30M → 15M | Single TF or none |
-| Dual execution | Solana vault + CEX API | One or the other |
-| Marketplace | 4-stage pipeline grades traders — grade is computed, not assigned | No verification |
-| On-chain journal | Every trade on Solscan, Pyth-priced | Off-chain only |
-| Business model | 20% profit share, $0 fees | Subscriptions |
+| Layer | Tool |
+|-------|------|
+| Runtime | Python 3.11 asyncio |
+| Solana wallet | Phantom Connect + `@solana/wallet-adapter` |
+| Stablecoin | USDC |
+| Solana vault | Custom Anchor program (Rust) |
+| Perps (primary) | Zeta Markets (`zetamarkets-py`) |
+| Perps (fallback) | Jupiter Perps (`@jup-ag/perps-sdk`) |
+| Price oracle | Pyth Network WebSocket + REST fallback |
+| RPC | Helius |
+| Chart rendering | KLineChart Pro (self-hosted, headless Playwright) |
+| Zone analysis | Claude Opus 4.6 via AWS Bedrock |
+| Auth | BetterAuth v1.6.9 (Hono, Google/GitHub OAuth + Phantom SIWS) |
+| Frontend | React 19 + Vite + React Router + Tailwind |
+| Backend | FastAPI + SQLAlchemy + Supabase (PostgreSQL) |
+| Database | Supabase PostgreSQL (platform) + SQLite (per-strategy journal) |
+| Notifications | Telegram |
+| Deployment | Docker Compose (3 services) |
 
 ---
 
@@ -262,30 +134,29 @@ tradelikeme/
 │   │       └── config.py          # Strategy params (watchlist, leverage, thresholds)
 │   ├── exchanges/
 │   │   ├── solana/
-│   │   │   ├── zeta_client.py         # Zeta Markets (primary, 5 assets, devnet+mainnet)
-│   │   │   ├── jupiter_client.py      # Jupiter Perps (fallback, 3 assets, mainnet)
-│   │   │   ├── solana_router.py       # Smart routing: Zeta → Jupiter on failure
+│   │   │   ├── zeta_client.py         # Zeta Markets (primary, devnet+mainnet)
+│   │   │   ├── jupiter_client.py      # Jupiter Perps (fallback, mainnet)
+│   │   │   ├── solana_router.py       # Routes Zeta → Jupiter on failure
 │   │   │   ├── pyth_ws.py             # Pyth Hermes WebSocket + REST fallback
 │   │   │   ├── anchor_vault_client.py # Vault deposit/withdraw/settle
 │   │   │   ├── trade_journal_client.py # On-chain trade recording
 │   │   │   └── anchor_vault/          # Rust Anchor program source + IDL
-│   │   └── cex/                       # EMPTY — Phase 2
+│   │   └── cex/                       # Phase 2
 │   ├── channels/
-│   │   └── telegram.py            # Telegram Bot API (send_telegram, send_photo_telegram)
+│   │   └── telegram.py            # Telegram Bot API
 │   ├── main.py                    # Production entry point
 │   └── devnet_demo.py             # Demo script (DRY_RUN=1 for no real orders)
 ├── verification/
 │   ├── data_fetcher.py            # OHLCV from Binance REST → parquet
-│   ├── backtest_engine.py         # vectorbt IS (2024) + OOS (2025) backtest
-│   ├── shadow_trades.py           # 30-day live paper trade log
-│   ├── edge_discovery.py          # 5 parallel agents test rule variations
-│   └── run_pipeline.py            # Orchestrate all 4 stages
+│   ├── backtest_engine.py         # vectorbt IS + OOS backtest
+│   ├── shadow_trades.py           # 30-day paper trade log
+│   ├── edge_discovery.py          # Parallel agents testing rule variations
+│   └── run_pipeline.py            # Orchestrates all 4 stages
 ├── backend/
-│   ├── main.py                    # FastAPI app, CORS, lifespan
+│   ├── main.py                    # FastAPI app
 │   ├── auth.py                    # BetterAuth JWT middleware
-│   ├── models/                    # SQLAlchemy ORM models (Supabase)
-│   └── routes/                    # strategies, subscriptions, vaults, trades,
-│                                  # notifications, users, admin, agent, ws
+│   ├── models/                    # SQLAlchemy ORM models
+│   └── routes/                    # strategies, vaults, trades, notifications, users, ws
 ├── frontend/                      # React 19 + Vite SPA
 │   └── src/
 │       ├── pages/                 # Landing, auth, dashboard, docs, blog
@@ -296,25 +167,25 @@ tradelikeme/
 │   └── src/providers/phantom.ts   # Custom Ed25519 Solana wallet auth plugin
 ├── infra/
 │   ├── docker-compose.yml         # backend (8001) + auth (3002) + agent
-│   ├── Dockerfile.backend         # python:3.11-slim + uvicorn
-│   ├── Dockerfile.agent           # python:3.11-slim + Playwright + chromium
+│   ├── Dockerfile.backend
+│   ├── Dockerfile.agent           # includes Playwright + Chromium
 │   ├── klinechart-mcp/            # MCP server: 8 tools, Playwright, port 8765
 │   ├── klinechart-pro/            # KLineChart Pro UI (vendored, Apache 2.0)
 │   └── klinechart/                # KLineChart v10 canvas engine (vendored)
 ├── tests/                         # 32 integration tests
-├── requirements.txt               # 18 Python packages
-├── run_agent.sh                   # Start live agent (DEVNET_MODE=1)
-├── run_demo.sh                    # Demo run (DRY_RUN=1 available)
-├── SETUP.md                       # Local setup guide
-├── CONTRIBUTING.md                # Contribution guide
-└── TRADING_RULES.md               # Full strategy — all 26 rules, all entry gates
+├── requirements.txt
+├── run_agent.sh                   # Start live agent
+├── run_demo.sh                    # Demo run (DRY_RUN=1)
+├── SETUP.md                       # Full local setup guide
+├── CONTRIBUTING.md
+└── TRADING_RULES.md               # Full strategy rules
 ```
 
 ---
 
 ## Quick Start
 
-See [SETUP.md](SETUP.md) for the full setup guide. Fast path:
+See [SETUP.md](SETUP.md) for the full setup guide.
 
 ```bash
 # 1. Clone and set up Python environment
@@ -326,15 +197,35 @@ playwright install chromium
 
 # 2. Copy and fill in environment variables
 cp .env.example .env
-# Edit .env — minimum required: HELIUS_RPC_URL, SOLANA_NETWORK=devnet,
-#   PHANTOM_PRIVATE_KEY, AWS_ACCESS_KEY_ID/SECRET, TELEGRAM_BOT_TOKEN/CHAT_ID
 
-# 3. Run the agent (devnet, 3-coin watchlist)
+# 3. Run the agent (devnet)
 bash run_agent.sh
 
 # 4. Or run the demo (synthetic zone touch, no real orders)
 DRY_RUN=1 bash run_demo.sh
 ```
+
+---
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `HELIUS_RPC_URL` | Yes | Helius RPC endpoint (get free at helius.dev) |
+| `SOLANA_NETWORK` | Yes | `devnet` or `mainnet-beta` |
+| `PHANTOM_PRIVATE_KEY` | Yes | Agent wallet keypair (base58) |
+| `AWS_ACCESS_KEY_ID` | Yes | AWS IAM key for Claude Bedrock (zone analysis) |
+| `AWS_SECRET_ACCESS_KEY` | Yes | AWS IAM secret |
+| `AWS_REGION` | Yes | e.g. `us-east-1` |
+| `TELEGRAM_BOT_TOKEN` | Yes | Telegram bot token from @BotFather |
+| `TELEGRAM_CHAT_ID` | Yes | Chat/channel ID to send alerts to |
+| `SUPABASE_DATABASE_URL` | Yes | Supabase PostgreSQL connection string |
+| `SUPABASE_ANON_KEY` | Yes | Supabase public anon key |
+| `BETTER_AUTH_SECRET` | Yes | Random secret for BetterAuth sessions |
+| `GOOGLE_CLIENT_ID` | Optional | Google OAuth (auth service) |
+| `GOOGLE_CLIENT_SECRET` | Optional | Google OAuth (auth service) |
+| `GITHUB_CLIENT_ID` | Optional | GitHub OAuth (auth service) |
+| `GITHUB_CLIENT_SECRET` | Optional | GitHub OAuth (auth service) |
 
 ---
 
@@ -347,7 +238,7 @@ docker compose -f infra/docker-compose.yml up --build
 # Services:
 # - FastAPI backend:    http://localhost:8001
 # - BetterAuth server:  http://localhost:3002
-# - Trading agent:      (no port — runs in background)
+# - Trading agent:      (background process)
 
 # Frontend (dev mode)
 cd frontend && npm install && npm run dev   # http://localhost:5173
@@ -364,7 +255,7 @@ cd auth && npm install && npm run dev       # http://localhost:3001
 # All integration tests (requires .env with devnet credentials)
 pytest tests/ -v
 
-# Specific test suites
+# Specific suites
 pytest tests/test_zeta_open_position.py -v      # Zeta Markets devnet
 pytest tests/test_vault_deposit_devnet.py -v    # Anchor vault
 pytest tests/test_sentinel_zone_touch.py -v     # Sentinel logic
@@ -373,41 +264,43 @@ pytest tests/test_strategies_api.py -v          # FastAPI routes
 
 ---
 
-## Sponsor Integrations
+## Adding a Strategy
 
-| Sponsor | How We Use It |
-|---------|---------------|
-| **Phantom Connect** | Email sign-in for web2 users + wallet auth (SIWS) for Solana users |
-| **Helius RPC** | All Solana RPC calls — devnet + mainnet, WebSocket subscriptions |
-| **CASH Stablecoin** | Accepted as deposit currency in Solana vault mode |
-| **Colosseum Copilot** | Used for competitive landscape analysis (43 trading projects surveyed) |
+Each strategy is an isolated Python class that inherits `BaseStrategy` and calls `ExchangeBase` methods.
+
+1. Create a folder under `trading_agent/strategies/<your_strategy>/`
+2. Implement `loop.py`, `trade_agent.py`, `sentinel.py`, `zones.py`, `journal.py`, `config.py` — follow `sd_zones/` as reference
+3. Add a `config.py` entry for `WATCHLIST`, `LEVERAGE`, and `MARGIN_PCT`
+4. Register via `POST /strategies` (admin endpoint) with strategy rules and risk mode params
+5. Run the verification pipeline: `python verification/run_pipeline.py --strategy <id>`
+
+The pipeline grades the strategy and stores the grade on-chain. Only strategies passing Stage 2 (OOS consistency) go live.
 
 ---
 
-## Hackathon
+## Roadmap
 
-**Solana Frontier Hackathon** — Colosseum / Solana Foundation  
-Period: Apr 6 – May 11, 2026 · Registration: ✅ Done · Prize target: Grand Champion $30k
-
-**Judging self-score**: Functionality 10/10 · Impact 10/10 · Novelty 10/10 · UX 10/10 · Open Source 9/10 · Business Plan 10/10
-
-See `colosseum_winners.md` for historical winner analysis and differentiation strategy.
+- [ ] CEX layer (`trading_agent/exchanges/cex/`) — WEEX, Bybit, Binance
+- [ ] Wire `notifier.send()` into `trade_agent.py` and `loop.py` event handlers
+- [ ] Frontend dashboard wiring — deposit/withdraw UI, trade history, P&L, WS live feed
+- [ ] Anchor vault client integration (replace deposit/withdraw stubs in backend)
+- [ ] WhatsApp notifications via Twilio
+- [ ] Dokploy PaaS setup on EC2
 
 ---
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, branch conventions, PR process, and areas where help is most needed.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, branch conventions, and PR process.
 
 ---
 
 ## Disclaimer
 
-> **Past performance is not indicative of future results.** The 89% win rate and 1:3 RRR figures are based on a growing sample of independently verified trades and backtests. Crypto trading involves substantial risk of loss. Leverage amplifies both gains and losses. You can lose your entire deposit. TradeLikeMe is not a financial advisor and nothing here constitutes financial advice. Only deposit what you can afford to lose. Performance may vary based on market conditions, execution quality, and strategy adherence.
+> **Past performance is not indicative of future results.** Crypto trading involves substantial risk of loss. Leverage amplifies both gains and losses. You can lose your entire deposit. Nothing here constitutes financial advice. Only use funds you can afford to lose.
 
 ---
 
 ## License
 
-Platform code: [MIT](LICENSE)  
-Strategy rules: Fully public — see [TRADING_RULES.md](TRADING_RULES.md)
+Platform code: [MIT](LICENSE) · Strategy rules: [TRADING_RULES.md](TRADING_RULES.md)
