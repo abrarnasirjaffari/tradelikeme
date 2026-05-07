@@ -208,6 +208,7 @@ class ZetaClient(ExchangeBase):
 
         Uses cached WebSocket price if available; falls back to Pyth REST if not.
         """
+        symbol = self._normalize_symbol(symbol)
         self._assert_supported(symbol)
         feed_key = _SYMBOL_TO_FEED[symbol]
 
@@ -239,6 +240,7 @@ class ZetaClient(ExchangeBase):
         IMMEDIATE_OR_CANCEL order with an aggressive price (±2% slippage)
         to guarantee a fill at the best available price.
         """
+        symbol = self._normalize_symbol(symbol)
         zeta = self._require_init()
         self._assert_supported(symbol)
 
@@ -311,6 +313,7 @@ class ZetaClient(ExchangeBase):
         at an aggressive price to guarantee a fill (same pattern as open_position).
         Raises RuntimeError if no open position exists.
         """
+        symbol = self._normalize_symbol(symbol)
         zeta = self._require_init()
         self._assert_supported(symbol)
 
@@ -389,6 +392,7 @@ class ZetaClient(ExchangeBase):
         Returns the tx signature.
         Raises RuntimeError if no open position exists for symbol.
         """
+        symbol = self._normalize_symbol(symbol)
         zeta = self._require_init()
         self._assert_supported(symbol)
 
@@ -465,6 +469,7 @@ class ZetaClient(ExchangeBase):
         Call this when moving SL to break-even (after TP1 hit) — cancel old SL
         then call set_sl again with the new price.
         """
+        symbol = self._normalize_symbol(symbol)
         zeta = self._require_init()
         self._assert_supported(symbol)
 
@@ -493,6 +498,7 @@ class ZetaClient(ExchangeBase):
         - Short TP: triggers when price <= tp_price (LessThanOrEqual), buy side
         reduce_only=True so it can only close, never open.
         """
+        symbol = self._normalize_symbol(symbol)
         zeta = self._require_init()
         self._assert_supported(symbol)
 
@@ -562,6 +568,7 @@ class ZetaClient(ExchangeBase):
 
     async def cancel_tp(self, symbol: str) -> str:
         """Cancel the take-profit trigger order for symbol. Returns tx signature."""
+        symbol = self._normalize_symbol(symbol)
         zeta = self._require_init()
         self._assert_supported(symbol)
 
@@ -588,6 +595,7 @@ class ZetaClient(ExchangeBase):
         Returns dict with keys: symbol, side, size, entry_price, unrealised_pnl
         size is always positive; side is 'long' or 'short'.
         """
+        symbol = self._normalize_symbol(symbol)
         zeta = self._require_init()
         self._assert_supported(symbol)
 
@@ -620,7 +628,17 @@ class ZetaClient(ExchangeBase):
     # Helpers
     # ------------------------------------------------------------------
 
+    @staticmethod
+    def _normalize_symbol(symbol: str) -> str:
+        """Convert 'SOLUSDT' → 'SOL', 'BTCUSDT' → 'BTC', etc."""
+        s = symbol.upper()
+        for suffix in ("USDT", "BUSD", "PERP"):
+            if s.endswith(suffix):
+                return s[: -len(suffix)]
+        return s
+
     def _assert_supported(self, symbol: str) -> None:
+        symbol = self._normalize_symbol(symbol)
         if symbol not in SUPPORTED_SYMBOLS:
             raise ValueError(
                 f"Symbol '{symbol}' not supported by Zeta Markets. "
@@ -628,6 +646,7 @@ class ZetaClient(ExchangeBase):
             )
 
     def _to_asset(self, symbol: str) -> Asset:
+        symbol = self._normalize_symbol(symbol)
         self._assert_supported(symbol)
         return _SYMBOL_TO_ASSET[symbol]
 

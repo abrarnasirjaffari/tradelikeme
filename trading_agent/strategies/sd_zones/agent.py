@@ -67,8 +67,11 @@ class SDZoneStrategy(BaseStrategy):
         if not zones:
             return None
 
+        # zones may be Zone dataclass objects (from scan_tf_stack) or plain dicts
+        first_zone = zones[0]
+        zone_type = first_zone.type if hasattr(first_zone, "type") else first_zone.get("type")
         direction: Literal["long", "short"] = (
-            "long" if zones[0].get("type") == "demand" else "short"
+            "long" if zone_type == "demand" else "short"
         )
 
         passed = await self._loop.check_entry(symbol, zones, direction)
