@@ -976,3 +976,724 @@ describe("vault — settle_epoch()", () => {
     assert.isTrue(threw, "non-agent should not be able to call settle_epoch");
   });
 });
+
+// ── T9a: record_trade() tests ─────────────────────────────────────────────────
+
+describe("vault — record_trade()", () => {
+  const provider = anchor.AnchorProvider.env();
+  anchor.setProvider(provider);
+  const program = anchor.workspace.Vault as Program<Vault>;
+
+  let mint: PublicKey;
+  let mintAuthority: Keypair;
+  let user: Keypair;
+  let agent: Keypair;
+  let platformWallet: Keypair;
+  let sid: number[];
+  let vaultPda: PublicKey;
+  let userTokenAccount: PublicKey;
+  let vaultTokenAccount: PublicKey;
+
+  // Derive the PDA for a trade record
+  async function deriveTradePda(
+    programId: PublicKey,
+    vaultPubkey: PublicKey,
+    tradeId: number
+  ): Promise<[PublicKey, number]> {
+    const tradeIdBuf = Buffer.alloc(8);
+    tradeIdBuf.writeBigUInt64LE(BigInt(tradeId));
+    return PublicKey.findProgramAddressSync(
+      [Buffer.from("trade"), vaultPubkey.toBuffer(), tradeIdBuf],
+      programId
+    );
+  }
+
+  // Encode a symbol string into a 16-byte array
+  function encodeSymbol(sym: string): number[] {
+    const buf = Buffer.alloc(16);
+    buf.write(sym, 0, "ascii");
+    return Array.from(buf);
+  }
+
+  before(async () => {
+    mintAuthority = Keypair.generate();
+    user = Keypair.generate();
+    agent = Keypair.generate();
+    platformWallet = Keypair.generate();
+    sid = strategyId(50);
+
+    await fundSol(provider, user.publicKey);
+
+    mint = await createMint(
+      provider.connection,
+      (provider.wallet as anchor.Wallet).payer,
+      mintAuthority.publicKey,
+      null,
+      6
+    );
+
+    [vaultPda] = await deriveVaultPda(program.programId, user.publicKey, sid);
+    userTokenAccount = await makeTokenAccount(provider, mint, user.publicKey);
+    vaultTokenAccount = await makeTokenAccount(provider, mint, vaultPda);
+
+    await fundTokenAccount(provider, mint, mintAuthority, userTokenAccount, 1_000_000_000);
+
+    // Create vault
+    await program.methods
+      .createVault(sid, platformWallet.publicKey)
+      .accounts({ vault: vaultPda, user: user.publicKey, systemProgram: SystemProgram.programId })
+      .signers([user])
+      .rpc();
+
+    // Deposit so vault has balance
+    await program.methods
+      .deposit(new BN(500_000_000))
+      .accounts({
+        vault: vaultPda,
+        vaultTokenAccount,
+        userTokenAccount,
+        user: user.publicKey,
+        userPubkey: user.publicKey,
+        tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+      })
+      .signers([user])
+      .rpc();
+
+    // Delegate to agent so agent_pubkey is set on vault
+    await program.methods
+      .delegateToProtocol(new BN(500_000_000))
+      .accounts({
+        vault: vaultPda,
+        vaultTokenAccount,
+        agent: agent.publicKey,
+        user: user.publicKey,
+        userPubkey: user.publicKey,
+        tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+      })
+      .signers([user])
+      .rpc();
+  });
+
+  it("T9a-1: record_trade creates TradeRecord PDA with correct fields", async () => {
+    const tradeId = 0;
+    const [tradePda] = await deriveTradePda(program.programId, vaultPda, tradeId);
+    const now = new BN(Math.floor(Date.now() / 1000));
+
+    await program.methods
+      .recordTrade(
+        new BN(tradeId),           // trade_id: u64
+        encodeSymbol("SOL"),        // symbol: [u8; 16]
+        0,                          // direction: u8 (0 = LONG)
+        new BN(150_000_000),        // entry_price: u64 (150.000000 USDC)
+        new BN(10),                 // qty: u64
+        new BN(140_000_000),        // sl_price: u64
+        new BN(160_000_000),        // tp1_price: u64
+        new BN(170_000_000),        // tp2_price: u64
+        sid,                        // strategy_id: [u8; 32]
+        now                         // opened_at: i64
+      )
+      .accounts({
+        vault: vaultPda,
+        tradeRecord: tradePda,
+        agent: agent.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([agent])
+      .rpc();
+
+    const record = await program.account.tradeRecord.fetch(tradePda);
+
+    assert.equal(record.tradeId.toNumber(), tradeId, "trade_id should be 0");
+    assert.equal(record.direction, 0, "direction should be 0 (LONG)");
+    assert.equal(record.status, 0, "status should be 0 (OPEN)");
+    assert.equal(record.entryPrice.toNumber(), 150_000_000, "entry_price should match");
+    assert.deepEqual(
+      Array.from(record.symbol as Uint8Array).slice(0, 3),
+      Array.from(Buffer.from("SOL", "ascii")),
+      "symbol should encode SOL"
+    );
+  });
+
+  it("T9a-2: trade_count increments after record_trade", async () => {
+    const vaultState = await program.account.vault.fetch(vaultPda);
+    assert.equal(
+      vaultState.tradeCount.toNumber(),
+      1,
+      "trade_count should be 1 after the first record_trade"
+    );
+  });
+
+  it("T9a-3: second trade gets trade_id=1 and creates distinct PDA", async () => {
+    const tradeId = 1;
+    const [tradePda] = await deriveTradePda(program.programId, vaultPda, tradeId);
+    const [tradePda0] = await deriveTradePda(program.programId, vaultPda, 0);
+    const now = new BN(Math.floor(Date.now() / 1000));
+
+    await program.methods
+      .recordTrade(
+        new BN(tradeId),
+        encodeSymbol("BTC"),
+        1,                          // direction: 1 = SHORT
+        new BN(60_000_000_000),     // entry_price
+        new BN(1),                  // qty
+        new BN(62_000_000_000),     // sl_price
+        new BN(58_000_000_000),     // tp1_price
+        new BN(55_000_000_000),     // tp2_price
+        sid,
+        now
+      )
+      .accounts({
+        vault: vaultPda,
+        tradeRecord: tradePda,
+        agent: agent.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([agent])
+      .rpc();
+
+    const record = await program.account.tradeRecord.fetch(tradePda);
+    assert.equal(record.tradeId.toNumber(), 1, "second trade_id should be 1");
+    assert.equal(record.direction, 1, "direction should be 1 (SHORT)");
+    assert.equal(record.status, 0, "status should be 0 (OPEN)");
+
+    // Confirm the two PDAs are distinct
+    assert.notEqual(
+      tradePda.toBase58(),
+      tradePda0.toBase58(),
+      "trade_id=1 PDA should be different from trade_id=0 PDA"
+    );
+
+    const vaultState = await program.account.vault.fetch(vaultPda);
+    assert.equal(vaultState.tradeCount.toNumber(), 2, "trade_count should be 2 after second record");
+  });
+
+  it("T9a-4: non-agent cannot call record_trade", async () => {
+    const impostor = Keypair.generate();
+    await fundSol(provider, impostor.publicKey);
+
+    const tradeId = 99;
+    const [tradePda] = await deriveTradePda(program.programId, vaultPda, tradeId);
+    const now = new BN(Math.floor(Date.now() / 1000));
+
+    let threw = false;
+    try {
+      await program.methods
+        .recordTrade(
+          new BN(tradeId),
+          encodeSymbol("ETH"),
+          0,
+          new BN(3_000_000_000),
+          new BN(5),
+          new BN(2_800_000_000),
+          new BN(3_200_000_000),
+          new BN(3_400_000_000),
+          sid,
+          now
+        )
+        .accounts({
+          vault: vaultPda,
+          tradeRecord: tradePda,
+          agent: impostor.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([impostor])
+        .rpc();
+    } catch (err: any) {
+      threw = true;
+      assert.include(
+        err.toString(),
+        "AgentMismatch",
+        "error should be VaultError::AgentMismatch"
+      );
+    }
+    assert.isTrue(threw, "non-agent should not be able to call record_trade");
+  });
+});
+
+// ── T9b: close_trade() tests ──────────────────────────────────────────────────
+
+describe("vault — close_trade()", () => {
+  const provider = anchor.AnchorProvider.env();
+  anchor.setProvider(provider);
+  const program = anchor.workspace.Vault as Program<Vault>;
+
+  let mint: PublicKey;
+  let mintAuthority: Keypair;
+  let user: Keypair;
+  let agent: Keypair;
+  let platformWallet: Keypair;
+  let sid: number[];
+  let vaultPda: PublicKey;
+  let userTokenAccount: PublicKey;
+  let vaultTokenAccount: PublicKey;
+  let tradePda: PublicKey;
+
+  // Derive the PDA for a trade record
+  async function deriveTradePda(
+    programId: PublicKey,
+    vaultPubkey: PublicKey,
+    tradeId: number
+  ): Promise<[PublicKey, number]> {
+    const tradeIdBuf = Buffer.alloc(8);
+    tradeIdBuf.writeBigUInt64LE(BigInt(tradeId));
+    return PublicKey.findProgramAddressSync(
+      [Buffer.from("trade"), vaultPubkey.toBuffer(), tradeIdBuf],
+      programId
+    );
+  }
+
+  // Encode a symbol string into a 16-byte array
+  function encodeSymbol(sym: string): number[] {
+    const buf = Buffer.alloc(16);
+    buf.write(sym, 0, "ascii");
+    return Array.from(buf);
+  }
+
+  before(async () => {
+    mintAuthority = Keypair.generate();
+    user = Keypair.generate();
+    agent = Keypair.generate();
+    platformWallet = Keypair.generate();
+    sid = strategyId(51);
+
+    await fundSol(provider, user.publicKey);
+
+    mint = await createMint(
+      provider.connection,
+      (provider.wallet as anchor.Wallet).payer,
+      mintAuthority.publicKey,
+      null,
+      6
+    );
+
+    [vaultPda] = await deriveVaultPda(program.programId, user.publicKey, sid);
+    userTokenAccount = await makeTokenAccount(provider, mint, user.publicKey);
+    vaultTokenAccount = await makeTokenAccount(provider, mint, vaultPda);
+
+    await fundTokenAccount(provider, mint, mintAuthority, userTokenAccount, 1_000_000_000);
+
+    // Create vault
+    await program.methods
+      .createVault(sid, platformWallet.publicKey)
+      .accounts({ vault: vaultPda, user: user.publicKey, systemProgram: SystemProgram.programId })
+      .signers([user])
+      .rpc();
+
+    // Deposit
+    await program.methods
+      .deposit(new BN(500_000_000))
+      .accounts({
+        vault: vaultPda,
+        vaultTokenAccount,
+        userTokenAccount,
+        user: user.publicKey,
+        userPubkey: user.publicKey,
+        tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+      })
+      .signers([user])
+      .rpc();
+
+    // Delegate to agent
+    await program.methods
+      .delegateToProtocol(new BN(500_000_000))
+      .accounts({
+        vault: vaultPda,
+        vaultTokenAccount,
+        agent: agent.publicKey,
+        user: user.publicKey,
+        userPubkey: user.publicKey,
+        tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+      })
+      .signers([user])
+      .rpc();
+
+    // Record a trade (trade_id=0) so close_trade tests have something to close
+    const [tPda] = await deriveTradePda(program.programId, vaultPda, 0);
+    tradePda = tPda;
+    const now = new BN(Math.floor(Date.now() / 1000));
+
+    await program.methods
+      .recordTrade(
+        new BN(0),
+        encodeSymbol("SOL"),
+        0,                        // direction: LONG
+        new BN(150_000_000),
+        new BN(10),
+        new BN(140_000_000),
+        new BN(160_000_000),
+        new BN(170_000_000),
+        sid,
+        now
+      )
+      .accounts({
+        vault: vaultPda,
+        tradeRecord: tradePda,
+        agent: agent.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([agent])
+      .rpc();
+  });
+
+  it("T9b-1: close_trade updates TradeRecord to CLOSED", async () => {
+    const now = new BN(Math.floor(Date.now() / 1000));
+
+    await program.methods
+      .closeTrade(
+        new BN(162_000_000),   // exit_price
+        new BN(120_000_000),   // realized_pnl (positive)
+        now,                   // closed_at
+        1                      // outcome: 1 = TP1
+      )
+      .accounts({
+        vault: vaultPda,
+        tradeRecord: tradePda,
+        agent: agent.publicKey,
+      })
+      .signers([agent])
+      .rpc();
+
+    const record = await program.account.tradeRecord.fetch(tradePda);
+    assert.equal(record.status, 1, "status should be 1 (CLOSED) after close_trade");
+    assert.equal(record.exitPrice.toNumber(), 162_000_000, "exit_price should be stored");
+    assert.equal(record.outcome, 1, "outcome should be 1 (TP1)");
+    assert.isTrue(
+      record.realizedPnl.toNumber() > 0,
+      "realized_pnl should be positive for a winning trade"
+    );
+  });
+
+  it("T9b-2: close_trade rejects already-closed trade", async () => {
+    // Trade was closed in T9b-1 — calling again must throw TradeAlreadyClosed
+    const now = new BN(Math.floor(Date.now() / 1000));
+
+    let threw = false;
+    try {
+      await program.methods
+        .closeTrade(
+          new BN(162_000_000),
+          new BN(120_000_000),
+          now,
+          1
+        )
+        .accounts({
+          vault: vaultPda,
+          tradeRecord: tradePda,
+          agent: agent.publicKey,
+        })
+        .signers([agent])
+        .rpc();
+    } catch (err: any) {
+      threw = true;
+      assert.include(
+        err.toString(),
+        "TradeAlreadyClosed",
+        "error should be VaultError::TradeAlreadyClosed"
+      );
+    }
+    assert.isTrue(threw, "closing an already-closed trade should throw");
+  });
+
+  it("T9b-3: non-agent cannot call close_trade", async () => {
+    // Record a fresh trade (trade_id=1) so a non-agent can attempt to close it
+    const [freshTradePda] = await deriveTradePda(program.programId, vaultPda, 1);
+    const now = new BN(Math.floor(Date.now() / 1000));
+
+    await program.methods
+      .recordTrade(
+        new BN(1),
+        encodeSymbol("ETH"),
+        0,
+        new BN(3_000_000_000),
+        new BN(2),
+        new BN(2_800_000_000),
+        new BN(3_200_000_000),
+        new BN(3_500_000_000),
+        sid,
+        now
+      )
+      .accounts({
+        vault: vaultPda,
+        tradeRecord: freshTradePda,
+        agent: agent.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([agent])
+      .rpc();
+
+    const impostor = Keypair.generate();
+    await fundSol(provider, impostor.publicKey);
+
+    let threw = false;
+    try {
+      await program.methods
+        .closeTrade(
+          new BN(3_100_000_000),
+          new BN(200_000_000),
+          now,
+          1
+        )
+        .accounts({
+          vault: vaultPda,
+          tradeRecord: freshTradePda,
+          agent: impostor.publicKey,
+        })
+        .signers([impostor])
+        .rpc();
+    } catch (err: any) {
+      threw = true;
+      assert.include(
+        err.toString(),
+        "AgentMismatch",
+        "error should be VaultError::AgentMismatch"
+      );
+    }
+    assert.isTrue(threw, "non-agent should not be able to call close_trade");
+  });
+});
+
+// ── T9c: register_strategy() tests ───────────────────────────────────────────
+
+describe("vault — register_strategy()", () => {
+  const provider = anchor.AnchorProvider.env();
+  anchor.setProvider(provider);
+  const program = anchor.workspace.Vault as Program<Vault>;
+
+  // Derive the PDA for a strategy record
+  async function deriveStrategyPda(
+    programId: PublicKey,
+    traderPubkey: PublicKey,
+    sid: number[]
+  ): Promise<[PublicKey, number]> {
+    return PublicKey.findProgramAddressSync(
+      [Buffer.from("strategy"), traderPubkey.toBuffer(), Buffer.from(sid)],
+      programId
+    );
+  }
+
+  // Build a 64-byte strategy name array
+  function encodeStrategyName(name: string): number[] {
+    const buf = Buffer.alloc(64);
+    buf.write(name, 0, "ascii");
+    return Array.from(buf);
+  }
+
+  // Build a 32-byte rules hash (all zeros except first byte)
+  function rulesHash(seed: number): number[] {
+    const buf = Buffer.alloc(32);
+    buf.writeUInt8(seed, 0);
+    return Array.from(buf);
+  }
+
+  it("T9c-1: register_strategy creates StrategyRecord PDA with correct fields", async () => {
+    const trader = Keypair.generate();
+    await fundSol(provider, trader.publicKey);
+
+    const sid = strategyId(60);
+    const [stratPda] = await deriveStrategyPda(program.programId, trader.publicKey, sid);
+
+    await program.methods
+      .registerStrategy(
+        sid,                            // strategy_id: [u8; 32]
+        encodeStrategyName("SD Zones"), // strategy_name: [u8; 64]
+        2,                              // fee_tier: u8
+        rulesHash(1),                   // rules_hash: [u8; 32]
+        75                              // min_win_rate: u8 (75%)
+      )
+      .accounts({
+        strategyRecord: stratPda,
+        trader: trader.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([trader])
+      .rpc();
+
+    const record = await program.account.strategyRecord.fetch(stratPda);
+
+    assert.equal(
+      record.traderPubkey.toBase58(),
+      trader.publicKey.toBase58(),
+      "trader_pubkey should be stored on StrategyRecord"
+    );
+    assert.equal(record.feeTier, 2, "fee_tier should match");
+    assert.equal(record.minWinRate, 75, "min_win_rate should be 75");
+    assert.deepEqual(Array.from(record.strategyId as Uint8Array), sid, "strategy_id should match");
+  });
+
+  it("T9c-2: different traders can register same strategy_id — distinct PDAs", async () => {
+    const traderA = Keypair.generate();
+    const traderB = Keypair.generate();
+    await fundSol(provider, traderA.publicKey);
+    await fundSol(provider, traderB.publicKey);
+
+    const sid = strategyId(61);
+
+    const [pdaA] = await deriveStrategyPda(program.programId, traderA.publicKey, sid);
+    const [pdaB] = await deriveStrategyPda(program.programId, traderB.publicKey, sid);
+
+    assert.notEqual(
+      pdaA.toBase58(),
+      pdaB.toBase58(),
+      "same strategy_id + different traders must produce different PDAs"
+    );
+
+    // Both registrations succeed independently
+    await program.methods
+      .registerStrategy(
+        sid,
+        encodeStrategyName("Strategy Alpha"),
+        1,
+        rulesHash(10),
+        80
+      )
+      .accounts({
+        strategyRecord: pdaA,
+        trader: traderA.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([traderA])
+      .rpc();
+
+    await program.methods
+      .registerStrategy(
+        sid,
+        encodeStrategyName("Strategy Beta"),
+        3,
+        rulesHash(20),
+        65
+      )
+      .accounts({
+        strategyRecord: pdaB,
+        trader: traderB.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([traderB])
+      .rpc();
+
+    const recordA = await program.account.strategyRecord.fetch(pdaA);
+    const recordB = await program.account.strategyRecord.fetch(pdaB);
+
+    assert.equal(recordA.traderPubkey.toBase58(), traderA.publicKey.toBase58());
+    assert.equal(recordB.traderPubkey.toBase58(), traderB.publicKey.toBase58());
+    assert.equal(recordA.feeTier, 1);
+    assert.equal(recordB.feeTier, 3);
+  });
+
+  it("T9c-3: same trader cannot register same strategy_id twice", async () => {
+    const trader = Keypair.generate();
+    await fundSol(provider, trader.publicKey);
+
+    const sid = strategyId(62);
+    const [stratPda] = await deriveStrategyPda(program.programId, trader.publicKey, sid);
+
+    // First registration succeeds
+    await program.methods
+      .registerStrategy(
+        sid,
+        encodeStrategyName("Unique Strategy"),
+        2,
+        rulesHash(5),
+        70
+      )
+      .accounts({
+        strategyRecord: stratPda,
+        trader: trader.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([trader])
+      .rpc();
+
+    // Second registration with identical (trader × strategy_id) must fail
+    let threw = false;
+    try {
+      await program.methods
+        .registerStrategy(
+          sid,
+          encodeStrategyName("Duplicate Attempt"),
+          3,
+          rulesHash(6),
+          55
+        )
+        .accounts({
+          strategyRecord: stratPda,
+          trader: trader.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([trader])
+        .rpc();
+    } catch {
+      threw = true;
+    }
+    assert.isTrue(threw, "duplicate (trader × strategy_id) registration must fail");
+  });
+});
+
+// ── T9d: set_risk_mode() tests ────────────────────────────────────────────────
+
+describe("vault — set_risk_mode()", () => {
+  const provider = anchor.AnchorProvider.env();
+  anchor.setProvider(provider);
+  const program = anchor.workspace.Vault as Program<Vault>;
+
+  let user: Keypair;
+  let platformWallet: Keypair;
+  let sid: number[];
+  let vaultPda: PublicKey;
+
+  before(async () => {
+    user = Keypair.generate();
+    platformWallet = Keypair.generate();
+    sid = strategyId(70);
+
+    await fundSol(provider, user.publicKey);
+
+    [vaultPda] = await deriveVaultPda(program.programId, user.publicKey, sid);
+
+    await program.methods
+      .createVault(sid, platformWallet.publicKey)
+      .accounts({ vault: vaultPda, user: user.publicKey, systemProgram: SystemProgram.programId })
+      .signers([user])
+      .rpc();
+  });
+
+  it("T9d-1: set_risk_mode stores risk_mode on vault", async () => {
+    // Set to 2 (Aggressive)
+    await program.methods
+      .setRiskMode(2)
+      .accounts({
+        vault: vaultPda,
+        user: user.publicKey,
+      })
+      .signers([user])
+      .rpc();
+
+    const vaultState = await program.account.vault.fetch(vaultPda);
+    assert.equal(vaultState.riskMode, 2, "risk_mode should be 2 (Aggressive) after set_risk_mode");
+  });
+
+  it("T9d-2: non-owner cannot set_risk_mode", async () => {
+    const attacker = Keypair.generate();
+    await fundSol(provider, attacker.publicKey);
+
+    let threw = false;
+    try {
+      await program.methods
+        .setRiskMode(0)
+        .accounts({
+          vault: vaultPda,
+          user: attacker.publicKey,
+        })
+        .signers([attacker])
+        .rpc();
+    } catch (err: any) {
+      threw = true;
+      // The error may surface as a constraint violation or a custom error depending on
+      // how the Rust instruction validates the user signer against vault.user_pubkey.
+      assert.isTrue(
+        err.toString().length > 0,
+        "attacker call should produce an error"
+      );
+    }
+    assert.isTrue(threw, "non-owner should not be able to call set_risk_mode");
+  });
+});

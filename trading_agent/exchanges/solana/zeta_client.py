@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import time
 from typing import Optional
 
 import based58
@@ -27,6 +28,12 @@ from zetamarkets_py.zeta_client.types.trigger_direction import (
 
 from trading_agent.base.exchange_base import ExchangeBase
 from trading_agent.exchanges.solana.pyth_ws import PythPriceFeed
+from trading_agent.exchanges.solana.trade_journal_client import (
+    TradeJournalClient,
+    DIRECTION_LONG,
+    DIRECTION_SHORT,
+    OUTCOME_MANUAL,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -127,6 +134,13 @@ class ZetaClient(ExchangeBase):
         self._rpc_url: str = os.getenv("HELIUS_RPC_URL", "")
         self._zeta: Optional[Client] = None  # zetamarkets_py.Client
         self._pyth = PythPriceFeed(network)
+
+        # Optional on-chain trade journal — set via set_vault_client()
+        self._vault_client: Optional[TradeJournalClient] = None
+        self._vault_pda: Optional[Pubkey] = None
+        self._strategy_id: Optional[bytes] = None
+        # Maps symbol → trade_id for in-flight trades (populated by open_position)
+        self._active_trades: dict[str, int] = {}
 
     # ------------------------------------------------------------------
     # Lifecycle
@@ -257,6 +271,39 @@ class ZetaClient(ExchangeBase):
             "open_position %s %s size=%.4f price=%.4f tx=%s",
             side, symbol, size, limit_price, tx_sig,
         )
+
+        # --- Optional on-chain trade journal ---
+        if self._vault_client is not None and self._vault_pda is not None:
+            try:
+                direction = DIRECTION_LONG if side == "long" else DIRECTION_SHORT
+                trade_id_str = await self._vault_client.record_trade(
+                    vault_pda=self._vault_pda,
+                    symbol=symbol,
+                    direction=direction,
+                    entry_price=current_price,
+                    qty=size,
+                    # SL / TP not known yet at entry; caller should update separately
+                    sl_price=0.0,
+                    tp1_price=0.0,
+                    tp2_price=0.0,
+                    strategy_id=self._strategy_id or b"",
+                    opened_at=int(time.time()),
+                )
+                # record_trade returns the tx sig; trade_id comes from get_trade_count before the call
+                # We read trade_count *before* record_trade incremented it, so we fetch it now
+                trade_id = await self._vault_client.get_trade_count(self._vault_pda) - 1
+                self._active_trades[symbol] = trade_id
+                logger.info(
+                    "Journal: recorded trade_id=%d for %s %s (journal_tx=%s)",
+                    trade_id, symbol, side, trade_id_str,
+                )
+            except Exception as exc:
+                logger.warning(
+                    "Journal: record_trade failed for %s %s — continuing without on-chain record. "
+                    "Error: %s",
+                    symbol, side, exc,
+                )
+
         return tx_sig
 
     async def close_position(self, symbol: str) -> str:
@@ -298,6 +345,39 @@ class ZetaClient(ExchangeBase):
             "close_position %s size=%.4f price=%.4f tx=%s",
             symbol, size, limit_price, tx_sig,
         )
+
+        # --- Optional on-chain trade journal ---
+        if self._vault_client is not None and self._vault_pda is not None:
+            if symbol in self._active_trades:
+                try:
+                    trade_id = self._active_trades[symbol]
+                    entry_price = position["entry_price"]
+                    pos_side = position["side"]
+                    if pos_side == "long":
+                        realized_pnl = (current_price - entry_price) * size
+                    else:
+                        realized_pnl = (entry_price - current_price) * size
+
+                    await self._vault_client.close_trade(
+                        vault_pda=self._vault_pda,
+                        trade_id=trade_id,
+                        exit_price=current_price,
+                        realized_pnl=realized_pnl,
+                        outcome=OUTCOME_MANUAL,
+                        closed_at=int(time.time()),
+                    )
+                    del self._active_trades[symbol]
+                    logger.info(
+                        "Journal: closed trade_id=%d for %s pnl=%.4f",
+                        trade_id, symbol, realized_pnl,
+                    )
+                except Exception as exc:
+                    logger.warning(
+                        "Journal: close_trade failed for %s trade_id=%d — continuing. "
+                        "Error: %s",
+                        symbol, self._active_trades.get(symbol, -1), exc,
+                    )
+
         return tx_sig
 
     async def set_sl(self, symbol: str, price: float) -> str:
@@ -552,3 +632,29 @@ class ZetaClient(ExchangeBase):
     def _to_asset(self, symbol: str) -> Asset:
         self._assert_supported(symbol)
         return _SYMBOL_TO_ASSET[symbol]
+
+    def set_vault_client(
+        self,
+        vault_client: TradeJournalClient,
+        vault_pda: Pubkey,
+        strategy_id: bytes,
+    ) -> None:
+        """Wire an on-chain trade journal to this exchange client.
+
+        Once set, every open_position() and close_position() call will additionally
+        record the trade to the Anchor vault program.  If the journal call fails,
+        the trade is NOT affected — the failure is logged as a warning only.
+
+        Args:
+            vault_client: An initialised TradeJournalClient instance.
+            vault_pda:    The vault PDA for the (user × strategy) pair being traded.
+            strategy_id:  32-byte strategy identifier matching the vault's strategy_id.
+        """
+        self._vault_client = vault_client
+        self._vault_pda = vault_pda
+        self._strategy_id = strategy_id
+        logger.info(
+            "ZetaClient: vault journal wired — vault_pda=%s strategy_id=%s",
+            vault_pda,
+            strategy_id.hex(),
+        )
