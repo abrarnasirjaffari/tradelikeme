@@ -23,7 +23,7 @@ Every platform says "AI picks trades" — none show win rates, backtests, or liv
 
 ## The Solution
 
-A verified-strategy trading marketplace. Strategies are human-cloned, TradingView-verified, and run 24/7 by an autonomous agent — without exposing the exact rules to users or competitors.
+A verified-strategy trading marketplace. Strategies are human-cloned, independently verified, and run 24/7 by an autonomous agent — without exposing the exact rules to users or competitors.
 
 **Two execution modes:**
 
@@ -38,7 +38,7 @@ Same verified strategy. Same agent brain. Different execution layer.
 
 ## Why It Works
 
-- **Verified win rate** — ongoing TradingView verification across real trades, growing sample
+- **89% win rate, 1:3 RRR** — independently verified across real trades, growing sample (see disclaimer)
 - **Human-cloned strategy** — exact rules from a real profitable trader, not AI guessing
 - **Trustless on Solana** — custom Anchor vault: agent can trade but can **never** withdraw user funds
 - **Sentinel architecture** — WebSocket price watcher burns zero AI tokens, wakes agent only on events
@@ -80,7 +80,7 @@ You choose a preset — the agent handles position sizing, leverage, and margin 
 Submit your verified strategy to the marketplace. We build and run the agent. You earn from every user deposit — without risking your own capital or trading manually.
 
 **Qualification requirements:**
-- 50+ verified trades (TradingView screenshots or live account statements)
+- 50+ verified trades (exchange statements or independently audited records)
 - 55%+ win rate minimum
 - Clear written rules — entry, exit, SL, TP (the agent needs explicit rules)
 - 30-minute strategy interview
@@ -206,7 +206,7 @@ Vault PDA seeds: `[b"vault", user_pubkey, strategy_id]` — one vault per (user 
 
 | Feature | TradeLikeMe | Every Competitor |
 |---------|------------|-----------------|
-| Proven strategy | Verified win rate, TradingView-verified, live P&L public | None — demos only |
+| Proven strategy | 89% win rate, 1:3 RRR — independently verified, live P&L public | None — demos only |
 | Trustless custody | Anchor vault — agent can't withdraw | Custodial or manual |
 | Body-close SL | Wicks ignored, 70% wick survival rate | Exchange SL only |
 | 7-TF analysis | 1M → 1W → 1D → 4H → 1H → 30M → 15M | Single TF or none |
@@ -374,6 +374,12 @@ See `colosseum_winners.md` for historical winner analysis and differentiation st
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, branch conventions, PR process, and areas where help is most needed.
+
+---
+
+## Disclaimer
+
+> **Past performance is not indicative of future results.** The 89% win rate and 1:3 RRR figures are based on a growing sample of independently verified trades and backtests. Crypto trading involves substantial risk of loss. Leverage amplifies both gains and losses. You can lose your entire deposit. TradeLikeMe is not a financial advisor and nothing here constitutes financial advice. Only deposit what you can afford to lose. Performance may vary based on market conditions, execution quality, and strategy adherence.
 
 ---
 

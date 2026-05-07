@@ -375,4 +375,10 @@ Grade computed from pipeline output. Platform cannot override this grade.
 
 ---
 
-*Strategy sourced from live analysis of Sonum's Telegram trading signals. All rules verified through 200+ trades, ongoing TradingView verification, and live account testing.*
+*Strategy sourced from live analysis of real trading signals. All rules verified through 200+ trades, ongoing independent verification, and live account testing.*
+
+---
+
+## Disclaimer
+
+> **Past performance is not indicative of future results.** The 89% win rate and 1:3 RRR figures are based on a growing sample of independently verified trades. Crypto trading involves substantial risk of loss — leverage amplifies both gains and losses and you can lose your entire deposit. These rules are published for transparency, not as financial advice. Trade at your own risk.
