@@ -1,6 +1,6 @@
-import { LayoutDashboard, Target, BarChart2, BookOpen, Bot, Wallet, Settings } from 'lucide-react'
+import { LayoutDashboard, Target, BarChart2, BookOpen, Bot, Wallet, Settings, FlaskConical } from 'lucide-react'
 
-export type DashboardPage = 'overview' | 'positions' | 'trades' | 'strategy' | 'agent' | 'vault' | 'settings'
+export type DashboardPage = 'overview' | 'positions' | 'trades' | 'strategy' | 'agent' | 'vault' | 'settings' | 'verification'
 
 interface Props {
   activePage: DashboardPage
@@ -18,6 +18,7 @@ const navItems: { id: DashboardPage; label: string; icon: React.ReactNode }[] = 
   { id: 'agent', label: 'Agent', icon: <Bot size={15} /> },
   { id: 'vault', label: 'Vault', icon: <Wallet size={15} /> },
   { id: 'settings', label: 'Settings', icon: <Settings size={15} /> },
+  { id: 'verification', label: 'Verification', icon: <FlaskConical size={15} /> },
 ]
 
 export default function DashboardSidebar({ activePage, onNavigate, user, agentStatus, openPositionCount }: Props) {

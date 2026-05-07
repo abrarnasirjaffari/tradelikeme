@@ -18,6 +18,7 @@ import AgentStatus from '../components/dashboard/AgentStatus'
 import AccountSettings from '../components/dashboard/AccountSettings'
 import OnChainVerification from '../components/dashboard/OnChainVerification'
 import VaultHistory from '../components/dashboard/VaultHistory'
+import StrategyVerification from '../components/dashboard/StrategyVerification'
 import DashboardSidebar from '../components/dashboard/DashboardSidebar'
 import type { DashboardPage } from '../components/dashboard/DashboardSidebar'
 import {
@@ -48,6 +49,7 @@ const PAGE_TITLES: Record<DashboardPage, string> = {
   agent: 'Agent Status',
   vault: 'Vault',
   settings: 'Settings',
+  verification: 'Strategy Verification',
 }
 
 export default function DashboardPage() {
@@ -158,6 +160,8 @@ export default function DashboardPage() {
             onLogout={() => navigate('/login')}
           />
         )
+      case 'verification':
+        return <StrategyVerification />
       default:
         return null
     }
