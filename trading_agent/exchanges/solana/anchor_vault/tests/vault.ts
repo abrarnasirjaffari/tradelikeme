@@ -1023,6 +1023,7 @@ describe("vault — record_trade()", () => {
     sid = strategyId(50);
 
     await fundSol(provider, user.publicKey);
+    await fundSol(provider, agent.publicKey);
 
     mint = await createMint(
       provider.connection,
@@ -1257,6 +1258,7 @@ describe("vault — close_trade()", () => {
     sid = strategyId(51);
 
     await fundSol(provider, user.publicKey);
+    await fundSol(provider, agent.publicKey);
 
     mint = await createMint(
       provider.connection,
