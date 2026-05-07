@@ -12,4 +12,5 @@ playwright
 anchorpy
 solders
 solana
+spl-token
 zetamarkets-py
