@@ -13,4 +13,5 @@ anchorpy
 solders
 solana
 spl-token
+based58
 zetamarkets-py

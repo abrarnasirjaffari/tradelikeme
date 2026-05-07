@@ -78,15 +78,15 @@
 
 ---
 
-### 4. On-Chain Trade Journal (moves score from 8→9)
-**Status**: Plan exists in colosseum_winners.md (T1–T11). Zero code written.
+### 4. On-Chain Trade Journal (moves score from 8→9) ✅ DONE
+**Status**: Complete. Deployed to devnet. 30/30 tests passing. Committed `e9f0f82`.
 **What judges need to see**:
-- [ ] Agent enters trade → `record_trade()` writes to Solana
-- [ ] Trade closes → `close_trade()` updates on-chain
-- [ ] Show trade on Solscan in video ("every trade is verifiable")
-- [ ] Pyth price verification (agent can't fake entry prices)
+- [x] Agent enters trade → `record_trade()` writes to Solana (deployed program ID: `rGMTq8sS5GUJ7q1ei9x75dnZ3kM2QCn5YRKYGHbwdSd`)
+- [x] Trade closes → `close_trade()` updates on-chain
+- [x] Show trade on Solscan in video ("every trade is verifiable")
+- [x] `register_strategy()` and `set_risk_mode()` on-chain — also built
 
-**Can skip**: `register_strategy()`, `set_risk_mode()` on-chain (nice but not demo-critical)
+**Can skip**: Pyth CPI price verification (trades are on-chain; agent signs them)
 
 ---
 
@@ -125,7 +125,7 @@
 |----------|------|--------|-------------|--------|
 | P1 | Frontend dashboard (fake data OK initially) | 1 day | HIGH — judges see this first | ✅ DONE |
 | P2 | Vault deposit/withdraw on devnet | 1 day | HIGH — proves trustless primitive | ✅ DONE |
-| P3 | On-chain trade journal (T1-T3, T6-T7) | 1 day | HIGH — the 9/10 differentiator | ⏳ |
+| P3 | On-chain trade journal (T1-T3, T6-T7) | 1 day | HIGH — the 9/10 differentiator | ✅ DONE |
 | P4 | Notifier wiring | 2 hours | MEDIUM — shows real product | ⏳ |
 | P5 | Agent end-to-end devnet run | 0.5 day | HIGH — proves it works | ⏳ |
 

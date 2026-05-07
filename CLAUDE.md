@@ -3,8 +3,8 @@
 ## What Is This Project
 TradeLikeMe is a verified-strategy trading marketplace. Users deposit funds, a proven agent trades on their behalf using a human-cloned strategy with 89% win rate. Platform takes 20% profit share. Zero fees, zero subscriptions.
 
-**This repo** (`abrarnasirjaffari/tradelikeme`) = Python backend platform only (for now).
-**`tradelikeme-website`** (separate GitHub repo) = Next.js website, waitlist live. Will be merged into this repo under `frontend/` **after the main platform is complete**. Do not touch it until then.
+**This repo** (`abrarnasirjaffari/tradelikeme`) = full platform: Python trading agent + FastAPI backend + React frontend + BetterAuth service.
+**`tradelikeme-website`** (separate GitHub repo) has been fully merged into `frontend/` — do NOT touch that old repo.
 
 ---
 
@@ -36,47 +36,38 @@ TradeLikeMe is a verified-strategy trading marketplace. Users deposit funds, a p
 
 ---
 
-## Build Status (as of Apr 29, 2026)
-- `README.md` — written and pushed
-- `plan.md` — full build plan written and pushed (**updated: KLineChart MCP server approach**)
-- `tasks.md` — full task list written and pushed (**updated: KC8–KC42 KLineChart MCP tasks**)
-- `.env` — created with Helius RPC URL + Phantom wallet keys
-- `.env.example` — created with all variable names
-- `infra/klinechart/` — KLineChart v10 cloned ✅
-- `infra/klinechart-pro/` — KLineChart Pro cloned, deps installed, build verified ✅ (KC1–KC7 done)
-- **No Python/Rust code written yet** — accounts/infra setup in progress
+## Build Status (as of May 6, 2026) — 126 commits
 
-### Zone Scanning Approach — DECIDED
-**KLineChart MCP server** (`infra/klinechart-mcp/`) — NOT Playwright-in-Python.
-Claude calls MCP tools directly (open_chart, screenshot, toggle_indicator etc) like a human.
-8 tools. One server. Reused by all strategies forever. No Python middleman.
-See `plan.md` Zone Scanning section for full details.
+### DONE ✅
+- **Auth service** (`auth/`) — BetterAuth v1.6.9 on Hono, deployed at `auth.tradelikeme.xyz`. Google + GitHub OAuth active. Twitter disabled (creds needed). Custom Phantom SIWS plugin (Ed25519). 2FA, admin panel, rate limiting, 30-day sessions.
+- **FastAPI backend** (`backend/`) — All routes built. Supabase (PostgreSQL) via SQLAlchemy. BetterAuth JWT middleware. WebSocket `/ws/live`. Vault deposit/withdraw stubs (TODO: anchor integration).
+- **Frontend** (`frontend/`) — React 19 + Vite + React Router (NOT Next.js). Landing page, auth flows, blog, docs hub, waitlist/strategy submission forms. Protected routes. Phantom SIWS. Sonner toasts.
+- **Trading agent** (`trading_agent/strategies/sd_zones/`) — ~85% done. Full zone scan → 5-gate check → 4-order atomic entry → sentinel TP1/body-SL → SQLite journal.
+- **Exchange layer** (`trading_agent/exchanges/solana/`) — ZetaClient (primary, devnet+mainnet) + JupiterClient (fallback, mainnet only) + SolanaRouter abstraction + PythPriceFeed.
+- **KLineChart MCP** (`infra/klinechart-mcp/`) — Fully built. 8 MCP tools. Playwright + Binance datafeed + Pyth fallback.
+- **Docker Compose** (`infra/docker-compose.yml`) — 3 services: backend (port 8001), auth (port 3002), agent.
+- **Tests** — 32 Python integration tests + 79 TypeScript Vitest tests in auth/src/.
+- **Notifications** — Telegram channel built. `notifier.py` dispatcher ready. **Gap: `notifier.send()` not yet called in event handlers.**
 
-### Accounts & Keys Completed
-- **A1–A2** ✅ Helius account + project created. RPC URL saved to `.env`
-- **A3–A4** ✅ Phantom wallet created for agent sub-account. Private key + pubkey saved to `.env`
-  - Pubkey: `HgcX7tJLhHTBUXmWskaohFcr4J1NR66FMwR7iAPawP7F`
-- **A5** ✅ Devnet keypair generated on EC2: `35Jt4Uz9NDXAZcwUaNHqr1TMtpdgvtHKHW3NnrRRi6p4`
-- **A6** ✅ 2.5 devnet SOL airdropped via faucet.solana.com
-- **A9–A10** ✅ Telegram bot created (@tradelikeme_alerts_bot), token + chat ID (6398964627) saved to `.env`
-- **A11–A12** ✅ AWS Bedrock IAM user `claude-code-bedrock` created, keys saved to `.env`
-- **A13** ✅ WEEX API key created
-- **A18** ✅ Colosseum registration done
-- **A19** ✅ tradelikeme.xyz domain verified, pointing to EC2 (54.179.141.76)
-- **A20** ✅ `.env` fully filled
+### PENDING ⏳
+- **Frontend wiring** (FE2–FE10) — Dashboard placeholder only. Need to wire `/vaults`, `/trades`, `/pnl`, WS live feed.
+- **Vault anchor client** — `POST /vaults/{id}/deposit|withdraw` return mock responses. Need `anchor_vault_client` integration.
+- **Notifier wiring** — `notifier.send()` defined but not imported/called in `trade_agent.py` or `loop.py`.
+- **CEX layer** — `trading_agent/exchanges/cex/` is completely empty (Phase 2).
+- **WhatsApp** — ON HOLD post-hackathon (Twilio).
+- **Pyth symbol mapping** — 8 of 14 watchlist symbols mapped in sentinel.
 
-### Remaining Accounts
-- A7–A8: Twilio (WhatsApp) — ON HOLD (post-hackathon)
-- A14–A17: CEX API keys (Bybit, BingX, Binance, Bitget) — not started (Phase 2)
+### Accounts & Keys
+- Helius RPC, Phantom wallet (`HgcX7tJLhHTBUXmWskaohFcr4J1NR66FMwR7iAPawP7F`), devnet keypair (`35Jt4Uz9NDXAZcwUaNHqr1TMtpdgvtHKHW3NnrRRi6p4`), Telegram bot (`@tradelikeme_alerts_bot`, chat ID `6398964627`), AWS Bedrock IAM (`claude-code-bedrock`, `us-east-1`), WEEX API key, Colosseum registration — all done.
+- Twilio (WhatsApp): ON HOLD. CEX keys (Bybit/BingX/Binance/Bitget): Phase 2.
 
 ---
 
-## What To Build Next Session
-1. **KC8–KC13**: Scaffold `infra/klinechart-mcp/` — package.json, tsconfig, empty MCP server, confirm it runs
-2. **KC14–KC20**: Build chart page — index.html + datafeed.ts + data-ready signal, test in browser
-3. **KC21–KC25**: Playwright browser manager — launch, navigate, close
-4. **KC26–KC35**: Write all 8 MCP tools (open_chart, set_symbol, set_timeframe, screenshot, toggle_indicator, get_ohlcv, scroll_chart, get_price)
-5. **KC36–KC42**: Build, test via MCP Inspector, full 7-TF zone scan test with Claude
+## What To Build Next
+1. Wire `notifier.send()` into `trade_agent.py` and `loop.py` event handlers
+2. Wire frontend FE2–FE10 (deposit/withdraw UI, trade history, P&L dashboard, WS live)
+3. Build `anchor_vault_client` to replace deposit/withdraw stubs in backend
+4. Add remaining 6 Pyth symbol mappings in sentinel
 
 ---
 
@@ -90,32 +81,32 @@ See `plan.md` Zone Scanning section for full details.
 - Multi-channel notifications (Telegram + WhatsApp Phase 1, more later)
 
 ### This Platform Does NOT Do (this phase)
-- Frontend / UI — merge is deferred until platform is complete
 - Forex (on hold — research needed)
-- CEX clients in Phase 1 (post-hackathon — focus is Solana first)
+- CEX clients (post-hackathon — focus is Solana first)
+- Live trading dashboard UI (frontend wiring FE2–FE10 pending)
 
 ---
 
 ## Exchange Layer
 
-### Solana (Phase 1 — hackathon priority)
-| Protocol | SDK | Coins | Leverage | Priority |
-|----------|-----|-------|----------|----------|
-| Raydium Perps | `raydium-sdk` | 70+ | 50x | 1st (primary) |
-| Jupiter Perps | `@jup-ag/perps-sdk` | BTC/SOL/ETH | 250x | 2nd (fallback) |
-| Third protocol | TBD | TBD | TBD | Research needed (Drift removed — hacked) |
+### Solana (Phase 1 — built)
+| Protocol | File | Coins | Leverage | Priority |
+|----------|------|-------|----------|----------|
+| Zeta Markets | `zeta_client.py` | SOL/BTC/ETH/APT/ARB | cross-margin USDC | 1st (primary) |
+| Jupiter Perps | `jupiter_client.py` | SOL/BTC/ETH | 100x | 2nd (fallback) |
 
-- **Price oracle**: Pyth Network WebSocket (shared by all Solana protocols)
-- **RPC**: Helius (free tier, ~5% usage)
-- **Wallet**: Phantom Connect (email sign-in, hackathon sponsor) + @solana/wallet-adapter
-- **Stablecoin**: CASH + USDC
-- **Auth**: BetterAuth (sessions, social login, 2FA, roles)
+- **Router**: `SolanaRouter` (`solana_router.py`) — tries Zeta first, falls back to Jupiter on failure
+- **Price oracle**: Pyth Hermes WebSocket (`pyth_ws.py`) — auto-reconnect, REST fallback
+- **RPC**: Helius (free tier)
+- **Wallet**: Phantom Connect + @solana/wallet-adapter
+- **Stablecoin**: USDC
+- **Note**: Raydium Perps was in the plan but is NOT in the codebase. Zeta is the actual primary.
 
-### CEX (Phase 2 — post hackathon)
-WEEX, Bybit, BingX, Binance, Bitget — all via `exchange_base.py` abstraction
+### CEX (Phase 2 — not started)
+`trading_agent/exchanges/cex/` is empty. WEEX, Bybit, BingX, Binance, Bitget planned via `exchange_base.py` abstraction.
 
 ### Forex (On Hold)
-Research needed before any integration
+Research needed before any integration.
 
 ---
 
@@ -196,32 +187,37 @@ KLineChart Pro is our **self-hosted TradingView replacement** — no API keys, n
 ## Database Architecture
 
 ```
-platform.db          ← shared: users, auth sessions, strategy registry, notification prefs
-strategy_sd.db       ← isolated: trades, positions, journal, epochs for S/D zone strategy
-strategy_b.db        ← isolated: trades, positions, journal, epochs for strategy B
+Supabase (PostgreSQL)   ← FastAPI + BetterAuth: users, sessions, strategies, subscriptions, notification_config
+strategy_sd.db (SQLite) ← isolated per strategy: trades, epochs journal (at repo root)
 ```
 
-FastAPI reads `platform.db` for auth, routes queries to the correct `strategy_{id}.db`.
+- FastAPI uses SQLAlchemy ORM against Supabase via `SUPABASE_DATABASE_URL`
+- BetterAuth uses its own Kysely adapter against the same Supabase instance
+- Trading agent writes to local SQLite (`strategy_sd.db`) — not Supabase
+- `platform.db` mentioned in plan.md but actual implementation uses Supabase
 
 ---
 
 ## Notifications
 
-### Phase 1 (build now)
-- Telegram (Bot API)
-- WhatsApp (Twilio sandbox → production Meta Cloud API later)
+### Phase 1 (built, wiring gap)
+- **Telegram**: `channels/telegram.py` — `send_telegram()` + `send_photo_telegram()` built. HTML message templates for all 8 events defined in `notifier.py`.
+- **WhatsApp**: ON HOLD post-hackathon (Twilio).
 
 ### Architecture
 ```
 sentinel / trade_agent
         ↓
     notifier.py  ← unified dispatcher (asyncio.gather)
-        ├── channels/telegram.py
-        └── channels/whatsapp.py
+        └── channels/telegram.py  ← BUILT
+        (whatsapp.py — not yet)
 ```
 
-### Event Types
+### Event Types (all defined, templates written)
 `ZONE_TOUCH`, `TRADE_ENTERED`, `TP1_HIT`, `TP2_HIT`, `SL_HIT`, `BALANCE_LOW`, `AGENT_DOWN`, `DAILY_SUMMARY`
+
+### CRITICAL GAP
+`notifier.send()` is defined but never imported or called in `trade_agent.py` or `loop.py`. All trade lifecycle handlers currently only log. Must add `await notifier.send(...)` calls to complete the notification loop.
 
 ---
 
@@ -251,20 +247,20 @@ sentinel / trade_agent
 ---
 
 ## User Risk Modes
-3 presets stored in `platform.db`, read by agent at runtime. UI is on the website.
+3 presets stored in Supabase, read by agent at runtime. UI form exists in frontend (NotificationPicker/ModePicker).
 - **Conservative**: low leverage, low margin, 20+ trade buffer
 - **Medium**: balanced risk/reward
 - **Aggressive**: high leverage, high margin, 4-5 trade buffer
-Exact parameters TBD when we define strategy config.
+Exact leverage/margin parameters TBD when strategy config is finalised.
 
 ---
 
 ## Deployment
-- **Server**: AWS EC2 t3.xlarge (Singapore, already running)
-- **PaaS**: Dokploy (self-hosted, install: `curl -sSL https://dokploy.com/install.sh | bash`)
-- **Containers**: one Docker container per strategy agent + one for FastAPI
-- **Routing**: Traefik auto-SSL → `api.tradelikeme.xyz` (FastAPI), `dash.tradelikeme.xyz` (Dokploy)
-- **Config**: single `docker-compose.yml` in `infra/`
+- **Server**: AWS EC2 t3.large, Ubuntu 22.04, Singapore (`54.179.141.76`)
+- **Docker Compose**: `infra/docker-compose.yml` — 3 services (backend:8001, auth:3002, agent). External network `supabase_default`.
+- **Live URLs**: `tradelikeme.xyz` (frontend), `auth.tradelikeme.xyz` (auth service — deployed + smoke tested), `api.tradelikeme.xyz` (backend — deployed)
+- **Dokploy**: planned PaaS layer. Install: `curl -sSL https://dokploy.com/install.sh | bash`. Not yet set up.
+- **Traefik**: auto-SSL. `dash.tradelikeme.xyz` → Dokploy dashboard (planned).
 
 ---
 
@@ -275,57 +271,69 @@ tradelikeme/
 ├── README.md
 ├── plan.md
 ├── tasks.md
-├── .env.example
+├── auth.md                        # Auth task tracking (BA1–BA48)
+├── .env / .env.example
 ├── requirements.txt
+├── auth/                          # BetterAuth service (Hono, TypeScript)
+│   ├── auth.ts                    # BetterAuth config (providers, plugins)
+│   ├── server.ts                  # Hono server + CORS
+│   ├── migrate.ts                 # DB migration runner
+│   ├── Dockerfile
+│   └── src/providers/phantom.ts   # Custom Phantom SIWS plugin
+├── backend/                       # FastAPI REST API
+│   ├── main.py
+│   ├── auth.py                    # BetterAuth JWT middleware
+│   ├── routes/                    # strategies, users, trades, vaults, subs, ws, admin, agent
+│   └── models/                    # SQLAlchemy models (Supabase)
+├── frontend/                      # React 19 + Vite + React Router
+│   ├── src/
+│   │   ├── App.tsx                # Routes: /, /login, /signup, /dashboard, /docs, /blog, /submit-strategy
+│   │   ├── context/AuthContext.tsx
+│   │   ├── components/            # Navbar, Footer, landing sections, EmailVerificationBanner
+│   │   └── pages/                 # WaitlistHero, InvestorForm, TraderForm, BlogPage, DocsPage, etc.
+│   ├── vite.config.ts             # Proxies /api/auth/* → http://localhost:3001
+│   └── package.json               # React 19, React Router 7, Framer Motion, Solana wallet-adapter
 ├── trading_agent/
 │   ├── base/
-│   │   ├── base_strategy.py    # Abstract strategy class
-│   │   ├── exchange_base.py    # Abstract exchange interface
-│   │   ├── notifier.py         # Notification dispatcher
-│   │   └── config.py           # Platform-wide constants
-│   ├── strategies/
-│   │   └── sd_zones/
-│   │       ├── agent.py        # Entry point for this strategy
-│   │       ├── loop.py         # Orchestrator
-│   │       ├── trade_agent.py  # Per-trade monitor
-│   │       ├── sentinel.py     # WS price watcher (zero AI tokens)
-│   │       ├── zones.py        # Zone scanner
-│   │       ├── journal.py      # SQLite persistence
-│   │       ├── state.py        # Runtime state
-│   │       └── config.py       # Strategy params
+│   │   ├── base_strategy.py       # Abstract strategy class
+│   │   ├── exchange_base.py       # Abstract exchange interface (7 methods)
+│   │   ├── notifier.py            # Dispatcher — NOT YET WIRED to handlers
+│   │   └── config.py              # Constants: MAX_AT_RISK_SLOTS=2, MIN_BALANCE=35, TF_STACK, etc.
+│   ├── strategies/sd_zones/
+│   │   ├── agent.py               # SDZoneStrategy entry point
+│   │   ├── loop.py                # Orchestrator (startup, zone refresh 4H, compound 72H, event loop)
+│   │   ├── trade_agent.py         # 4-order atomic entry, TP1/TP2/SL/body-SL handlers
+│   │   ├── sentinel.py            # Pyth WS watcher: ZONE_TOUCH, TP1_HIT, BODY_SL
+│   │   ├── zones.py               # 7-TF zone scan via KLineChart MCP → Claude Bedrock
+│   │   ├── journal.py             # SQLite: trades table + epochs table
+│   │   ├── state.py               # Dataclasses (defined but unused — loop uses own dicts)
+│   │   └── config.py              # Strategy params: WATCHLIST (14 coins), LEVERAGE=200, MARGIN=0.5%
 │   ├── exchanges/
 │   │   ├── solana/
-│   │   │   ├── raydium_client.py
-│   │   │   ├── jupiter_client.py
-│   │   │   ├── pyth_ws.py
-│   │   │   └── anchor_vault/   # Rust Anchor program
-│   │   └── cex/                # Phase 2
-│   │       ├── weex.py
-│   │       ├── bybit.py
-│   │       ├── bingx.py
-│   │       ├── binance.py
-│   │       └── bitget.py
+│   │   │   ├── zeta_client.py     # Zeta Markets (primary, devnet+mainnet, 5 coins)
+│   │   │   ├── jupiter_client.py  # Jupiter Perps (fallback, mainnet only, 3 coins)
+│   │   │   ├── solana_router.py   # Routes Zeta→Jupiter on failure
+│   │   │   ├── pyth_ws.py         # Pyth Hermes WS price feed
+│   │   │   └── anchor_vault/      # Rust Anchor vault program (deposit/settle/withdraw)
+│   │   └── cex/                   # EMPTY — Phase 2
 │   └── channels/
-│       ├── telegram.py
-│       └── whatsapp.py
-├── backend/
-│   ├── main.py
-│   ├── routes/
-│   └── models/
-└── infra/
-    ├── klinechart/                # KLineChart v10 canvas engine (cloned)
-    ├── klinechart-pro/            # KLineChart Pro UI (cloned + adapted)
-    │   └── src/
-    │       └── CryptoDatafeed.ts  # Our OHLCV datafeed (replaces DefaultDatafeed)
-    ├── chart_server/
-    │   └── index.html             # Headless render page for Playwright screenshots
-    └── docker-compose.yml
-├── frontend/                      # Next.js app (merged from tradelikeme-website)
-│   ├── app/                       # Next.js app router pages
-│   ├── components/                # Shared UI components
-│   ├── public/                    # Static assets
-│   └── package.json
-└── .env.example
+│       └── telegram.py            # send_telegram() + send_photo_telegram()
+├── tests/                         # 32 Python integration tests
+├── infra/
+│   ├── docker-compose.yml         # 3 services: backend (8001), auth (3002), agent
+│   ├── Dockerfile.backend
+│   ├── Dockerfile.agent
+│   ├── klinechart/                # KLineChart v10 canvas engine (vendored)
+│   ├── klinechart-pro/            # KLineChart Pro UI (vendored, SolidJS)
+│   └── klinechart-mcp/            # MCP server — FULLY BUILT
+│       ├── src/index.ts           # Static HTTP server (port 8765) + MCP entry
+│       ├── src/browser.ts         # Playwright Chromium automation
+│       ├── src/tools/             # 8 tools: open_chart, screenshot, set_symbol, set_timeframe,
+│       │                          #           get_ohlcv, get_price, scroll_chart, toggle_indicator
+│       └── chart/
+│           ├── index.html         # Chart UI shell (KLineChart Pro, dark theme)
+│           └── datafeed.js        # Binance Futures REST (primary) + Pyth Benchmarks (fallback)
+└── venv/
 ```
 
 ---
@@ -334,21 +342,21 @@ tradelikeme/
 | Layer | Tool |
 |-------|------|
 | Language | Python 3.11 asyncio |
-| Solana Perps | Raydium Perps + Jupiter Perps |
-| Solana Vault | Custom Anchor program (Rust) |
-| Price Oracle | Pyth Network WebSocket |
+| Solana Perps | Zeta Markets (primary) + Jupiter Perps (fallback) |
+| Solana Vault | Custom Anchor program (Rust) — devnet tested |
+| Price Oracle | Pyth Hermes WebSocket + REST fallback |
 | RPC | Helius (free tier) |
 | Wallet | Phantom Connect + @solana/wallet-adapter |
-| Stablecoin | CASH + USDC |
-| Zone Scanning | KLineChart Pro + Playwright (primary) → TradingView MCP (fallback) |
-| Zone Analysis | Claude Opus 4.6 via AWS Bedrock |
-| Auth | BetterAuth |
-| Backend | FastAPI + SQLAlchemy |
-| Database | SQLite (platform.db + per-strategy DBs) |
-| Notifications | Telegram + WhatsApp (Twilio) |
-| Server | AWS EC2 t3.xlarge |
-| Deployment | Dokploy + Docker Compose + Traefik |
-| Frontend | Next.js + Tailwind (merged into `frontend/`) |
+| Stablecoin | USDC |
+| Zone Scanning | KLineChart MCP server (Playwright + Binance datafeed + Pyth fallback) |
+| Zone Analysis | Claude Opus 4.6 via AWS Bedrock (IAM user `claude-code-bedrock`, region `us-east-1`) |
+| Auth | BetterAuth v1.6.9 (Hono server, Kysely+Postgres adapter) |
+| Backend | FastAPI + SQLAlchemy + Supabase (PostgreSQL) |
+| Database | Supabase PostgreSQL (platform) + SQLite (per-strategy journal) |
+| Notifications | Telegram (built) + WhatsApp Twilio (post-hackathon) |
+| Server | AWS EC2 t3.large, Ubuntu 22.04, Singapore |
+| Deployment | Docker Compose (3 services) — Dokploy planned |
+| Frontend | React 19 + Vite + React Router + Tailwind (`frontend/`) |
 
 ---
 
@@ -371,9 +379,10 @@ tradelikeme/
 ## Hackathon Info
 - **Event**: Solana Frontier Hackathon — Colosseum / Solana Foundation
 - **Period**: Apr 6 – May 11, 2026
-- **Registration deadline**: May 4, 2026 (ACTION REQUIRED)
+- **Registration**: ✅ DONE (A18 completed)
+- **Submission deadline**: May 11, 2026
 - **Prize target**: Grand Champion $30k or Standout $10k
-- **Sponsors used**: Phantom Connect, CASH stablecoin, Helius RPC, Colosseum Copilot
+- **Sponsors used**: Phantom Connect, Helius RPC, Colosseum Copilot (CASH stablecoin in docs/marketing)
 
 ---
 

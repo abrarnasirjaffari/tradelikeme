@@ -276,7 +276,7 @@ class ZetaClient(ExchangeBase):
         if self._vault_client is not None and self._vault_pda is not None:
             try:
                 direction = DIRECTION_LONG if side == "long" else DIRECTION_SHORT
-                trade_id_str = await self._vault_client.record_trade(
+                journal_tx, trade_id = await self._vault_client.record_trade(
                     vault_pda=self._vault_pda,
                     symbol=symbol,
                     direction=direction,
@@ -289,13 +289,11 @@ class ZetaClient(ExchangeBase):
                     strategy_id=self._strategy_id or b"",
                     opened_at=int(time.time()),
                 )
-                # record_trade returns the tx sig; trade_id comes from get_trade_count before the call
-                # We read trade_count *before* record_trade incremented it, so we fetch it now
-                trade_id = await self._vault_client.get_trade_count(self._vault_pda) - 1
+                # record_trade now returns (tx_sig, trade_id) — no second RPC needed.
                 self._active_trades[symbol] = trade_id
                 logger.info(
                     "Journal: recorded trade_id=%d for %s %s (journal_tx=%s)",
-                    trade_id, symbol, side, trade_id_str,
+                    trade_id, symbol, side, journal_tx,
                 )
             except Exception as exc:
                 logger.warning(

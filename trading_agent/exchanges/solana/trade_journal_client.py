@@ -64,9 +64,9 @@ class TradeJournalClient:
         await client.initialise()
 
         vault_pda = TradeJournalClient.derive_vault_pda(user_pubkey, strategy_id_bytes)
-        tx_sig = await client.record_trade(vault_pda, "SOL", DIRECTION_LONG, 150.0, 10.0,
-                                           145.0, 160.0, 175.0, strategy_id_bytes,
-                                           int(time.time()))
+        tx_sig, trade_id = await client.record_trade(vault_pda, "SOL", DIRECTION_LONG, 150.0, 10.0,
+                                                     145.0, 160.0, 175.0, strategy_id_bytes,
+                                                     int(time.time()))
         tx_sig = await client.close_trade(vault_pda, trade_id=0, exit_price=160.0,
                                           realized_pnl=100.0, outcome=OUTCOME_TP1,
                                           closed_at=int(time.time()))
@@ -248,7 +248,7 @@ class TradeJournalClient:
         tp2_price: float,
         strategy_id: bytes,
         opened_at: int,
-    ) -> str:
+    ) -> tuple[str, int]:
         """Record a new trade entry on-chain when the agent opens a position.
 
         Reads the current trade_count from the vault to determine trade_id,
@@ -267,10 +267,14 @@ class TradeJournalClient:
             opened_at:    Unix timestamp (seconds) when the trade was opened.
 
         Returns:
-            Transaction signature as a hex string.
+            Tuple of (transaction_signature, trade_id).
+            trade_id is the sequential ID written on-chain (vault.trade_count before increment).
+            Callers should store trade_id to pass to close_trade() later.
         """
         program = self._require_init()
 
+        # Read trade_count BEFORE submitting — this is the trade_id used on-chain.
+        # Returning it avoids a second RPC round-trip in the caller.
         trade_id = await self.get_trade_count(vault_pda)
         trade_pda = self.derive_trade_pda(vault_pda, trade_id)
 
@@ -310,7 +314,7 @@ class TradeJournalClient:
             qty,
             tx_sig,
         )
-        return str(tx_sig)
+        return str(tx_sig), trade_id
 
     async def close_trade(
         self,

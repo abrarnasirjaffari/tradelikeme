@@ -57,6 +57,17 @@
 
 ---
 
+## ON-CHAIN TRADE JOURNAL (P3)
+
+- [x] P3-J1 — Design on-chain trade journal program — record_trade / close_trade / register_strategy / set_risk_mode instructions
+- [x] P3-J2 — Implement Anchor program for on-chain trade journal
+- [x] P3-J3 — Deploy on-chain trade journal to devnet — Program ID: `rGMTq8sS5GUJ7q1ei9x75dnZ3kM2QCn5YRKYGHbwdSd` (slot 459047601)
+- [x] P3-J4 — Write Python client `trade_journal_client.py` using anchorpy — record_trade / close_trade / register_strategy / set_risk_mode
+- [x] P3-J5 — Run integration tests — 30/30 tests pass (devnet, May 7 2026)
+- [x] P3 COMPLETE — On-chain trade journal: record_trade/close_trade/register_strategy/set_risk_mode deployed to devnet (rGMTq8sS5GUJ7q1ei9x75dnZ3kM2QCn5YRKYGHbwdSd). 30/30 tests pass.
+
+---
+
 ## ANCHOR VAULT PROGRAM (Rust — Solana smart contract)
 
 - [x] V1 — Install Rust via rustup
