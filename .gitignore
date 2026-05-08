@@ -75,6 +75,17 @@ auth/tsdown.config.ts
 auth/vitest.config.ts
 auth/vitest.config.adapters.ts
 
+# ── Internal planning docs (local only) ─────────────────
+auth.md
+dashboard.md
+demo_script.md
+pre-hack.md
+colosseum_winners.md
+frontend/hackathon.md
+frontend/htask.md
+infra/jupiter_perps_research.md
+CLAUDE.md
+
 # ── Misc ────────────────────────────────────────────────
 *.tmp
 *.bak
