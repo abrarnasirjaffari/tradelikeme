@@ -81,11 +81,16 @@ dashboard.md
 demo_script.md
 pre-hack.md
 plan.md
+tasks.md
 colosseum_winners.md
 frontend/hackathon.md
 frontend/htask.md
 infra/jupiter_perps_research.md
 CLAUDE.md
+
+# ── Vendored library docs (not our code) ────────────────
+infra/klinechart/docs/
+infra/klinechart-pro/docs/
 
 # ── Misc ────────────────────────────────────────────────
 *.tmp

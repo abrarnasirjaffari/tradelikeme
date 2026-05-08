@@ -1,3 +1,0 @@
-```typescript
-(timezone: string) => void
-```

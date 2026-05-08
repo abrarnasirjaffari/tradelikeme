@@ -1,3 +1,0 @@
-```typescript
-(animationDuration?: number) => void
-```

@@ -1,3 +1,0 @@
-```typescript
-() => SymbolInfo | null
-```

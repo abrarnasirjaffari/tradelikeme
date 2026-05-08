@@ -1,3 +1,0 @@
-```typescript
-(space: number) => void
-```
