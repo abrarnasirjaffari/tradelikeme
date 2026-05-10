@@ -8,6 +8,10 @@ import { registerToggleIndicator } from "./tools/toggle_indicator.js";
 import { registerGetOhlcv } from "./tools/get_ohlcv.js";
 import { registerScrollChart } from "./tools/scroll_chart.js";
 import { registerGetPrice } from "./tools/get_price.js";
+import { registerDrawZone } from "./tools/draw_zone.js";
+import { registerDrawPriceLine } from "./tools/draw_price_line.js";
+import { registerDrawAnnotation } from "./tools/draw_annotation.js";
+import { registerClearOverlays } from "./tools/clear_overlays.js";
 import http from "http";
 import fs from "fs";
 import path from "path";
@@ -71,6 +75,10 @@ registerToggleIndicator(server);
 registerGetOhlcv(server);
 registerScrollChart(server);
 registerGetPrice(server);
+registerDrawZone(server);
+registerDrawPriceLine(server);
+registerDrawAnnotation(server);
+registerClearOverlays(server);
 
 async function main() {
   await startStaticServer();

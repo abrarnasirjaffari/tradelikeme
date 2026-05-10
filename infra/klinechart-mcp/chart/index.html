@@ -69,5 +69,324 @@
       subIndicators: ['VOL', 'RSI', 'MACD']
     })
   </script>
+
+  <!-- Demo mode: draws a realistic S/D zone setup when ?demo=true is in the URL -->
+  <script>
+  ;(function () {
+    // Only activate in demo mode
+    if (!new URLSearchParams(window.location.search).has('demo')) return
+
+    // ---------------------------------------------------------------------------
+    // Zone computation helpers
+    // ---------------------------------------------------------------------------
+
+    /** Find swing lows (local minima with 3-bar lookback/lookahead). */
+    function findSwingLows(bars) {
+      var lows = []
+      for (var i = 3; i < bars.length - 10; i++) {
+        var lo = bars[i].low
+        if (
+          lo < bars[i - 1].low && lo < bars[i - 2].low && lo < bars[i - 3].low &&
+          lo < bars[i + 1].low && lo < bars[i + 2].low && lo < bars[i + 3].low
+        ) {
+          lows.push({ idx: i, price: lo, bar: bars[i] })
+        }
+      }
+      return lows
+    }
+
+    /** Find swing highs (local maxima with 3-bar lookback/lookahead). */
+    function findSwingHighs(bars) {
+      var highs = []
+      for (var i = 3; i < bars.length - 10; i++) {
+        var hi = bars[i].high
+        if (
+          hi > bars[i - 1].high && hi > bars[i - 2].high && hi > bars[i - 3].high &&
+          hi > bars[i + 1].high && hi > bars[i + 2].high && hi > bars[i + 3].high
+        ) {
+          highs.push({ idx: i, price: hi, bar: bars[i] })
+        }
+      }
+      return highs
+    }
+
+    /**
+     * Compute demand zone, supply zone (TP1), and TP2 zone from OHLCV bars.
+     * Falls back to percentile-based zones when swing detection yields too few points.
+     */
+    function computeZones(bars) {
+      var recent = bars.slice(-200)
+      var len = recent.length
+      var currentPrice = recent[len - 1].close
+
+      var swingLows = findSwingLows(recent)
+      var swingHighs = findSwingHighs(recent)
+
+      // --- Demand zone ---
+      var demandCandidates = swingLows
+        .filter(function (s) { return s.price < currentPrice * 0.99 })
+        .sort(function (a, b) { return b.idx - a.idx }) // most recent first
+
+      var demand = demandCandidates[0] || null
+
+      // Fallback: 10th-percentile low of all bars
+      if (!demand) {
+        var allLows = recent.map(function (b) { return b.low }).sort(function (a, b) { return a - b })
+        var p10Price = allLows[Math.floor(allLows.length * 0.10)]
+        // Find the bar closest to that price
+        var bestDist = Infinity, bestBar = null, bestIdx = 0
+        for (var i = 0; i < recent.length; i++) {
+          var dist = Math.abs(recent[i].low - p10Price)
+          if (dist < bestDist) { bestDist = dist; bestBar = recent[i]; bestIdx = i }
+        }
+        demand = { idx: bestIdx, price: p10Price, bar: bestBar }
+      }
+
+      // --- Supply zone (TP1) ---
+      var supplyCandidates = swingHighs
+        .filter(function (s) { return s.price > currentPrice * 1.01 })
+        .sort(function (a, b) { return b.idx - a.idx }) // most recent first
+
+      var supply = supplyCandidates[0] || null
+
+      // Fallback: synthetic supply 4% above current price
+      if (!supply) {
+        var synthPrice = currentPrice * 1.04
+        supply = {
+          idx: len - 20,
+          price: synthPrice,
+          bar: recent[Math.max(0, len - 20)]
+        }
+      }
+
+      // --- TP2 zone (second supply above current price) ---
+      var tp2 = supplyCandidates[1] || null
+
+      // Fallback: 8% above current price if no second swing high
+      if (!tp2) {
+        var tp2Price = currentPrice * 1.08
+        tp2 = {
+          idx: len - 40,
+          price: tp2Price,
+          bar: recent[Math.max(0, len - 40)]
+        }
+      }
+
+      return {
+        demand: demand,
+        supply: supply,
+        tp2: tp2,
+        currentPrice: currentPrice,
+        bars: recent
+      }
+    }
+
+    // ---------------------------------------------------------------------------
+    // Drawing
+    // ---------------------------------------------------------------------------
+
+    /**
+     * Draw all S/D demo overlays on the KLineChart widget.
+     * @param {object} widget - window.__kwidget
+     * @param {Array}  allBars - raw OHLCV array from __ohlcvCache
+     */
+    function drawDemoZones(widget, allBars) {
+      var zones = computeZones(allBars)
+      var recent = zones.bars
+      var len = recent.length
+
+      var barInterval = len > 1
+        ? (recent[1].timestamp - recent[0].timestamp)
+        : 4 * 60 * 60 * 1000
+
+      var lastTs = recent[len - 1].timestamp
+
+      // ---- 1. Demand zone rectangle (green) ----
+      var demandTop = zones.demand.price * 1.015
+      var demandBottom = zones.demand.price * 0.985
+      var demandStartTs = zones.demand.bar.timestamp - 20 * barInterval
+
+      widget.createOverlay({
+        name: 'rect',
+        points: [
+          { timestamp: demandStartTs, value: demandTop },
+          { timestamp: lastTs,        value: demandBottom }
+        ],
+        styles: {
+          polygon: {
+            color: 'rgba(34,197,94,0.18)',
+            borderColor: '#22c55e',
+            borderSize: 1
+          }
+        },
+        lock: true
+      })
+
+      // ---- 2. Supply zone rectangle (red) for TP1 ----
+      var supplyTop = zones.supply.price * 1.015
+      var supplyBottom = zones.supply.price * 0.985
+      var supplyStartTs = zones.supply.bar.timestamp - 20 * barInterval
+
+      widget.createOverlay({
+        name: 'rect',
+        points: [
+          { timestamp: supplyStartTs, value: supplyTop },
+          { timestamp: lastTs,        value: supplyBottom }
+        ],
+        styles: {
+          polygon: {
+            color: 'rgba(239,68,68,0.18)',
+            borderColor: '#ef4444',
+            borderSize: 1
+          }
+        },
+        lock: true
+      })
+
+      // ---- 3. TP2 supply zone rectangle (red, slightly translucent) ----
+      if (zones.tp2) {
+        var tp2Top = zones.tp2.price * 1.015
+        var tp2Bottom = zones.tp2.price * 0.985
+        var tp2StartTs = zones.tp2.bar.timestamp - 20 * barInterval
+
+        widget.createOverlay({
+          name: 'rect',
+          points: [
+            { timestamp: tp2StartTs, value: tp2Top },
+            { timestamp: lastTs,     value: tp2Bottom }
+          ],
+          styles: {
+            polygon: {
+              color: 'rgba(239,68,68,0.12)',
+              borderColor: '#ef4444',
+              borderSize: 1
+            }
+          },
+          lock: true
+        })
+      }
+
+      // ---- 4. Entry annotation (blue arrow) at top of demand zone ----
+      var entryPrice = demandTop
+      widget.createOverlay({
+        name: 'simpleAnnotation',
+        points: [{ timestamp: lastTs, value: entryPrice }],
+        extendData: 'Entry ↑',
+        styles: {
+          line: { color: '#3b82f6' },
+          text: { color: '#3b82f6', size: 13, weight: 'bold' }
+        },
+        lock: true
+      })
+
+      // ---- 5. TP1 price line (dashed green) ----
+      widget.createOverlay({
+        name: 'priceLine',
+        points: [{ value: supplyBottom }],
+        styles: {
+          line: {
+            color: '#22c55e',
+            size: 1.5,
+            style: 'dashed',
+            dashedValue: [6, 4]
+          },
+          text: { color: '#22c55e', size: 11 }
+        },
+        extendData: 'TP1',
+        lock: true
+      })
+
+      // ---- 6. TP2 price line (dashed green, thinner) ----
+      if (zones.tp2) {
+        widget.createOverlay({
+          name: 'priceLine',
+          points: [{ value: zones.tp2.price * 0.985 }],
+          styles: {
+            line: {
+              color: '#22c55e',
+              size: 1,
+              style: 'dashed',
+              dashedValue: [6, 4]
+            },
+            text: { color: '#22c55e', size: 11 }
+          },
+          extendData: 'TP2',
+          lock: true
+        })
+      }
+
+      // ---- 7. SL price line (dashed red) ----
+      var slPrice = zones.demand.price * 0.975
+      widget.createOverlay({
+        name: 'priceLine',
+        points: [{ value: slPrice }],
+        styles: {
+          line: {
+            color: '#ef4444',
+            size: 1.5,
+            style: 'dashed',
+            dashedValue: [6, 4]
+          },
+          text: { color: '#ef4444', size: 11 }
+        },
+        extendData: 'SL',
+        lock: true
+      })
+
+      console.log('[demo] S/D zones drawn — demand:', zones.demand.price.toFixed(4),
+        '| supply:', zones.supply.price.toFixed(4),
+        '| tp2:', zones.tp2 ? zones.tp2.price.toFixed(4) : 'synthetic',
+        '| sl:', slPrice.toFixed(4))
+    }
+
+    // ---------------------------------------------------------------------------
+    // Entry point — poll until widget + OHLCV cache are both available
+    // ---------------------------------------------------------------------------
+
+    function runDemo() {
+      try {
+        var widget = window.__kwidget
+        if (!widget) { setTimeout(runDemo, 200); return }
+
+        var params = new URLSearchParams(window.location.search)
+        var symbol = params.get('symbol') || 'SOLUSDT'
+        var tf = params.get('tf') || '4H'
+
+        var TF_TO_INTERVAL = {
+          '1M': '1M', '1W': '1w', '1D': '1d',
+          '4H': '4h', '1H': '1h',
+          '30M': '30m', '15M': '15m', '5M': '5m'
+        }
+        var interval = TF_TO_INTERVAL[tf] || '4h'
+        var cacheKey = symbol + '_' + interval
+
+        var cache = window.__ohlcvCache
+        if (!cache || !cache[cacheKey] || cache[cacheKey].length < 20) {
+          setTimeout(runDemo, 500); return
+        }
+
+        drawDemoZones(widget, cache[cacheKey])
+      } catch (err) {
+        console.error('[demo] Error drawing S/D zones:', err)
+      }
+    }
+
+    // Wait for chart data-ready attribute, then run
+    var chartEl = document.getElementById('chart')
+    if (chartEl) {
+      if (chartEl.getAttribute('data-ready') === 'true') {
+        runDemo()
+      } else {
+        var obs = new MutationObserver(function () {
+          if (chartEl.getAttribute('data-ready') === 'true') {
+            obs.disconnect()
+            runDemo()
+          }
+        })
+        obs.observe(chartEl, { attributes: true, attributeFilter: ['data-ready'] })
+      }
+    }
+  })()
+  </script>
 </body>
 </html>
