@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import type { Strategy, StrategyTier } from '@/types/api';
 
 interface Props {
@@ -14,50 +13,33 @@ interface Props {
   onPress: () => void;
 }
 
-const TIER_COLORS: Record<StrategyTier, { bg: string; text: string }> = {
-  S: { bg: '#EDE9FE', text: '#7C3AED' },
-  A: { bg: '#DBEAFE', text: '#1D4ED8' },
-  B: { bg: '#DCFCE7', text: '#15803D' },
-  C: { bg: '#FEF3C7', text: '#B45309' },
+const TIER_COLORS: Record<StrategyTier, { bg: string; text: string; label: string }> = {
+  S: { bg: '#EDE9FE', text: '#7C3AED', label: 'S-TIER' },
+  A: { bg: '#DBEAFE', text: '#1D4ED8', label: 'A-TIER' },
+  B: { bg: '#DCFCE7', text: '#15803D', label: 'B-TIER' },
+  C: { bg: '#FEF3C7', text: '#B45309', label: 'C-TIER' },
 };
-
-function TierBadge({ tier }: { tier: StrategyTier }) {
-  const colors = TIER_COLORS[tier];
-  return (
-    <View style={[styles.tierBadge, { backgroundColor: colors.bg }]}>
-      <Text style={[styles.tierText, { color: colors.text }]}>{tier}-Tier</Text>
-    </View>
-  );
-}
-
-function VerifiedBadge() {
-  return (
-    <View style={styles.verifiedBadge}>
-      <Ionicons name="shield-checkmark" size={12} color="#1D4ED8" />
-      <Text style={styles.verifiedText}>Verified</Text>
-    </View>
-  );
-}
 
 interface StatItemProps {
   label: string;
   value: string;
-  highlight?: boolean;
 }
 
-function StatItem({ label, value, highlight }: StatItemProps) {
+function StatItem({ label, value }: StatItemProps) {
   return (
     <View style={styles.statItem}>
-      <Text style={[styles.statValue, highlight && styles.statValueHighlight]}>
-        {value}
-      </Text>
       <Text style={styles.statLabel}>{label}</Text>
+      <Text style={styles.statValue}>{value}</Text>
     </View>
   );
 }
 
 export default function StrategyCard({ strategy, onPress }: Props) {
-  const isSubscribed = false;
+  const tierColors = TIER_COLORS[strategy.tier];
+  const isOurs = strategy.isOurs ?? false;
+  const feeLabel = isOurs
+    ? '20% profit share'
+    : `${strategy.feePercent}% profit share`;
 
   return (
     <TouchableOpacity
@@ -65,66 +47,56 @@ export default function StrategyCard({ strategy, onPress }: Props) {
       onPress={onPress}
       activeOpacity={0.85}
     >
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Text style={styles.strategyName} numberOfLines={1}>
-            {strategy.name}
+      {/* Row 1: strategy name + verified badge */}
+      <View style={styles.row1}>
+        <Text style={styles.strategyName} numberOfLines={1}>
+          {strategy.name}
+        </Text>
+        {(strategy.isVerified || isOurs) && (
+          <View style={styles.verifiedBadge}>
+            <Text style={styles.verifiedText}>✓ Verified</Text>
+          </View>
+        )}
+      </View>
+
+      {/* Row 2: by trader · tier badge */}
+      <View style={styles.row2}>
+        <Text style={styles.traderName}>by {strategy.traderName}</Text>
+        <View style={[styles.tierBadge, { backgroundColor: tierColors.bg }]}>
+          <Text style={[styles.tierText, { color: tierColors.text }]}>
+            {tierColors.label}
           </Text>
-          <View style={styles.badgeRow}>
-            <TierBadge tier={strategy.tier} />
-            {strategy.isVerified && <VerifiedBadge />}
+        </View>
+      </View>
+
+      {/* Row 3: fee badge (only for our strategy / profit share) */}
+      {isOurs && (
+        <View style={styles.row3}>
+          <View style={styles.feeBadge}>
+            <Text style={styles.feeText}>{feeLabel}</Text>
           </View>
         </View>
-        <View style={styles.headerRight}>
-          <Text style={styles.traderLabel}>by</Text>
-          <Text style={styles.traderName} numberOfLines={1}>
-            {strategy.traderName}
-          </Text>
-        </View>
-      </View>
+      )}
 
-      <View style={styles.divider} />
-
+      {/* Stats row */}
       <View style={styles.statsRow}>
-        <StatItem
-          label="Win Rate"
-          value={`${strategy.winRate}%`}
-          highlight={strategy.winRate >= 80}
-        />
+        <StatItem label="Win Rate" value={`${strategy.winRate}%`} />
         <View style={styles.statDivider} />
-        <StatItem
-          label="Monthly Return"
-          value={`+${strategy.monthlyReturn}%`}
-          highlight
-        />
+        <StatItem label="Monthly" value={`${strategy.monthlyReturn}%`} />
         <View style={styles.statDivider} />
-        <StatItem
-          label="Fee"
-          value={`${strategy.feePercent}%`}
-        />
+        <StatItem label="Trades" value={strategy.totalTrades.toString()} />
       </View>
 
-      <View style={styles.divider} />
-
-      <Text style={styles.description} numberOfLines={2}>
-        {strategy.description}
-      </Text>
-
-      <View style={styles.footer}>
-        <Text style={styles.tradesText}>
-          {strategy.totalTrades} verified trades
-        </Text>
-        <View style={styles.actionRow}>
-          <Text style={[styles.actionText, isSubscribed && styles.actionTextView]}>
-            {isSubscribed ? 'View' : 'Subscribe'}
-          </Text>
-          <Ionicons
-            name="chevron-forward"
-            size={14}
-            color={isSubscribed ? '#64748B' : '#3B82F6'}
-          />
-        </View>
-      </View>
+      {/* Subscribe button */}
+      {isOurs ? (
+        <TouchableOpacity style={styles.subscribeBtnFilled} onPress={onPress} activeOpacity={0.85}>
+          <Text style={styles.subscribeBtnFilledText}>Subscribe →</Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity style={styles.subscribeBtnOutline} onPress={onPress} activeOpacity={0.85}>
+          <Text style={styles.subscribeBtnOutlineText}>Subscribe →</Text>
+        </TouchableOpacity>
+      )}
     </TouchableOpacity>
   );
 }
@@ -132,7 +104,7 @@ export default function StrategyCard({ strategy, onPress }: Props) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 16,
     marginHorizontal: 16,
     marginBottom: 12,
@@ -142,82 +114,83 @@ const styles = StyleSheet.create({
       ios: {
         shadowColor: '#0F172A',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.07,
-        shadowRadius: 8,
+        shadowOpacity: 0.06,
+        shadowRadius: 6,
       },
       android: {
-        elevation: 3,
+        elevation: 2,
       },
     }),
   },
-  header: {
+  row1: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  headerLeft: {
-    flex: 1,
-    marginRight: 8,
-  },
-  headerRight: {
-    alignItems: 'flex-end',
+    alignItems: 'center',
+    marginBottom: 6,
   },
   strategyName: {
     fontSize: 16,
     fontWeight: '700',
     color: '#0F172A',
-    marginBottom: 6,
+    flex: 1,
+    marginRight: 8,
   },
-  badgeRow: {
+  verifiedBadge: {
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+  verifiedText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#16A34A',
+  },
+  row2: {
     flexDirection: 'row',
-    gap: 6,
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 8,
+  },
+  traderName: {
+    fontSize: 12,
+    color: '#64748B',
   },
   tierBadge: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 9,
     paddingVertical: 3,
     borderRadius: 20,
   },
   tierText: {
     fontSize: 11,
     fontWeight: '700',
-    letterSpacing: 0.3,
+    letterSpacing: 0.4,
   },
-  verifiedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
+  row3: {
+    marginBottom: 12,
+  },
+  feeBadge: {
     backgroundColor: '#DBEAFE',
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
   },
-  verifiedText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#1D4ED8',
-  },
-  traderLabel: {
-    fontSize: 11,
-    color: '#94A3B8',
-    marginBottom: 1,
-  },
-  traderName: {
+  feeText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#64748B',
-    maxWidth: 100,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#F1F5F9',
-    marginBottom: 12,
+    color: '#1D4ED8',
   },
   statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
+    paddingTop: 4,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    paddingBottom: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
   },
   statItem: {
     flex: 1,
@@ -228,48 +201,40 @@ const styles = StyleSheet.create({
     height: 28,
     backgroundColor: '#E2E8F0',
   },
-  statValue: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#0F172A',
+  statLabel: {
+    fontSize: 11,
+    color: '#94A3B8',
     marginBottom: 2,
   },
-  statValueHighlight: {
-    color: '#16A34A',
+  statValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0F172A',
   },
-  statLabel: {
-    fontSize: 10,
-    color: '#94A3B8',
-    fontWeight: '500',
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-  },
-  description: {
-    fontSize: 13,
-    color: '#64748B',
-    lineHeight: 19,
-    marginBottom: 12,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  subscribeBtnFilled: {
+    backgroundColor: '#1D4ED8',
+    borderRadius: 10,
+    height: 46,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  tradesText: {
-    fontSize: 12,
-    color: '#94A3B8',
+  subscribeBtnFilledText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
   },
-  actionRow: {
-    flexDirection: 'row',
+  subscribeBtnOutline: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    height: 46,
     alignItems: 'center',
-    gap: 2,
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#1D4ED8',
   },
-  actionText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#3B82F6',
-  },
-  actionTextView: {
-    color: '#64748B',
+  subscribeBtnOutlineText: {
+    color: '#1D4ED8',
+    fontSize: 15,
+    fontWeight: '700',
   },
 });

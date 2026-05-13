@@ -10,11 +10,13 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { getVaults, getPnl } from '@/api/vault';
-import { usePhantomDeepLink } from '@/hooks/usePhantomDeepLink';
 import { useAuthStore } from '@/store/authStore';
 import type { Vault, EpochSummary } from '@/types/api';
+
+const PRIMARY = '#1D4ED8';
+const SUCCESS = '#22C55E';
 
 function formatCurrency(value: number): string {
   return value.toLocaleString('en-US', {
@@ -25,81 +27,105 @@ function formatCurrency(value: number): string {
   });
 }
 
-function formatDate(dateStr: string): string {
-  try {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  } catch {
-    return dateStr;
-  }
-}
+// ── Portfolio card ────────────────────────────────────────────────────────────
 
-interface SummaryCardProps {
+interface PortfolioCardProps {
   totalDeposited: number;
   currentValue: number;
   unrealisedGain: number;
-  gainPercent: number;
+  platformCut: number;
 }
 
-function SummaryCard({ totalDeposited, currentValue, unrealisedGain, gainPercent }: SummaryCardProps) {
-  const isPositive = unrealisedGain >= 0;
+function PortfolioCard({ totalDeposited, currentValue, unrealisedGain, platformCut }: PortfolioCardProps) {
   return (
-    <View style={styles.summaryCard}>
-      <Text style={styles.summaryLabel}>Portfolio Value</Text>
-      <Text style={styles.summaryValue}>{formatCurrency(currentValue)}</Text>
-      <View style={styles.summaryGainRow}>
-        <Ionicons
-          name={isPositive ? 'trending-up' : 'trending-down'}
-          size={14}
-          color={isPositive ? '#16A34A' : '#DC2626'}
-        />
-        <Text style={[styles.summaryGain, { color: isPositive ? '#16A34A' : '#DC2626' }]}>
-          {isPositive ? '+' : ''}{formatCurrency(unrealisedGain)} ({isPositive ? '+' : ''}{gainPercent.toFixed(2)}%)
-        </Text>
-      </View>
-      <View style={styles.summaryDivider} />
-      <View style={styles.summaryRow}>
-        <View style={styles.summaryCol}>
-          <Text style={styles.summaryColLabel}>Total Deposited</Text>
-          <Text style={styles.summaryColValue}>{formatCurrency(totalDeposited)}</Text>
+    <View style={styles.portfolioCard}>
+      <Text style={styles.portfolioLabel}>Total Portfolio Value</Text>
+      <Text style={styles.portfolioValue}>{formatCurrency(currentValue)}</Text>
+      <View style={styles.portfolioStatsRow}>
+        <View style={styles.portfolioStat}>
+          <Text style={styles.portfolioStatLabel}>Deposited</Text>
+          <Text style={styles.portfolioStatValue}>{formatCurrency(totalDeposited)}</Text>
         </View>
-        <View style={styles.summaryColDivider} />
-        <View style={styles.summaryCol}>
-          <Text style={styles.summaryColLabel}>Unrealised Gain</Text>
-          <Text style={[styles.summaryColValue, { color: isPositive ? '#16A34A' : '#DC2626' }]}>
-            {isPositive ? '+' : ''}{formatCurrency(unrealisedGain)}
+        <View style={styles.portfolioStat}>
+          <Text style={styles.portfolioStatLabel}>Total Gain</Text>
+          <Text style={styles.portfolioStatValue}>
+            {unrealisedGain >= 0 ? '+' : ''}{formatCurrency(unrealisedGain)}
           </Text>
+        </View>
+        <View style={styles.portfolioStat}>
+          <Text style={styles.portfolioStatLabel}>Our 20%</Text>
+          <Text style={styles.portfolioStatValue}>{formatCurrency(platformCut)}</Text>
         </View>
       </View>
     </View>
   );
 }
 
-interface VaultRowProps {
+// ── Deposit / Withdraw tab switcher ──────────────────────────────────────────
+
+interface TabSwitcherProps {
+  active: 'deposit' | 'withdraw';
+  onDeposit: () => void;
+  onWithdraw: () => void;
+}
+
+function TabSwitcher({ active, onDeposit, onWithdraw }: TabSwitcherProps) {
+  return (
+    <View style={styles.tabRow}>
+      <TouchableOpacity
+        style={[styles.tabBtn, styles.tabBtnLeft, active === 'deposit' && styles.tabBtnActive]}
+        onPress={onDeposit}
+        activeOpacity={0.85}
+      >
+        <Text style={[styles.tabBtnText, active === 'deposit' && styles.tabBtnTextActive]}>
+          Deposit
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.tabBtn, styles.tabBtnRight, active === 'withdraw' && styles.tabBtnActive]}
+        onPress={onWithdraw}
+        activeOpacity={0.85}
+      >
+        <Text style={[styles.tabBtnText, active === 'withdraw' && styles.tabBtnTextActive]}>
+          Withdraw
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+// ── Allocation row ────────────────────────────────────────────────────────────
+
+interface AllocationRowProps {
   vault: Vault;
 }
 
-function VaultRow({ vault }: VaultRowProps) {
+function AllocationRow({ vault }: AllocationRowProps) {
   const gain = vault.currentValue - vault.deposited;
+  const gainPercent = vault.deposited > 0 ? (gain / vault.deposited) * 100 : 0;
   const isPositive = gain >= 0;
   return (
-    <View style={styles.vaultRow}>
-      <View style={styles.vaultLeft}>
-        <Text style={styles.vaultName}>{vault.strategyName}</Text>
-        <Text style={styles.vaultAllocation}>{vault.allocationPercent.toFixed(1)}% of portfolio</Text>
+    <View style={styles.allocationCard}>
+      <View style={styles.allocationLeft}>
+        <View style={styles.logoChip}>
+          <Text style={styles.logoChipText}>TL</Text>
+        </View>
+        <View>
+          <Text style={styles.allocationName}>{vault.strategyName}</Text>
+          <Text style={styles.allocationWinRate}>89% win rate</Text>
+        </View>
       </View>
-      <View style={styles.vaultRight}>
-        <Text style={styles.vaultCurrentValue}>{formatCurrency(vault.currentValue)}</Text>
-        <Text style={[styles.vaultGain, { color: isPositive ? '#16A34A' : '#DC2626' }]}>
-          {isPositive ? '+' : ''}{formatCurrency(gain)}
+      <View style={styles.allocationRight}>
+        <Text style={styles.allocationValue}>{formatCurrency(vault.currentValue)}</Text>
+        <Text style={[styles.allocationGain, { color: isPositive ? SUCCESS : '#EF4444' }]}>
+          {isPositive ? '+' : ''}{gainPercent.toFixed(1)}%
         </Text>
       </View>
     </View>
   );
 }
+
+// ── Epoch row ─────────────────────────────────────────────────────────────────
 
 interface EpochRowProps {
   epoch: EpochSummary;
@@ -107,47 +133,55 @@ interface EpochRowProps {
 
 function EpochRow({ epoch }: EpochRowProps) {
   const isPositive = epoch.netProfit >= 0;
+  // Build "April 2026" from start date
+  let monthLabel = epoch.startDate;
+  try {
+    monthLabel = new Date(epoch.startDate).toLocaleDateString('en-US', {
+      month: 'long',
+      year: 'numeric',
+    });
+  } catch {}
+
+  const startVal = epoch.profit + epoch.platformCut - epoch.netProfit + epoch.netProfit - epoch.profit;
+  // Simpler: show opening → closing narrative
+  const opening = epoch.profit > 0
+    ? epoch.netProfit + epoch.platformCut
+    : epoch.netProfit + epoch.platformCut;
+  const closing = opening + epoch.profit;
+
   return (
-    <View style={styles.epochRow}>
-      <View style={styles.epochHeader}>
-        <Text style={styles.epochDates}>
-          {formatDate(epoch.startDate)} – {formatDate(epoch.endDate)}
-        </Text>
-        <Text style={[styles.epochNetProfit, { color: isPositive ? '#16A34A' : '#DC2626' }]}>
-          {isPositive ? '+' : ''}{formatCurrency(epoch.netProfit)}
+    <View style={styles.epochCard}>
+      <View style={styles.epochLeft}>
+        <Text style={styles.epochMonth}>{monthLabel}</Text>
+        <Text style={styles.epochRange}>
+          {formatCurrency(Math.abs(closing - epoch.profit))} → {formatCurrency(closing)}
         </Text>
       </View>
-      <View style={styles.epochDetails}>
-        <Text style={styles.epochDetail}>
-          Profit: <Text style={styles.epochDetailBold}>{formatCurrency(epoch.profit)}</Text>
+      <View style={styles.epochRight}>
+        <Text style={[styles.epochProfit, { color: isPositive ? SUCCESS : '#EF4444' }]}>
+          {isPositive ? '+' : ''}{formatCurrency(epoch.netProfit)}
         </Text>
-        <Text style={styles.epochDetailSep}>·</Text>
-        <Text style={styles.epochDetail}>
-          Cut: <Text style={[styles.epochDetailBold, { color: '#64748B' }]}>-{formatCurrency(epoch.platformCut)}</Text>
-        </Text>
-        <Text style={styles.epochDetailSep}>·</Text>
-        <Text style={styles.epochDetail}>
-          Net: <Text style={[styles.epochDetailBold, { color: isPositive ? '#16A34A' : '#DC2626' }]}>
-            {isPositive ? '+' : ''}{formatCurrency(epoch.netProfit)}
-          </Text>
-        </Text>
+        <Text style={styles.epochPlatformCut}>Platform: {formatCurrency(epoch.platformCut)}</Text>
       </View>
     </View>
   );
 }
 
+// ── Section types ─────────────────────────────────────────────────────────────
+
 type Section =
-  | { type: 'summary'; data: SummaryCardProps }
-  | { type: 'actions' }
-  | { type: 'allocationsHeader' }
-  | { type: 'vaultRow'; data: Vault }
-  | { type: 'epochsHeader' }
+  | { type: 'portfolioCard'; data: PortfolioCardProps }
+  | { type: 'tabSwitcher' }
+  | { type: 'sectionTitle'; title: string }
+  | { type: 'allocationRow'; data: Vault }
   | { type: 'epochRow'; data: EpochSummary }
   | { type: 'empty'; message: string };
 
+// ── Screen ────────────────────────────────────────────────────────────────────
+
 export default function VaultScreen() {
   const user = useAuthStore((s) => s.user);
-  const { isProcessing: phantomLoading, deposit, withdraw } = usePhantomDeepLink();
+  const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw'>('deposit');
 
   const [vaults, setVaults] = useState<Vault[]>([]);
   const [epochs, setEpochs] = useState<EpochSummary[]>([]);
@@ -179,25 +213,34 @@ export default function VaultScreen() {
   const totalDeposited = vaults.reduce((s, v) => s + v.deposited, 0);
   const currentValue = vaults.reduce((s, v) => s + v.currentValue, 0);
   const unrealisedGain = currentValue - totalDeposited;
-  const gainPercent = totalDeposited > 0 ? (unrealisedGain / totalDeposited) * 100 : 0;
+  const platformCut = unrealisedGain > 0 ? unrealisedGain * 0.2 : 0;
+
+  const handleDepositTab = () => {
+    setActiveTab('deposit');
+    router.push('/deposit');
+  };
+
+  const handleWithdrawTab = () => {
+    setActiveTab('withdraw');
+  };
 
   const sections: Section[] = [];
 
   if (!loading) {
     sections.push({
-      type: 'summary',
-      data: { totalDeposited, currentValue, unrealisedGain, gainPercent },
+      type: 'portfolioCard',
+      data: { totalDeposited, currentValue, unrealisedGain, platformCut },
     });
-    sections.push({ type: 'actions' });
-    sections.push({ type: 'allocationsHeader' });
+    sections.push({ type: 'tabSwitcher' });
+    sections.push({ type: 'sectionTitle', title: 'Allocation' });
 
     if (vaults.length === 0) {
       sections.push({ type: 'empty', message: 'No vaults yet. Deposit to get started.' });
     } else {
-      vaults.forEach((v) => sections.push({ type: 'vaultRow', data: v }));
+      vaults.forEach((v) => sections.push({ type: 'allocationRow', data: v }));
     }
 
-    sections.push({ type: 'epochsHeader' });
+    sections.push({ type: 'sectionTitle', title: 'Epoch History' });
 
     if (epochs.length === 0) {
       sections.push({ type: 'empty', message: 'No epoch history yet.' });
@@ -208,70 +251,32 @@ export default function VaultScreen() {
 
   const renderItem = ({ item }: { item: Section }) => {
     switch (item.type) {
-      case 'summary':
-        return <SummaryCard {...item.data} />;
+      case 'portfolioCard':
+        return <PortfolioCard {...item.data} />;
 
-      case 'actions':
+      case 'tabSwitcher':
         return (
-          <View style={styles.actionsContainer}>
-            <TouchableOpacity
-              style={[styles.depositButton, phantomLoading && styles.buttonDisabled]}
-              onPress={() => deposit()}
-              disabled={phantomLoading}
-              activeOpacity={0.85}
-            >
-              {phantomLoading ? (
-                <>
-                  <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 8 }} />
-                  <Text style={styles.depositButtonText}>Opening Phantom...</Text>
-                </>
-              ) : (
-                <>
-                  <Ionicons name="add-circle-outline" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
-                  <Text style={styles.depositButtonText}>Deposit</Text>
-                </>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.withdrawButton, phantomLoading && styles.buttonDisabled]}
-              onPress={() => withdraw()}
-              disabled={phantomLoading}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="arrow-down-circle-outline" size={18} color="#3B82F6" style={{ marginRight: 8 }} />
-              <Text style={styles.withdrawButtonText}>Withdraw</Text>
-            </TouchableOpacity>
+          <View style={styles.tabWrapper}>
+            <TabSwitcher
+              active={activeTab}
+              onDeposit={handleDepositTab}
+              onWithdraw={handleWithdrawTab}
+            />
           </View>
         );
 
-      case 'allocationsHeader':
+      case 'sectionTitle':
         return (
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionHeaderTitle}>Strategy Allocations</Text>
+          <View style={styles.sectionTitleWrapper}>
+            <Text style={styles.sectionTitle}>{item.title}</Text>
           </View>
         );
 
-      case 'vaultRow':
-        return (
-          <View style={styles.card}>
-            <VaultRow vault={item.data} />
-          </View>
-        );
-
-      case 'epochsHeader':
-        return (
-          <View style={[styles.sectionHeader, { marginTop: 8 }]}>
-            <Text style={styles.sectionHeaderTitle}>Epoch History</Text>
-            <Text style={styles.sectionHeaderSub}>Monthly profit settlement records</Text>
-          </View>
-        );
+      case 'allocationRow':
+        return <AllocationRow vault={item.data} />;
 
       case 'epochRow':
-        return (
-          <View style={styles.card}>
-            <EpochRow epoch={item.data} />
-          </View>
-        );
+        return <EpochRow epoch={item.data} />;
 
       case 'empty':
         return (
@@ -290,10 +295,9 @@ export default function VaultScreen() {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.screenHeader}>
           <Text style={styles.screenTitle}>Vault</Text>
-          <Text style={styles.screenSubtitle}>Your portfolio & profit history</Text>
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#3B82F6" />
+          <ActivityIndicator size="large" color={PRIMARY} />
           <Text style={styles.loadingText}>Loading portfolio...</Text>
         </View>
       </SafeAreaView>
@@ -304,13 +308,13 @@ export default function VaultScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.screenHeader}>
         <Text style={styles.screenTitle}>Vault</Text>
-        <Text style={styles.screenSubtitle}>Your portfolio & profit history</Text>
       </View>
       <FlatList
         data={sections}
         keyExtractor={(item, index) => {
-          if (item.type === 'vaultRow') return `vault-${item.data.id}`;
+          if (item.type === 'allocationRow') return `vault-${item.data.id}`;
           if (item.type === 'epochRow') return `epoch-${item.data.id}`;
+          if (item.type === 'sectionTitle') return `title-${item.title}`;
           return `${item.type}-${index}`;
         }}
         renderItem={renderItem}
@@ -320,14 +324,16 @@ export default function VaultScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#3B82F6"
-            colors={['#3B82F6']}
+            tintColor={PRIMARY}
+            colors={[PRIMARY]}
           />
         }
       />
     </SafeAreaView>
   );
 }
+
+// ── Styles ────────────────────────────────────────────────────────────────────
 
 const cardShadow = Platform.select({
   ios: {
@@ -356,11 +362,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     color: '#0F172A',
-    marginBottom: 2,
-  },
-  screenSubtitle: {
-    fontSize: 13,
-    color: '#64748B',
   },
   listContent: {
     paddingBottom: 32,
@@ -375,216 +376,205 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#94A3B8',
   },
-  summaryCard: {
-    backgroundColor: '#0F172A',
+
+  // Portfolio card
+  portfolioCard: {
+    backgroundColor: PRIMARY,
     margin: 16,
     marginBottom: 0,
     borderRadius: 16,
     padding: 20,
     ...Platform.select({
       ios: {
-        shadowColor: '#0F172A',
+        shadowColor: PRIMARY,
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
+        shadowOpacity: 0.3,
         shadowRadius: 12,
       },
       android: { elevation: 6 },
     }),
   },
-  summaryLabel: {
+  portfolioLabel: {
     fontSize: 12,
-    color: '#94A3B8',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    color: 'rgba(255,255,255,0.75)',
     marginBottom: 4,
   },
-  summaryValue: {
-    fontSize: 36,
-    fontWeight: '800',
+  portfolioValue: {
+    fontSize: 32,
+    fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 6,
-  },
-  summaryGainRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
     marginBottom: 16,
   },
-  summaryGain: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  summaryDivider: {
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    marginBottom: 16,
-  },
-  summaryRow: {
+  portfolioStatsRow: {
     flexDirection: 'row',
   },
-  summaryCol: {
+  portfolioStat: {
     flex: 1,
   },
-  summaryColDivider: {
-    width: 1,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    marginHorizontal: 16,
+  portfolioStatLabel: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.65)',
+    marginBottom: 2,
   },
-  summaryColLabel: {
-    fontSize: 11,
-    color: '#94A3B8',
-    marginBottom: 3,
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-  },
-  summaryColValue: {
-    fontSize: 16,
+  portfolioStatValue: {
+    fontSize: 13,
     fontWeight: '700',
     color: '#FFFFFF',
   },
-  actionsContainer: {
-    flexDirection: 'row',
-    gap: 12,
+
+  // Tab switcher
+  tabWrapper: {
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 4,
   },
-  depositButton: {
-    flex: 1,
+  tabRow: {
     flexDirection: 'row',
-    backgroundColor: '#3B82F6',
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#3B82F6',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.25,
-        shadowRadius: 6,
-      },
-      android: { elevation: 3 },
-    }),
-  },
-  depositButtonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  withdrawButton: {
-    flex: 1,
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#3B82F6',
-  },
-  withdrawButtonText: {
-    color: '#3B82F6',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  sectionHeader: {
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 8,
-  },
-  sectionHeaderTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
-  sectionHeaderSub: {
-    fontSize: 12,
-    color: '#94A3B8',
-    marginTop: 2,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 16,
-    marginBottom: 8,
+    height: 48,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     overflow: 'hidden',
-    ...cardShadow,
   },
-  vaultRow: {
+  tabBtn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  tabBtnLeft: {
+    borderTopLeftRadius: 10,
+    borderBottomLeftRadius: 10,
+  },
+  tabBtnRight: {
+    borderTopRightRadius: 10,
+    borderBottomRightRadius: 10,
+    borderLeftWidth: 1,
+    borderLeftColor: '#E2E8F0',
+  },
+  tabBtnActive: {
+    backgroundColor: PRIMARY,
+  },
+  tabBtnText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  tabBtnTextActive: {
+    color: '#FFFFFF',
+  },
+
+  // Section title
+  sectionTitleWrapper: {
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 10,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+
+  // Allocation card
+  allocationCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 14,
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
+    marginBottom: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 16,
+    ...cardShadow,
   },
-  vaultLeft: {
+  allocationLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
     flex: 1,
-    marginRight: 12,
   },
-  vaultName: {
+  logoChip: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: PRIMARY,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoChipText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  allocationName: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#0F172A',
-    marginBottom: 3,
-  },
-  vaultAllocation: {
-    fontSize: 12,
-    color: '#94A3B8',
-  },
-  vaultRight: {
-    alignItems: 'flex-end',
-  },
-  vaultCurrentValue: {
-    fontSize: 15,
     fontWeight: '700',
     color: '#0F172A',
     marginBottom: 2,
   },
-  vaultGain: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  epochRow: {
-    padding: 14,
-  },
-  epochHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  epochDates: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#0F172A',
-  },
-  epochNetProfit: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  epochDetails: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 4,
-  },
-  epochDetail: {
+  allocationWinRate: {
     fontSize: 12,
     color: '#64748B',
   },
-  epochDetailSep: {
-    fontSize: 12,
-    color: '#CBD5E1',
+  allocationRight: {
+    alignItems: 'flex-end',
   },
-  epochDetailBold: {
-    fontWeight: '600',
+  allocationValue: {
+    fontSize: 14,
+    fontWeight: '700',
     color: '#0F172A',
+    marginBottom: 2,
   },
+  allocationGain: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  // Epoch card
+  epochCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
+    marginBottom: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 16,
+    ...cardShadow,
+  },
+  epochLeft: {
+    flex: 1,
+    marginRight: 12,
+  },
+  epochMonth: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 3,
+  },
+  epochRange: {
+    fontSize: 12,
+    color: '#64748B',
+  },
+  epochRight: {
+    alignItems: 'flex-end',
+  },
+  epochProfit: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  epochPlatformCut: {
+    fontSize: 11,
+    color: '#94A3B8',
+  },
+
+  // Empty
   emptyRow: {
     padding: 20,
     alignItems: 'center',

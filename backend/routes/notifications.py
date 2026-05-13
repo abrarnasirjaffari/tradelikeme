@@ -5,17 +5,13 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from backend.auth import CurrentUser, require_auth
+from backend.limiter import limiter
 from backend.models.base import get_db
 from backend.models.notification_config import NotificationConfig
 from backend.models.user import User
 from trading_agent.channels.telegram import send_telegram
 
 router = APIRouter(tags=["notifications"])
-
-
-def _get_limiter():
-    from backend.main import limiter
-    return limiter
 
 
 class NotificationConfigOut(BaseModel):
@@ -107,7 +103,7 @@ def update_notification_config(
 
 
 @router.post("/notifications/test", status_code=200)
-@_get_limiter().limit("10/minute")
+@limiter.limit("10/minute")
 async def test_notification(
     request: Request,
     user_id: UUID,

@@ -1,12 +1,13 @@
 import { useEffect } from 'react';
 import {
   View,
+  Text,
   StyleSheet,
   StatusBar,
+  TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Button } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/store/authStore';
 
@@ -32,185 +33,178 @@ export default function SplashScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-        <ActivityIndicator size="large" color="#3B82F6" />
+        <StatusBar barStyle="light-content" backgroundColor="#1D4ED8" />
+        <ActivityIndicator size="large" color="#FFFFFF" />
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <View style={styles.outerContainer}>
+      <StatusBar barStyle="light-content" backgroundColor="#1D4ED8" />
 
-      <View style={styles.heroSection}>
-        <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>Trade</Text>
-          <Text style={styles.logoAccent}>LikeMe</Text>
+      {/* Blue hero area */}
+      <SafeAreaView style={styles.heroArea} edges={['top']}>
+        {/* Logo box */}
+        <View style={styles.logoBox}>
+          <Text style={styles.logoBoxText}>TL</Text>
         </View>
-        <Text style={styles.tagline}>89% win rate. Verified. Automated.</Text>
-        <Text style={styles.subTagline}>
-          Copy a proven trading strategy. Earn while you sleep.
+
+        {/* App name */}
+        <Text style={styles.appName}>TradeLikeMe</Text>
+
+        {/* Subtitle */}
+        <Text style={styles.subtitle}>
+          Verified strategies. Automated profits.
         </Text>
-      </View>
 
-      <View style={styles.statsRow}>
-        <View style={styles.stat}>
-          <Text style={styles.statValue}>89%</Text>
-          <Text style={styles.statLabel}>Win Rate</Text>
+        {/* Badge pills */}
+        <View style={styles.badgeRow}>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>89% Win Rate</Text>
+          </View>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>Trustless</Text>
+          </View>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>200x</Text>
+          </View>
         </View>
-        <View style={styles.statDivider} />
-        <View style={styles.stat}>
-          <Text style={styles.statValue}>200x</Text>
-          <Text style={styles.statLabel}>Max Leverage</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.stat}>
-          <Text style={styles.statValue}>24/7</Text>
-          <Text style={styles.statLabel}>Auto Trading</Text>
-        </View>
-      </View>
+      </SafeAreaView>
 
-      <View style={styles.buttonSection}>
-        <Button
-          mode="contained"
-          onPress={() => router.push('/(auth)/signup' as never)}
+      {/* White bottom sheet */}
+      <SafeAreaView style={styles.bottomSheet} edges={['bottom']}>
+        <TouchableOpacity
           style={styles.primaryButton}
-          contentStyle={styles.buttonContent}
-          labelStyle={styles.primaryButtonLabel}
+          onPress={() => router.push('/onboarding' as never)}
+          activeOpacity={0.85}
         >
-          Get Started
-        </Button>
-        <Button
-          mode="outlined"
-          onPress={() => router.push('/(auth)/login' as never)}
-          style={styles.outlinedButton}
-          contentStyle={styles.buttonContent}
-          labelStyle={styles.outlinedButtonLabel}
-        >
-          Log In
-        </Button>
-      </View>
+          <Text style={styles.primaryButtonText}>Get Started</Text>
+        </TouchableOpacity>
 
-      <Text style={styles.disclaimer}>
-        Trading involves risk. Past performance does not guarantee future results.
-      </Text>
-    </SafeAreaView>
+        <TouchableOpacity
+          style={styles.ghostButton}
+          onPress={() => router.push('/(auth)/login' as never)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.ghostButtonText}>Log In</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.footerText}>
+          Your funds. Your gains. 20% profit share only.
+        </Text>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1D4ED8',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  container: {
+  outerContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1D4ED8',
+  },
+  heroArea: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: 24,
-    justifyContent: 'space-between',
-    paddingBottom: 24,
+    paddingBottom: 40,
   },
-  heroSection: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 48,
-  },
-  logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    marginBottom: 16,
-  },
-  logoText: {
-    fontSize: 40,
-    fontWeight: '800',
-    color: '#0F172A',
-    letterSpacing: -1,
-  },
-  logoAccent: {
-    fontSize: 40,
-    fontWeight: '800',
-    color: '#3B82F6',
-    letterSpacing: -1,
-  },
-  tagline: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#0F172A',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  subTagline: {
-    fontSize: 15,
-    color: '#64748B',
-    textAlign: 'center',
-    lineHeight: 22,
-    paddingHorizontal: 16,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F8FAFC',
+  logoBox: {
+    width: 60,
+    height: 60,
     borderRadius: 16,
-    paddingVertical: 20,
-    paddingHorizontal: 16,
-    marginBottom: 32,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  stat: {
-    flex: 1,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
   },
-  statValue: {
-    fontSize: 22,
+  logoBoxText: {
+    fontSize: 24,
     fontWeight: '700',
-    color: '#3B82F6',
+    color: '#1D4ED8',
+    fontFamily: 'Inter',
   },
-  statLabel: {
-    fontSize: 12,
-    color: '#64748B',
-    marginTop: 4,
-    fontWeight: '500',
+  appName: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    fontFamily: 'Inter',
+    marginBottom: 10,
+    letterSpacing: -0.5,
   },
-  statDivider: {
-    width: 1,
-    height: 32,
-    backgroundColor: '#E2E8F0',
+  subtitle: {
+    fontSize: 15,
+    color: 'rgba(255, 255, 255, 0.9)',
+    textAlign: 'center',
+    marginBottom: 28,
+    lineHeight: 22,
+    fontFamily: 'Inter',
   },
-  buttonSection: {
-    gap: 12,
-    marginBottom: 16,
+  badgeRow: {
+    flexDirection: 'row',
+    gap: 10,
   },
-  primaryButton: {
-    borderRadius: 12,
-    backgroundColor: '#3B82F6',
-  },
-  outlinedButton: {
-    borderRadius: 12,
-    borderColor: '#3B82F6',
-    borderWidth: 1.5,
-  },
-  buttonContent: {
+  badge: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingHorizontal: 14,
     paddingVertical: 6,
   },
-  primaryButtonLabel: {
+  badgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#1D4ED8',
+    fontFamily: 'Inter',
+  },
+  bottomSheet: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingHorizontal: 24,
+    paddingTop: 32,
+    paddingBottom: 16,
+  },
+  primaryButton: {
+    backgroundColor: '#1D4ED8',
+    borderRadius: 28,
+    height: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  primaryButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
+    fontFamily: 'Inter',
   },
-  outlinedButtonLabel: {
+  ghostButton: {
+    borderRadius: 28,
+    height: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#1D4ED8',
+    marginBottom: 20,
+  },
+  ghostButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#3B82F6',
+    color: '#1D4ED8',
+    fontFamily: 'Inter',
   },
-  disclaimer: {
-    fontSize: 11,
+  footerText: {
+    fontSize: 12,
     color: '#94A3B8',
     textAlign: 'center',
-    lineHeight: 16,
+    lineHeight: 18,
+    fontFamily: 'Inter',
   },
 });

@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from backend.auth import CurrentUser, require_auth
+from backend.limiter import limiter
 from backend.models.base import get_db
 from backend.models.subscription import Subscription
 from backend.models.user import User
@@ -30,12 +31,6 @@ from trading_agent.exchanges.solana.anchor_vault_client import (
 )
 
 logger = logging.getLogger(__name__)
-
-# Import the shared limiter from main (deferred to avoid circular import)
-def _get_limiter():
-    from backend.main import limiter
-    return limiter
-
 router = APIRouter(tags=["vaults"])
 
 # One shared client — RPC connection is managed internally by AsyncClient.
@@ -155,7 +150,7 @@ def list_user_vaults(
 # ── Deposit ────────────────────────────────────────────────────────────────────
 
 @router.post("/vaults/{subscription_id}/deposit", response_model=DepositTxResponse)
-@_get_limiter().limit("10/minute")
+@limiter.limit("10/minute")
 async def deposit(
     request: Request,
     subscription_id: UUID,
@@ -232,7 +227,7 @@ def confirm_deposit(
 # ── Withdraw ───────────────────────────────────────────────────────────────────
 
 @router.post("/vaults/{subscription_id}/withdraw", response_model=WithdrawTxResponse)
-@_get_limiter().limit("10/minute")
+@limiter.limit("10/minute")
 async def withdraw(
     request: Request,
     subscription_id: UUID,

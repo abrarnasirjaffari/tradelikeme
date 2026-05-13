@@ -6,10 +6,10 @@ import {
   FlatList,
   TouchableOpacity,
   RefreshControl,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useTradesStore } from '@/store/tradesStore';
 import { useAuthStore } from '@/store/authStore';
 import { getPositions, getTrades, closeTrade } from '@/api/trades';
@@ -53,15 +53,16 @@ function PositionCardSkeleton() {
   return (
     <View style={styles.positionCard}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 }}>
-        <SkeletonBlock width={80} height={20} />
+        <SkeletonBlock width={120} height={20} />
         <SkeletonBlock width={60} height={20} />
       </View>
       <SkeletonBlock width="100%" height={1} style={{ marginBottom: 12 }} />
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        <SkeletonBlock width={70} height={16} />
-        <SkeletonBlock width={70} height={16} />
-        <SkeletonBlock width={70} height={16} />
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 }}>
+        <SkeletonBlock width={70} height={32} />
+        <SkeletonBlock width={70} height={32} />
+        <SkeletonBlock width={70} height={32} />
       </View>
+      <SkeletonBlock width="100%" height={40} style={{ borderRadius: 8 }} />
     </View>
   );
 }
@@ -69,13 +70,15 @@ function PositionCardSkeleton() {
 function TradeRowSkeleton() {
   return (
     <View style={styles.skeletonRow}>
-      <View style={{ flex: 1, gap: 6 }}>
-        <SkeletonBlock width={120} height={14} />
-        <SkeletonBlock width={160} height={12} />
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
+        <SkeletonBlock width={40} height={40} style={{ borderRadius: 20 }} />
+        <View style={{ gap: 6, flex: 1 }}>
+          <SkeletonBlock width={120} height={14} />
+          <SkeletonBlock width={160} height={12} />
+        </View>
       </View>
       <View style={{ alignItems: 'flex-end', gap: 6 }}>
         <SkeletonBlock width={60} height={14} />
-        <SkeletonBlock width={80} height={12} />
       </View>
     </View>
   );
@@ -90,62 +93,57 @@ function PositionCard({ position, onClose }: PositionCardProps) {
   const isLong = position.direction === 'LONG';
   const isPnlPositive = position.unrealisedPnl >= 0;
 
+  const handlePress = () => {
+    router.push(`/trade/${position.id}` as any);
+  };
+
   return (
-    <TouchableOpacity style={styles.positionCard} onPress={() => onClose(position)} activeOpacity={0.8}>
+    <TouchableOpacity style={styles.positionCard} onPress={handlePress} activeOpacity={0.85}>
+      {/* Card header: symbol chip + pair label left, direction badge right */}
       <View style={styles.positionCardHeader}>
         <View style={styles.positionSymbolRow}>
-          <Text style={styles.positionSymbol}>{position.symbol}</Text>
-          <View style={[styles.directionBadge, isLong ? styles.longBadge : styles.shortBadge]}>
-            <Text style={styles.directionText}>{position.direction}</Text>
+          <View style={styles.symbolChip}>
+            <Text style={styles.symbolChipText}>{position.symbol}</Text>
           </View>
+          <Text style={styles.pairLabel}>{position.symbol}/USDT · 200x</Text>
         </View>
-        <View style={styles.positionPnlBox}>
-          <Text style={[styles.positionPnl, isPnlPositive ? styles.pnlPositive : styles.pnlNegative]}>
-            {formatPnl(position.unrealisedPnl)}
-          </Text>
-          <Ionicons
-            name={isPnlPositive ? 'trending-up' : 'trending-down'}
-            size={14}
-            color={isPnlPositive ? '#22C55E' : '#EF4444'}
-          />
+        <View style={[styles.directionBadge, isLong ? styles.longBadge : styles.shortBadge]}>
+          <Text style={styles.directionText}>{position.direction}</Text>
         </View>
       </View>
 
-      <View style={styles.divider} />
-
+      {/* 3-column row: Entry / Current / Unrealised P&L */}
       <View style={styles.positionDetails}>
         <View style={styles.detailCol}>
           <Text style={styles.detailLabel}>Entry</Text>
           <Text style={styles.detailValue}>${formatPrice(position.entryPrice)}</Text>
         </View>
-        <View style={styles.detailCol}>
+        <View style={[styles.detailCol, styles.detailColCenter]}>
           <Text style={styles.detailLabel}>Current</Text>
           <Text style={styles.detailValue}>${formatPrice(position.currentPrice)}</Text>
         </View>
-        <View style={styles.detailCol}>
-          <Text style={styles.detailLabel}>Qty</Text>
-          <Text style={styles.detailValue}>{position.qty}</Text>
+        <View style={[styles.detailCol, styles.detailColRight]}>
+          <Text style={styles.detailLabel}>Unrealised P&L</Text>
+          <Text style={[styles.detailValueBold, isPnlPositive ? styles.pnlPositive : styles.pnlNegative]}>
+            {formatPnl(position.unrealisedPnl)}
+          </Text>
         </View>
       </View>
 
+      {/* TP/SL levels strip */}
       <View style={styles.positionLevels}>
-        <View style={styles.levelItem}>
-          <Text style={styles.levelLabel}>TP1</Text>
-          <Text style={[styles.levelValue, styles.tpColor]}>${formatPrice(position.tp1)}</Text>
-        </View>
-        <View style={styles.levelItem}>
-          <Text style={styles.levelLabel}>TP2</Text>
-          <Text style={[styles.levelValue, styles.tpColor]}>${formatPrice(position.tp2)}</Text>
-        </View>
-        <View style={styles.levelItem}>
-          <Text style={styles.levelLabel}>SL</Text>
-          <Text style={[styles.levelValue, styles.slColor]}>${formatPrice(position.sl)}</Text>
-        </View>
+        <Text style={[styles.levelInline, styles.tpColor]}>
+          TP1 ${formatPrice(position.tp1)}
+        </Text>
+        <View style={styles.levelDivider} />
+        <Text style={[styles.levelInline, styles.tpColor]}>
+          TP2 ${formatPrice(position.tp2)}
+        </Text>
+        <View style={styles.levelDivider} />
+        <Text style={[styles.levelInline, styles.slColor]}>
+          SL ${formatPrice(position.sl)}
+        </Text>
       </View>
-
-      <TouchableOpacity style={styles.closeBtn} onPress={() => onClose(position)}>
-        <Text style={styles.closeBtnText}>Close Position</Text>
-      </TouchableOpacity>
     </TouchableOpacity>
   );
 }
@@ -316,10 +314,20 @@ export default function TradesScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Header row: title left, LIVE badge right (shown on active tab) */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Trades</Text>
+        <Text style={styles.headerTitle}>
+          {activeTab === 'active' ? 'Active Trades' : 'Trade History'}
+        </Text>
+        {activeTab === 'active' && (
+          <View style={styles.liveBadge}>
+            <View style={styles.liveDot} />
+            <Text style={styles.liveText}>LIVE</Text>
+          </View>
+        )}
       </View>
 
+      {/* Tab switcher pills */}
       <View style={styles.segmented}>
         <TouchableOpacity
           style={[styles.segmentBtn, activeTab === 'active' && styles.segmentBtnActive]}
@@ -366,7 +374,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
+  // Header
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 16,
     backgroundColor: '#FFFFFF',
@@ -378,11 +390,35 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#0F172A',
   },
+  // LIVE badge
+  liveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#DCFCE7',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    gap: 5,
+  },
+  liveDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: '#16A34A',
+  },
+  liveText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#16A34A',
+    letterSpacing: 0.5,
+  },
+  // Tab switcher pills
   segmented: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 16,
     paddingBottom: 12,
+    paddingTop: 10,
     gap: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
@@ -443,7 +479,7 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
   },
@@ -451,25 +487,37 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   positionSymbolRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  positionSymbol: {
-    fontSize: 18,
+  // Coin symbol chip — gray bg, rounded 6, bold 12px
+  symbolChip: {
+    backgroundColor: '#F1F5F9',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  symbolChipText: {
+    fontSize: 12,
     fontWeight: '700',
-    color: '#0F172A',
+    color: '#334155',
+  },
+  pairLabel: {
+    fontSize: 13,
+    color: '#94A3B8',
+    fontWeight: '500',
   },
   directionBadge: {
     paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 12,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   longBadge: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#1D4ED8',
   },
   shortBadge: {
     backgroundColor: '#F59E0B',
@@ -480,33 +528,26 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     letterSpacing: 0.5,
   },
-  positionPnlBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  positionPnl: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
   pnlPositive: {
     color: '#22C55E',
   },
   pnlNegative: {
     color: '#EF4444',
   },
-  divider: {
-    height: 1,
-    backgroundColor: '#E2E8F0',
-    marginBottom: 12,
-  },
+  // 3-column details row
   positionDetails: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 12,
   },
   detailCol: {
-    gap: 2,
+    gap: 3,
+  },
+  detailColCenter: {
+    alignItems: 'center',
+  },
+  detailColRight: {
+    alignItems: 'flex-end',
   },
   detailLabel: {
     fontSize: 11,
@@ -514,33 +555,34 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   detailValue: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '700',
     color: '#0F172A',
   },
+  detailValueBold: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  // TP/SL levels inline strip
   positionLevels: {
     flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#F8FAFC',
     borderRadius: 8,
-    padding: 10,
-    marginBottom: 12,
-    gap: 0,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    gap: 6,
   },
-  levelItem: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 2,
-  },
-  levelLabel: {
-    fontSize: 10,
-    color: '#94A3B8',
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  levelValue: {
+  levelInline: {
     fontSize: 12,
     fontWeight: '600',
+    flex: 1,
+    textAlign: 'center',
+  },
+  levelDivider: {
+    width: 1,
+    height: 14,
+    backgroundColor: '#E2E8F0',
   },
   tpColor: {
     color: '#22C55E',
@@ -548,37 +590,24 @@ const styles = StyleSheet.create({
   slColor: {
     color: '#EF4444',
   },
-  closeBtn: {
-    height: 40,
-    borderRadius: 8,
-    borderWidth: 1.5,
-    borderColor: '#EF4444',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  closeBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#EF4444',
-  },
-  // History filter
+  // History filter pills
   filterRow: {
     flexDirection: 'row',
     paddingHorizontal: 16,
     paddingVertical: 12,
     gap: 8,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
   },
   filterChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 7,
     borderRadius: 20,
     backgroundColor: '#F1F5F9',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
   },
   filterChipActive: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#3B82F6',
+    backgroundColor: '#3B82F6',
   },
   filterChipText: {
     fontSize: 13,
@@ -586,7 +615,7 @@ const styles = StyleSheet.create({
     color: '#64748B',
   },
   filterChipTextActive: {
-    color: '#3B82F6',
+    color: '#FFFFFF',
   },
   // Skeleton
   skeletonRow: {

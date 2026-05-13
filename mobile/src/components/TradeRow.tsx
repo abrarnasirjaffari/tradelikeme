@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import type { Trade } from '@/types/api';
 
 interface TradeRowProps {
@@ -29,7 +30,6 @@ function formatDate(dateStr: string): string {
     return new Date(dateStr).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
-      year: 'numeric',
     });
   } catch {
     return dateStr;
@@ -40,38 +40,36 @@ export default function TradeRow({ trade }: TradeRowProps) {
   const isLong = trade.direction === 'LONG';
   const isPnlPositive = trade.pnl >= 0;
 
+  // Circle color: green for long wins, red for short or loss
+  const isWin = trade.status === 'WIN';
+  const circleColor = isLong && isWin ? '#22C55E' : '#EF4444';
+  const iconName: 'arrow-up-outline' | 'arrow-down-outline' =
+    isLong ? 'arrow-up-outline' : 'arrow-down-outline';
+
   return (
     <View style={styles.row}>
+      {/* Left: colored circle icon + text stack */}
       <View style={styles.leftSection}>
-        <View style={styles.symbolRow}>
-          <Text style={styles.symbol}>{trade.symbol}</Text>
-          <View
-            style={[
-              styles.directionBadge,
-              isLong ? styles.longBadge : styles.shortBadge,
-            ]}
-          >
-            <Text style={styles.directionText}>{trade.direction}</Text>
-          </View>
+        {/* Colored circle */}
+        <View style={[styles.iconCircle, { backgroundColor: circleColor + '1A' }]}>
+          <Ionicons name={iconName} size={18} color={circleColor} />
         </View>
-        <View style={styles.priceRow}>
-          <Text style={styles.priceText}>${formatPrice(trade.entryPrice)}</Text>
-          <Text style={styles.priceArrow}>→</Text>
-          <Text style={styles.priceText}>${formatPrice(trade.exitPrice)}</Text>
+
+        {/* Text column */}
+        <View style={styles.textStack}>
+          <Text style={styles.symbol}>
+            {trade.symbol} {trade.direction}
+          </Text>
+          <Text style={styles.subline}>
+            ${formatPrice(trade.entryPrice)} → ${formatPrice(trade.exitPrice)} · {formatDate(trade.closedAt)}
+          </Text>
         </View>
       </View>
 
-      <View style={styles.rightSection}>
-        <Text
-          style={[
-            styles.pnl,
-            isPnlPositive ? styles.pnlPositive : styles.pnlNegative,
-          ]}
-        >
-          {formatPnl(trade.pnl)}
-        </Text>
-        <Text style={styles.date}>{formatDate(trade.closedAt)}</Text>
-      </View>
+      {/* Right: P&L */}
+      <Text style={[styles.pnl, isPnlPositive ? styles.pnlPositive : styles.pnlNegative]}>
+        {formatPnl(trade.pnl)}
+      </Text>
     </View>
   );
 }
@@ -83,70 +81,47 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
   },
   leftSection: {
     flex: 1,
-    gap: 4,
-  },
-  symbolRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
+  },
+  // Colored circle with transparent background
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  textStack: {
+    flex: 1,
+    gap: 3,
   },
   symbol: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#0F172A',
   },
-  directionBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-  },
-  longBadge: {
-    backgroundColor: '#3B82F6',
-  },
-  shortBadge: {
-    backgroundColor: '#F59E0B',
-  },
-  directionText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    letterSpacing: 0.5,
-  },
-  priceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  priceText: {
-    fontSize: 12,
-    color: '#64748B',
-  },
-  priceArrow: {
-    fontSize: 12,
+  subline: {
+    fontSize: 13,
     color: '#94A3B8',
-  },
-  rightSection: {
-    alignItems: 'flex-end',
-    gap: 4,
+    fontWeight: '400',
   },
   pnl: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
+    marginLeft: 8,
   },
   pnlPositive: {
     color: '#22C55E',
   },
   pnlNegative: {
     color: '#EF4444',
-  },
-  date: {
-    fontSize: 11,
-    color: '#94A3B8',
   },
 });

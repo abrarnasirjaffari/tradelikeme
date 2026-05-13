@@ -39,13 +39,30 @@ export default function RootLayout() {
             name="strategy/[id]"
             options={{ title: 'Strategy Details', headerBackTitle: 'Back' }}
           />
-          <Stack.Screen
-            name="settings"
-            options={{ title: 'Settings', headerBackTitle: 'Back' }}
-          />
+          <Stack.Screen name="onboarding" options={{ headerShown: false }} />
           <Stack.Screen
             name="notification"
-            options={{ title: 'Notification', headerBackTitle: 'Back' }}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="notifications"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="referral"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="trade/[id]"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="leaderboard"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="deposit"
+            options={{ headerShown: false }}
           />
         </Stack>
       </PaperProvider>

@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { getStrategy, subscribe } from '@/api/strategies';
 import type { Strategy, StrategyTier, RiskMode } from '@/types/api';
 
@@ -43,34 +42,19 @@ const RISK_MODES: { value: RiskMode; label: string; desc: string; color: string 
   },
 ];
 
-interface StatRowProps {
-  label: string;
-  value: string;
-  highlight?: boolean;
-}
+const RISK_PARAMS = [
+  { label: 'Leverage', value: '200x Cross' },
+  { label: 'Margin per trade', value: '0.5%' },
+  { label: 'Max concurrent', value: '2 positions' },
+  { label: 'Stop Loss', value: 'Structural (body-close)' },
+  { label: 'Timeframes', value: '7 TFs (1M → 15M)' },
+];
 
-function StatRow({ label, value, highlight }: StatRowProps) {
-  return (
-    <View style={styles.statRow}>
-      <Text style={styles.statRowLabel}>{label}</Text>
-      <Text style={[styles.statRowValue, highlight && styles.statRowValueHighlight]}>
-        {value}
-      </Text>
-    </View>
-  );
-}
-
-function formatDate(dateStr: string): string {
-  try {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  } catch {
-    return dateStr;
-  }
-}
+const RECENT_TRADES = [
+  { label: 'SOL LONG · Apr 14', pnl: '+$42.10', positive: true },
+  { label: 'BTC LONG · Apr 18', pnl: '+$88.20', positive: true },
+  { label: 'XRP SHORT · Apr 16', pnl: '-$0.96', positive: false },
+];
 
 export default function StrategyDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -110,9 +94,9 @@ export default function StrategyDetailScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={['bottom']}>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#3B82F6" />
+          <ActivityIndicator size="large" color="#1D4ED8" />
           <Text style={styles.loadingText}>Loading strategy...</Text>
         </View>
       </SafeAreaView>
@@ -121,11 +105,11 @@ export default function StrategyDetailScreen() {
 
   if (!strategy) {
     return (
-      <SafeAreaView style={styles.container} edges={['bottom']}>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <View style={styles.loadingContainer}>
           <Text style={styles.errorText}>Strategy not found.</Text>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Text style={styles.backButtonText}>Go Back</Text>
+          <TouchableOpacity onPress={() => router.back()} style={styles.goBackButton}>
+            <Text style={styles.goBackButtonText}>Go Back</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -133,70 +117,81 @@ export default function StrategyDetailScreen() {
   }
 
   const tierColors = TIER_COLORS[strategy.tier];
+  const tierLabel = `${strategy.tier}-TIER`;
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      {/* Header nav */}
+      <View style={styles.navBar}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
+          <Text style={styles.backArrow}>←</Text>
+          <Text style={styles.navTitle}>Strategy Detail</Text>
+        </TouchableOpacity>
+        {strategy.isVerified && (
+          <View style={styles.verifiedBadge}>
+            <Text style={styles.verifiedText}>✓ Verified</Text>
+          </View>
+        )}
+      </View>
+
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Blue hero card */}
         <View style={styles.heroCard}>
-          <View style={styles.heroHeader}>
-            <View style={styles.heroLeft}>
-              <Text style={styles.heroName}>{strategy.name}</Text>
-              <View style={styles.heroBadges}>
-                <View style={[styles.tierBadge, { backgroundColor: tierColors.bg }]}>
-                  <Text style={[styles.tierText, { color: tierColors.text }]}>
-                    {strategy.tier}-Tier
-                  </Text>
+          <Text style={styles.heroName}>{strategy.name}</Text>
+          <Text style={styles.heroSub}>
+            by {strategy.traderName} · {tierLabel}
+          </Text>
+          <View style={styles.heroStats}>
+            <View style={styles.heroStatItem}>
+              <Text style={styles.heroStatLabel}>Win Rate</Text>
+              <Text style={styles.heroStatValue}>{strategy.winRate}%</Text>
+            </View>
+            <View style={styles.heroStatItem}>
+              <Text style={styles.heroStatLabel}>Monthly</Text>
+              <Text style={styles.heroStatValue}>{strategy.monthlyReturn}%</Text>
+            </View>
+            <View style={styles.heroStatItem}>
+              <Text style={styles.heroStatLabel}>Trades</Text>
+              <Text style={styles.heroStatValue}>{strategy.totalTrades}</Text>
+            </View>
+            <View style={styles.heroStatItem}>
+              <Text style={styles.heroStatLabel}>Profit</Text>
+              <Text style={styles.heroStatValue}>$2.8k</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Performance section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Performance</Text>
+          <View style={styles.card}>
+            <View style={styles.equityPlaceholder}>
+              <Text style={styles.equityPlaceholderText}>↑ Equity Curve (coming soon)</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Risk Parameters section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Risk Parameters</Text>
+          <View style={styles.card}>
+            {RISK_PARAMS.map((param, index) => (
+              <React.Fragment key={param.label}>
+                <View style={styles.paramRow}>
+                  <Text style={styles.paramLabel}>{param.label}</Text>
+                  <Text style={styles.paramValue}>{param.value}</Text>
                 </View>
-                {strategy.isVerified && (
-                  <View style={styles.verifiedBadge}>
-                    <Ionicons name="shield-checkmark" size={13} color="#1D4ED8" />
-                    <Text style={styles.verifiedText}>Verified</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-            <View style={styles.heroRight}>
-              <Text style={styles.heroWinRate}>{strategy.winRate}%</Text>
-              <Text style={styles.heroWinRateLabel}>Win Rate</Text>
-            </View>
-          </View>
-          <Text style={styles.heroTrader}>by {strategy.traderName}</Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Performance Stats</Text>
-          <View style={styles.statsCard}>
-            <StatRow
-              label="Win Rate"
-              value={`${strategy.winRate}%`}
-              highlight={strategy.winRate >= 80}
-            />
-            <View style={styles.statsDivider} />
-            <StatRow
-              label="Monthly Return"
-              value={`+${strategy.monthlyReturn}%`}
-              highlight
-            />
-            <View style={styles.statsDivider} />
-            <StatRow label="Platform Fee" value={`${strategy.feePercent}% of profit`} />
-            <View style={styles.statsDivider} />
-            <StatRow label="Total Trades" value={strategy.totalTrades.toString()} />
-            <View style={styles.statsDivider} />
-            <StatRow label="Active Since" value={formatDate(strategy.openSince)} />
+                {index < RISK_PARAMS.length - 1 && <View style={styles.rowDivider} />}
+              </React.Fragment>
+            ))}
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Rules Summary</Text>
-          <View style={styles.rulesCard}>
-            <Text style={styles.rulesText}>{strategy.rulesText}</Text>
-          </View>
-        </View>
-
+        {/* Select Risk Mode */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Select Risk Mode</Text>
           <Text style={styles.sectionSubtitle}>
@@ -221,7 +216,7 @@ export default function StrategyDetailScreen() {
                   <View style={styles.riskModeHeader}>
                     <View
                       style={[
-                        styles.riskModeIndicator,
+                        styles.riskModeDot,
                         { backgroundColor: isSelected ? mode.color : '#E2E8F0' },
                       ]}
                     />
@@ -234,12 +229,7 @@ export default function StrategyDetailScreen() {
                       {mode.label}
                     </Text>
                     {isSelected && (
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={18}
-                        color={mode.color}
-                        style={styles.riskModeCheck}
-                      />
+                      <Text style={[styles.riskModeCheck, { color: mode.color }]}>✓</Text>
                     )}
                   </View>
                   <Text style={styles.riskModeDesc}>{mode.desc}</Text>
@@ -249,39 +239,48 @@ export default function StrategyDetailScreen() {
           </View>
         </View>
 
-        <View style={styles.subscribeSection}>
-          <TouchableOpacity
-            style={[
-              styles.subscribeButton,
-              (subscribing || subscribed) && styles.subscribeButtonDisabled,
-            ]}
-            onPress={handleSubscribe}
-            disabled={subscribing || subscribed}
-            activeOpacity={0.85}
-          >
-            {subscribing ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <>
-                <Ionicons
-                  name={subscribed ? 'checkmark-circle' : 'flash'}
-                  size={18}
-                  color="#FFFFFF"
-                  style={{ marginRight: 8 }}
-                />
-                <Text style={styles.subscribeButtonText}>
-                  {subscribed ? 'Subscribed' : 'Subscribe Now'}
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
-
-          <Text style={styles.subscribeDisclaimer}>
-            You keep 80% of all profits. {strategy.feePercent}% platform fee applies only on
-            gains.
-          </Text>
+        {/* Recent Trades */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Recent Trades</Text>
+          <View style={styles.card}>
+            {RECENT_TRADES.map((trade, index) => (
+              <React.Fragment key={trade.label}>
+                <View style={styles.tradeRow}>
+                  <Text style={styles.tradeLabel}>{trade.label}</Text>
+                  <Text style={[styles.tradePnl, trade.positive ? styles.pnlPositive : styles.pnlNegative]}>
+                    {trade.pnl}
+                  </Text>
+                </View>
+                {index < RECENT_TRADES.length - 1 && <View style={styles.rowDivider} />}
+              </React.Fragment>
+            ))}
+          </View>
         </View>
+
+        {/* Bottom spacing for fixed button */}
+        <View style={{ height: 24 }} />
       </ScrollView>
+
+      {/* Fixed subscribe button */}
+      <View style={styles.bottomBar}>
+        <TouchableOpacity
+          style={[
+            styles.subscribeButton,
+            (subscribing || subscribed) && styles.subscribeButtonDisabled,
+          ]}
+          onPress={handleSubscribe}
+          disabled={subscribing || subscribed}
+          activeOpacity={0.85}
+        >
+          {subscribing ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Text style={styles.subscribeButtonText}>
+              {subscribed ? 'Subscribed ✓' : `Subscribe · ${strategy.feePercent}% Profit Share`}
+            </Text>
+          )}
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
@@ -295,7 +294,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 32,
+    paddingBottom: 16,
   },
   loadingContainer: {
     flex: 1,
@@ -311,109 +310,121 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#64748B',
   },
-  backButton: {
+  goBackButton: {
     marginTop: 8,
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#1D4ED8',
     borderRadius: 8,
   },
-  backButtonText: {
+  goBackButtonText: {
     color: '#FFFFFF',
     fontWeight: '600',
     fontSize: 14,
   },
-  heroCard: {
-    backgroundColor: '#0F172A',
-    padding: 20,
-    marginBottom: 0,
-  },
-  heroHeader: {
+  // Nav bar
+  navBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 8,
-  },
-  heroLeft: {
-    flex: 1,
-    marginRight: 12,
-  },
-  heroName: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    marginBottom: 8,
-  },
-  heroBadges: {
-    flexDirection: 'row',
-    gap: 6,
     alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 4,
+    paddingBottom: 12,
   },
-  tierBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
+  backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
-  tierText: {
-    fontSize: 12,
+  backArrow: {
+    fontSize: 18,
+    color: '#0F172A',
+    lineHeight: 22,
+  },
+  navTitle: {
+    fontSize: 16,
     fontWeight: '700',
+    color: '#0F172A',
   },
   verifiedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    backgroundColor: '#DBEAFE',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 20,
   },
   verifiedText: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#1D4ED8',
+    fontWeight: '700',
+    color: '#16A34A',
   },
-  heroRight: {
-    alignItems: 'flex-end',
+  // Hero card
+  heroCard: {
+    backgroundColor: '#1D4ED8',
+    marginHorizontal: 16,
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 20,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#1D4ED8',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 10,
+      },
+      android: { elevation: 5 },
+    }),
   },
-  heroWinRate: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: '#4ADE80',
-    lineHeight: 36,
+  heroName: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
   },
-  heroWinRateLabel: {
-    fontSize: 11,
-    color: '#94A3B8',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  heroTrader: {
+  heroSub: {
     fontSize: 13,
-    color: '#94A3B8',
-    marginTop: 4,
+    color: 'rgba(255,255,255,0.8)',
+    marginBottom: 16,
   },
+  heroStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  heroStatItem: {
+    alignItems: 'center',
+  },
+  heroStatLabel: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.7)',
+    marginBottom: 2,
+  },
+  heroStatValue: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  // Sections
   section: {
     paddingHorizontal: 16,
-    paddingTop: 20,
+    marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 15,
     fontWeight: '700',
     color: '#0F172A',
-    marginBottom: 4,
+    marginBottom: 10,
   },
   sectionSubtitle: {
     fontSize: 12,
     color: '#64748B',
-    marginBottom: 12,
+    marginBottom: 10,
+    marginTop: -4,
   },
-  statsCard: {
+  card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     overflow: 'hidden',
-    marginTop: 12,
     ...Platform.select({
       ios: {
         shadowColor: '#0F172A',
@@ -424,55 +435,41 @@ const styles = StyleSheet.create({
       android: { elevation: 1 },
     }),
   },
-  statRow: {
+  // Equity placeholder
+  equityPlaceholder: {
+    height: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  equityPlaceholderText: {
+    fontSize: 13,
+    color: '#94A3B8',
+  },
+  // Risk params
+  paramRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 13,
   },
-  statsDivider: {
-    height: 1,
-    backgroundColor: '#F1F5F9',
-    marginHorizontal: 16,
-  },
-  statRowLabel: {
+  paramLabel: {
     fontSize: 14,
     color: '#64748B',
   },
-  statRowValue: {
+  paramValue: {
     fontSize: 14,
     fontWeight: '600',
     color: '#0F172A',
   },
-  statRowValueHighlight: {
-    color: '#16A34A',
+  rowDivider: {
+    height: 1,
+    backgroundColor: '#F1F5F9',
+    marginHorizontal: 16,
   },
-  rulesCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 16,
-    marginTop: 12,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#0F172A',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-      },
-      android: { elevation: 1 },
-    }),
-  },
-  rulesText: {
-    fontSize: 14,
-    color: '#475569',
-    lineHeight: 22,
-  },
+  // Risk modes
   riskModes: {
     gap: 10,
-    marginTop: 8,
   },
   riskModeCard: {
     backgroundColor: '#FFFFFF',
@@ -486,7 +483,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 4,
   },
-  riskModeIndicator: {
+  riskModeDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
@@ -499,6 +496,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   riskModeCheck: {
+    fontSize: 15,
+    fontWeight: '700',
     marginLeft: 4,
   },
   riskModeDesc: {
@@ -506,22 +505,49 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     marginLeft: 16,
   },
-  subscribeSection: {
+  // Recent trades
+  tradeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 24,
+    paddingVertical: 13,
+  },
+  tradeLabel: {
+    fontSize: 14,
+    color: '#0F172A',
+    fontWeight: '500',
+  },
+  tradePnl: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  pnlPositive: {
+    color: '#16A34A',
+  },
+  pnlNegative: {
+    color: '#DC2626',
+  },
+  // Bottom bar
+  bottomBar: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 8,
+    backgroundColor: '#F8FAFC',
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
   },
   subscribeButton: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#1D4ED8',
     borderRadius: 12,
-    paddingVertical: 16,
+    height: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    flexDirection: 'row',
     ...Platform.select({
       ios: {
-        shadowColor: '#3B82F6',
+        shadowColor: '#1D4ED8',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
+        shadowOpacity: 0.28,
         shadowRadius: 8,
       },
       android: { elevation: 4 },
@@ -532,14 +558,7 @@ const styles = StyleSheet.create({
   },
   subscribeButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
-  },
-  subscribeDisclaimer: {
-    fontSize: 12,
-    color: '#94A3B8',
-    textAlign: 'center',
-    marginTop: 12,
-    lineHeight: 18,
   },
 });

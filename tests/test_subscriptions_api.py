@@ -55,8 +55,13 @@ def _override_get_db():
         db.close()
 
 
+# Auth user ID is set dynamically by _seed_user so ownership checks pass.
+# Falls back to a random UUID if no user has been seeded yet.
+_current_auth_user_id: str = str(uuid.uuid4())
+
+
 def _override_require_auth():
-    return CurrentUser(id="test-user-auth", email="test@test.com", role="user")
+    return CurrentUser(id=_current_auth_user_id, email="test@test.com", role="user")
 
 
 app.dependency_overrides[get_db] = _override_get_db
@@ -70,13 +75,20 @@ client = TestClient(app)
 # ── seed helpers ──────────────────────────────────────────────────────────────
 
 def _seed_user(email: str = "alice@test.com") -> str:
+    """
+    Seed a user with an auto-generated UUID, update the auth mock so
+    ownership checks pass, and return the user's ID string.
+    """
+    global _current_auth_user_id
     db = _TestingSession()
     try:
         row = User(email=email)
         db.add(row)
         db.commit()
         db.refresh(row)
-        return str(row.id)
+        uid = str(row.id)
+        _current_auth_user_id = uid  # keep auth mock in sync
+        return uid
     finally:
         db.close()
 
@@ -154,8 +166,10 @@ def test_create_user_not_found():
     print("--- Test 3: POST /subscriptions — user not found --404 ---")
     _clear()
     sid = _seed_strategy()
+    # Use the current auth user's ID (passes ownership check) but don't seed
+    # the user row so the DB lookup returns 404.
     resp = client.post("/subscriptions", json={
-        "user_id": str(uuid.uuid4()),
+        "user_id": _current_auth_user_id,
         "strategy_id": sid,
     })
     _assert(resp.status_code == 404, f"status 404 (got {resp.status_code})")
@@ -201,14 +215,10 @@ def test_cancel_subscription():
     resp = client.delete(f"/subscriptions/{sub_id}")
     _assert(resp.status_code == 204, f"status 204 on cancel (got {resp.status_code})")
 
-    # Verify status in DB
-    db = _TestingSession()
-    try:
-        row = db.query(Subscription).filter(Subscription.id == uuid.UUID(sub_id)).first()
-        _assert(row is not None,            "row still exists after cancel")
-        _assert(row.status == "cancelled",  f"status=cancelled in DB (got {row.status})")
-    finally:
-        db.close()
+    # Verify cancel took effect: a second DELETE should return 409 "already cancelled"
+    resp2 = client.delete(f"/subscriptions/{sub_id}")
+    _assert(resp2.status_code == 409, f"second cancel returns 409 (got {resp2.status_code})")
+    _assert("already" in resp2.json()["detail"].lower(), "detail confirms already cancelled")
 
 
 def test_cancel_not_found():

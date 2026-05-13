@@ -16,6 +16,7 @@ def init_db() -> None:
         conn.executescript("""
             CREATE TABLE IF NOT EXISTS trades (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id     TEXT,
                 symbol      TEXT    NOT NULL,
                 side        TEXT    NOT NULL,
                 entry       REAL    NOT NULL,
@@ -54,12 +55,13 @@ def init_db() -> None:
 
 
 def log_trade_open(symbol: str, side: str, entry: float, sl: float,
-                   tp1: float, tp2: float, open_time: str) -> int:
+                   tp1: float, tp2: float, open_time: str,
+                   user_id: str | None = None) -> int:
     with _get_conn() as conn:
         cur = conn.execute(
-            "INSERT INTO trades (symbol, side, entry, sl, tp1, tp2, open_time) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (symbol, side, entry, sl, tp1, tp2, open_time),
+            "INSERT INTO trades (user_id, symbol, side, entry, sl, tp1, tp2, open_time) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (user_id, symbol, side, entry, sl, tp1, tp2, open_time),
         )
         return cur.lastrowid
 

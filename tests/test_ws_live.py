@@ -12,6 +12,7 @@ import asyncio
 import json
 import os
 import sys
+import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
@@ -22,17 +23,18 @@ from fastapi.testclient import TestClient
 import backend.routes.ws as ws_mod
 from backend.main import app
 
-# ---- patch _validate_token so no BetterAuth call is made ------------------
+# ---- helpers to inject one-time tickets directly into the ticket store ------
 
-_VALID_TOKEN = "good-token"
 _USER_ID = "user-abc-123"
 
 
-async def _mock_validate_token(token: str):
-    return _USER_ID if token == _VALID_TOKEN else None
+def _make_ticket(user_id: str = _USER_ID) -> str:
+    """Insert a fresh ticket into the store and return it."""
+    import secrets
+    ticket = secrets.token_urlsafe(32)
+    ws_mod._TICKET_STORE[ticket] = (user_id, time.time())
+    return ticket
 
-
-ws_mod._validate_token = _mock_validate_token
 
 client = TestClient(app)
 
@@ -68,8 +70,9 @@ class MockWebSocket:
 # ---- endpoint tests --------------------------------------------------------
 
 def test_connected_frame():
-    print("--- Test 1: valid token -- CONNECTED frame received ---")
-    with client.websocket_connect(f"/ws/live?token={_VALID_TOKEN}") as ws:
+    print("--- Test 1: valid ticket -- CONNECTED frame received ---")
+    ticket = _make_ticket()
+    with client.websocket_connect(f"/ws/live?ticket={ticket}") as ws:
         frame = json.loads(ws.receive_text())
         _assert(frame["event"] == "CONNECTED",        f"event=CONNECTED (got {frame['event']})")
         _assert(frame["data"]["user_id"] == _USER_ID, f"user_id in data")
@@ -77,18 +80,35 @@ def test_connected_frame():
 
 
 def test_invalid_token_rejected():
-    print("--- Test 2: invalid token -- connection closed ---")
+    print("--- Test 2: invalid ticket -- connection closed ---")
     try:
-        with client.websocket_connect("/ws/live?token=bad-token") as ws:
+        with client.websocket_connect("/ws/live?ticket=bad-ticket-xxx") as ws:
             ws.receive_text()
         _assert(False, "expected rejection was not raised")
     except Exception as exc:
         _assert(True, f"connection rejected ({type(exc).__name__})")
 
 
+def test_ticket_single_use():
+    print("--- Test 3: ticket is single-use -- second connect is rejected ---")
+    ticket = _make_ticket()
+    # First use should succeed
+    with client.websocket_connect(f"/ws/live?ticket={ticket}") as ws:
+        ws.receive_text()  # consume CONNECTED
+
+    # Ticket is now consumed — second connection must be rejected
+    try:
+        with client.websocket_connect(f"/ws/live?ticket={ticket}") as ws2:
+            ws2.receive_text()
+        _assert(False, "second connect with same ticket should be rejected")
+    except Exception:
+        _assert(True, "second connect with consumed ticket was rejected")
+
+
 def test_ping_pong():
-    print("--- Test 3: client sends ping -- server replies pong ---")
-    with client.websocket_connect(f"/ws/live?token={_VALID_TOKEN}") as ws:
+    print("--- Test 4: client sends ping -- server replies pong ---")
+    ticket = _make_ticket()
+    with client.websocket_connect(f"/ws/live?ticket={ticket}") as ws:
         ws.receive_text()  # consume CONNECTED
         ws.send_text("ping")
         frame = json.loads(ws.receive_text())
@@ -96,10 +116,11 @@ def test_ping_pong():
 
 
 def test_disconnect_cleans_registry():
-    print("--- Test 4: disconnect removes user from registry ---")
+    print("--- Test 5: disconnect removes user from registry ---")
     ws_mod.manager._connections.pop(_USER_ID, None)
 
-    with client.websocket_connect(f"/ws/live?token={_VALID_TOKEN}") as ws:
+    ticket = _make_ticket()
+    with client.websocket_connect(f"/ws/live?ticket={ticket}") as ws:
         ws.receive_text()  # consume CONNECTED
         _assert(_USER_ID in ws_mod.manager._connections, "user in registry while connected")
 
@@ -109,7 +130,7 @@ def test_disconnect_cleans_registry():
 # ---- manager unit tests (pure asyncio, no TestClient) ----------------------
 
 async def _test_broadcast_delivers():
-    print("--- Test 5: manager.broadcast delivers PRICE_UPDATE ---")
+    print("--- Test 6: manager.broadcast delivers PRICE_UPDATE ---")
     mgr = ws_mod.ConnectionManager()
     ws1, ws2 = MockWebSocket(), MockWebSocket()
 
@@ -127,7 +148,7 @@ async def _test_broadcast_delivers():
 
 
 async def _test_send_to_user_targeted():
-    print("--- Test 6: manager.send_to_user delivers to correct user only ---")
+    print("--- Test 7: manager.send_to_user delivers to correct user only ---")
     mgr = ws_mod.ConnectionManager()
     ws_a, ws_b = MockWebSocket(), MockWebSocket()
 
@@ -145,7 +166,7 @@ async def _test_send_to_user_targeted():
 
 
 async def _test_dead_connection_pruned():
-    print("--- Test 7: dead WebSocket pruned from registry on next broadcast ---")
+    print("--- Test 8: dead WebSocket pruned from registry on next broadcast ---")
     mgr = ws_mod.ConnectionManager()
     alive, dead = MockWebSocket(), MockWebSocket()
     dead._fail = True  # simulate dropped connection
@@ -162,7 +183,7 @@ async def _test_dead_connection_pruned():
 
 
 async def _test_send_to_unknown_user():
-    print("--- Test 8: send_to_user on unknown user does not raise ---")
+    print("--- Test 9: send_to_user on unknown user does not raise ---")
     mgr = ws_mod.ConnectionManager()
     await mgr.send_to_user("nonexistent-user", "SL_HIT", {"symbol": "SOLUSDT"})
     _assert(True, "no exception on unknown user")
@@ -180,6 +201,7 @@ def run_async_tests():
 if __name__ == "__main__":
     test_connected_frame()
     test_invalid_token_rejected()
+    test_ticket_single_use()
     test_ping_pong()
     test_disconnect_cleans_registry()
     run_async_tests()

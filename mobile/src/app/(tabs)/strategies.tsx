@@ -56,7 +56,6 @@ export default function StrategiesScreen() {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <Text style={styles.title}>Strategies</Text>
-          <Text style={styles.subtitle}>Verified trading strategies marketplace</Text>
         </View>
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Loading strategies...</Text>
@@ -67,10 +66,9 @@ export default function StrategiesScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
       <View style={styles.header}>
         <Text style={styles.title}>Strategies</Text>
-        <Text style={styles.subtitle}>Verified trading strategies marketplace</Text>
       </View>
       <FlatList
         data={strategies}
@@ -87,20 +85,13 @@ export default function StrategiesScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#3B82F6"
-            colors={['#3B82F6']}
+            tintColor="#1D4ED8"
+            colors={['#1D4ED8']}
           />
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>No strategies available</Text>
-          </View>
-        }
-        ListHeaderComponent={
-          <View style={styles.listHeader}>
-            <Text style={styles.listHeaderText}>
-              {strategies.length} {strategies.length === 1 ? 'strategy' : 'strategies'} available
-            </Text>
           </View>
         }
       />
@@ -114,37 +105,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   header: {
-    backgroundColor: '#FFFFFF',
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 12,
     paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
   },
   title: {
     fontSize: 24,
     fontWeight: '700',
     color: '#0F172A',
-    marginBottom: 2,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: '#64748B',
   },
   list: {
-    paddingTop: 12,
+    paddingTop: 4,
     paddingBottom: 24,
-  },
-  listHeader: {
-    paddingHorizontal: 16,
-    marginBottom: 8,
-  },
-  listHeaderText: {
-    fontSize: 12,
-    color: '#94A3B8',
-    fontWeight: '500',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   loadingContainer: {
     flex: 1,

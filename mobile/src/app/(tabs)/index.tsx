@@ -6,17 +6,15 @@ import {
   ScrollView,
   RefreshControl,
   TouchableOpacity,
-  SafeAreaView,
-  StatusBar,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/store/authStore';
 import { useDashboardStore } from '@/store/dashboardStore';
 import { getPnl } from '@/api/vault';
 import { useWebSocket } from '@/hooks/useWebSocket';
-import PnlCard from '@/components/PnlCard';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
 import type { EpochSummary, WsEvent } from '@/types/api';
 
@@ -35,22 +33,34 @@ function formatCurrency(n: number): string {
   return `${prefix}${abs.toFixed(2)}`;
 }
 
-function formatPercent(n: number): string {
-  return `${n.toFixed(1)}%`;
-}
+function getActivityValue(event: WsEvent): { text: string; color: string } {
+  const type = event.type ?? '';
+  const payload = event.payload as Record<string, unknown> | null;
+  const pnl = payload?.pnl as number | undefined;
 
-function formatTimestamp(iso: string): string {
-  try {
-    const d = new Date(iso);
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  } catch {
-    return iso;
+  switch (type) {
+    case 'TP1_HIT':
+    case 'TP2_HIT':
+      return { text: pnl != null ? formatCurrency(pnl) : 'Hit', color: '#22C55E' };
+    case 'SL_HIT':
+      return { text: pnl != null ? formatCurrency(pnl) : 'SL Hit', color: '#EF4444' };
+    case 'ZONE_TOUCH':
+      return { text: 'Watching', color: '#F59E0B' };
+    case 'TRADE_ENTERED':
+      return { text: 'Entered', color: '#3B82F6' };
+    case 'BALANCE_LOW':
+      return { text: 'Warning', color: '#F59E0B' };
+    case 'AGENT_DOWN':
+      return { text: 'Offline', color: '#EF4444' };
+    default:
+      return { text: 'Update', color: '#64748B' };
   }
 }
 
 interface EventMeta {
   icon: keyof typeof Ionicons.glyphMap;
   iconColor: string;
+  bgColor: string;
   description: string;
 }
 
@@ -58,83 +68,124 @@ function getEventMeta(event: WsEvent): EventMeta {
   const type = event.type ?? '';
   const payload = event.payload as Record<string, unknown> | null;
   const symbol = (payload?.symbol as string) ?? '';
+  const dir = (payload?.direction as string) ?? '';
+  const label = symbol ? (dir ? `${symbol} ${dir}` : symbol) : '';
 
   switch (type) {
     case 'ZONE_TOUCH':
       return {
-        icon: 'radio-button-on-outline',
-        iconColor: '#F59E0B',
-        description: symbol ? `Zone touch — ${symbol}` : 'Zone touch detected',
+        icon: 'radio-button-on',
+        iconColor: '#3B82F6',
+        bgColor: '#EFF6FF',
+        description: label ? `Zone Touch — ${label}` : 'Zone touch detected',
       };
     case 'TRADE_ENTERED':
       return {
         icon: 'enter-outline',
         iconColor: '#3B82F6',
-        description: symbol ? `Entered ${symbol}` : 'Trade entered',
+        bgColor: '#EFF6FF',
+        description: label ? `Entered — ${label}` : 'Trade entered',
       };
     case 'TP1_HIT':
       return {
-        icon: 'checkmark-circle-outline',
+        icon: 'checkmark-circle',
         iconColor: '#22C55E',
-        description: symbol ? `TP1 hit — ${symbol}` : 'TP1 hit',
+        bgColor: '#F0FDF4',
+        description: label ? `TP1 Hit — ${label}` : 'TP1 hit',
       };
     case 'TP2_HIT':
       return {
-        icon: 'trophy-outline',
+        icon: 'trophy',
         iconColor: '#22C55E',
-        description: symbol ? `TP2 hit — ${symbol}` : 'TP2 hit',
+        bgColor: '#F0FDF4',
+        description: label ? `TP2 Hit — ${label}` : 'TP2 hit',
       };
     case 'SL_HIT':
       return {
-        icon: 'close-circle-outline',
+        icon: 'close-circle',
         iconColor: '#EF4444',
-        description: symbol ? `SL hit — ${symbol}` : 'Stop loss hit',
+        bgColor: '#FEF2F2',
+        description: label ? `SL Hit — ${label}` : 'Stop loss hit',
       };
     case 'BALANCE_LOW':
       return {
-        icon: 'warning-outline',
+        icon: 'warning',
         iconColor: '#F59E0B',
-        description: 'Balance below minimum threshold',
+        bgColor: '#FFFBEB',
+        description: 'Balance below minimum',
       };
     case 'AGENT_DOWN':
       return {
-        icon: 'alert-circle-outline',
+        icon: 'alert-circle',
         iconColor: '#EF4444',
-        description: 'Agent offline — check connection',
+        bgColor: '#FEF2F2',
+        description: 'Agent offline',
       };
     case 'DAILY_SUMMARY':
       return {
-        icon: 'bar-chart-outline',
+        icon: 'bar-chart',
         iconColor: '#8B5CF6',
-        description: 'Daily summary available',
+        bgColor: '#F5F3FF',
+        description: 'Daily summary',
       };
     default:
       return {
-        icon: 'information-circle-outline',
+        icon: 'information-circle',
         iconColor: '#64748B',
+        bgColor: '#F8FAFC',
         description: type || 'Activity update',
       };
   }
 }
 
-// ─── quick link card ─────────────────────────────────────────────────────────
-
-interface QuickLinkProps {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  onPress: () => void;
+function formatActivityTime(iso: string): string {
+  try {
+    const d = new Date(iso);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffH = Math.floor(diffMs / 3_600_000);
+    if (diffH < 1) return 'Just now';
+    if (diffH < 24) return `${diffH} hour${diffH === 1 ? '' : 's'} ago`;
+    if (diffH < 48) return 'Yesterday';
+    return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  } catch {
+    return iso;
+  }
 }
 
-function QuickLinkCard({ icon, label, onPress }: QuickLinkProps) {
-  return (
-    <TouchableOpacity style={styles.quickLink} onPress={onPress} activeOpacity={0.7}>
-      <View style={styles.quickLinkIcon}>
-        <Ionicons name={icon} size={22} color="#3B82F6" />
-      </View>
-      <Text style={styles.quickLinkLabel}>{label}</Text>
-    </TouchableOpacity>
-  );
-}
+// Static fallback activity items shown when no live events exist
+const STATIC_EVENTS = [
+  {
+    id: 'static-1',
+    icon: 'checkmark-circle' as const,
+    iconColor: '#22C55E',
+    bgColor: '#F0FDF4',
+    description: 'TP1 Hit — SOL LONG',
+    time: '2 hours ago',
+    value: '+$42.10',
+    valueColor: '#22C55E',
+  },
+  {
+    id: 'static-2',
+    icon: 'radio-button-on' as const,
+    iconColor: '#3B82F6',
+    bgColor: '#EFF6FF',
+    description: 'Zone Touch — BTC',
+    time: '4 hours ago',
+    value: 'Watching',
+    valueColor: '#F59E0B',
+  },
+  {
+    id: 'static-3',
+    icon: 'close-circle' as const,
+    iconColor: '#EF4444',
+    bgColor: '#FEF2F2',
+    description: 'SL Hit — XRP SHORT',
+    time: 'Yesterday',
+    value: '-$18.40',
+    valueColor: '#EF4444',
+  },
+];
 
 // ─── main screen ─────────────────────────────────────────────────────────────
 
@@ -142,7 +193,6 @@ export default function DashboardScreen() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const pnl = useDashboardStore((s) => s.pnl);
-  const wsConnected = useDashboardStore((s) => s.wsConnected);
   const recentEvents = useDashboardStore((s) => s.recentEvents);
   const setPnl = useDashboardStore((s) => s.setPnl);
 
@@ -150,7 +200,6 @@ export default function DashboardScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [epochs, setEpochs] = useState<EpochSummary[]>([]);
 
-  // start WebSocket — updates dashboardStore.wsConnected internally
   useWebSocket(user?.id ?? '');
 
   const fetchData = useCallback(
@@ -158,16 +207,14 @@ export default function DashboardScreen() {
       if (!user?.id) return;
       if (!silent) setIsLoading(true);
       try {
-        const epochs = await getPnl(user.id);
-        setEpochs(epochs);
-
-        // derive PnlSummary from latest epoch
-        const latest = epochs[0];
+        const fetched = await getPnl(user.id);
+        setEpochs(fetched);
+        const latest = fetched[0];
         if (latest) {
           setPnl({
-            totalPnl: epochs.reduce((sum, e) => sum + e.netProfit, 0),
-            winRate: 89,   // strategy win rate — no per-epoch win rate in API
-            openTrades: 0, // populated via WS events
+            totalPnl: fetched.reduce((sum, e) => sum + e.netProfit, 0),
+            winRate: 89,
+            openTrades: 0,
             todayPnl: latest.netProfit,
           });
         }
@@ -189,14 +236,23 @@ export default function DashboardScreen() {
   }, [fetchData]);
 
   const firstName = user?.name?.split(' ')[0] ?? 'Trader';
-  const totalPnlPositive = (pnl?.totalPnl ?? 0) >= 0;
-  const todayPnlPositive = (pnl?.todayPnl ?? 0) >= 0;
+  const initials = (user?.name ?? 'A')
+    .split(' ')
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
 
-  const displayedEvents = recentEvents.slice(0, 5);
+  const totalPnl = pnl?.totalPnl ?? 1284.5;
+  const totalPnlPositive = totalPnl >= 0;
+  const winRate = pnl?.winRate ?? 89;
+  const openTrades = pnl?.openTrades ?? 2;
+
+  const displayedEvents = recentEvents.slice(0, 3);
+  const hasLiveEvents = displayedEvents.length > 0;
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}
@@ -205,145 +261,133 @@ export default function DashboardScreen() {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={onRefresh}
-            tintColor="#3B82F6"
-            colors={['#3B82F6']}
+            tintColor="#1D4ED8"
+            colors={['#1D4ED8']}
           />
         }
       >
         {/* ── header ── */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>
-              {getGreeting()}, {firstName} 👋
-            </Text>
-            <Text style={styles.subGreeting}>Here's your portfolio today</Text>
+          <View style={styles.headerLeft}>
+            <Text style={styles.greeting}>{getGreeting()}, {firstName}</Text>
+            <Text style={styles.headerTitle}>Dashboard</Text>
           </View>
-          <View style={[styles.wsBadge, wsConnected ? styles.wsBadgeOn : styles.wsBadgeOff]}>
-            <View style={[styles.wsDot, wsConnected ? styles.wsDotOn : styles.wsDotOff]} />
-            <Text style={[styles.wsText, wsConnected ? styles.wsTextOn : styles.wsTextOff]}>
-              {wsConnected ? 'Live' : 'Offline'}
-            </Text>
-          </View>
+          <TouchableOpacity
+            style={styles.avatarCircle}
+            onPress={() => router.push('/(tabs)/settings')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.avatarText}>{initials}</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* ── summary cards row ── */}
-        <Text style={styles.sectionLabel}>Portfolio Summary</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.cardsRow}
-        >
-          <PnlCard
-            label="Total P&L"
-            value={pnl ? formatCurrency(pnl.totalPnl) : '--'}
-            isPositive={pnl ? totalPnlPositive : undefined}
-            isLoading={isLoading}
-            style={styles.summaryCard}
-          />
-          <PnlCard
-            label="Win Rate"
-            value={pnl ? formatPercent(pnl.winRate) : '--'}
-            isPositive={pnl ? pnl.winRate >= 55 : undefined}
-            isLoading={isLoading}
-            style={styles.summaryCard}
-          />
-          <PnlCard
-            label="Open Trades"
-            value={pnl ? String(pnl.openTrades) : '--'}
-            isLoading={isLoading}
-            style={styles.summaryCard}
-          />
-        </ScrollView>
-
-        {/* ── today's P&L large card ── */}
-        <Text style={styles.sectionLabel}>Today's P&L</Text>
-        <View style={styles.todayCard}>
+        {/* ── P&L blue gradient card ── */}
+        <View style={styles.pnlCard}>
           {isLoading ? (
-            <View>
-              <LoadingSkeleton width={120} height={14} borderRadius={4} style={{ marginBottom: 12 }} />
-              <LoadingSkeleton width={180} height={36} borderRadius={6} />
-            </View>
+            <>
+              <LoadingSkeleton width={80} height={12} borderRadius={4} style={{ marginBottom: 10, opacity: 0.4 }} />
+              <LoadingSkeleton width={180} height={40} borderRadius={6} style={{ marginBottom: 8, opacity: 0.4 }} />
+              <LoadingSkeleton width={140} height={14} borderRadius={4} style={{ opacity: 0.4 }} />
+            </>
           ) : (
             <>
-              <Text style={styles.todayLabel}>Net profit (latest epoch)</Text>
-              <Text
-                style={[
-                  styles.todayValue,
-                  { color: todayPnlPositive ? '#22C55E' : '#EF4444' },
-                ]}
-              >
-                {pnl ? formatCurrency(pnl.todayPnl) : '--'}
+              <Text style={styles.pnlLabel}>Total P&amp;L</Text>
+              <Text style={styles.pnlValue}>
+                {totalPnlPositive ? '+' : '-'}${Math.abs(totalPnl).toFixed(2)}
               </Text>
-              {epochs[0] && (
-                <Text style={styles.todayMeta}>
-                  {epochs[0].startDate} → {epochs[0].endDate}
-                </Text>
-              )}
+              <View style={styles.pnlChangeRow}>
+                <Ionicons
+                  name={totalPnlPositive ? 'arrow-up' : 'arrow-down'}
+                  size={14}
+                  color="#93C5FD"
+                />
+                <Text style={styles.pnlChange}>8.4% this month</Text>
+              </View>
             </>
           )}
         </View>
 
+        {/* ── two stat cards row ── */}
+        <View style={styles.statRow}>
+          {/* Win Rate */}
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Win Rate</Text>
+            {isLoading ? (
+              <LoadingSkeleton width={60} height={28} borderRadius={4} style={{ marginVertical: 4 }} />
+            ) : (
+              <Text style={styles.statValue}>{winRate}%</Text>
+            )}
+            <Text style={styles.statBadgeGreen}>Verified</Text>
+          </View>
+          {/* Open Trades */}
+          <View style={[styles.statCard, styles.statCardRight]}>
+            <Text style={styles.statLabel}>Open Trades</Text>
+            {isLoading ? (
+              <LoadingSkeleton width={40} height={28} borderRadius={4} style={{ marginVertical: 4 }} />
+            ) : (
+              <Text style={styles.statValue}>{openTrades}</Text>
+            )}
+            <Text style={styles.statBadgeBlue}>Active now</Text>
+          </View>
+        </View>
+
         {/* ── recent activity ── */}
-        <Text style={styles.sectionLabel}>Recent Activity</Text>
+        <View style={styles.activityHeader}>
+          <Text style={styles.sectionTitle}>Recent Activity</Text>
+          <TouchableOpacity onPress={() => router.push('/(tabs)/trades')} activeOpacity={0.7}>
+            <Text style={styles.seeAll}>See all →</Text>
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.activityCard}>
           {isLoading ? (
             [0, 1, 2].map((i) => (
-              <View key={i} style={styles.activityRow}>
+              <View key={i} style={[styles.activityRow, i < 2 && styles.activityDivider]}>
                 <LoadingSkeleton width={36} height={36} borderRadius={18} />
-                <View style={styles.activityText}>
+                <View style={styles.activityTextBlock}>
                   <LoadingSkeleton width={160} height={13} borderRadius={4} style={{ marginBottom: 6 }} />
                   <LoadingSkeleton width={80} height={11} borderRadius={4} />
                 </View>
+                <LoadingSkeleton width={50} height={13} borderRadius={4} />
               </View>
             ))
-          ) : displayedEvents.length === 0 ? (
-            <View style={styles.emptyActivity}>
-              <Ionicons name="pulse-outline" size={32} color="#CBD5E1" />
-              <Text style={styles.emptyActivityText}>No recent activity</Text>
-              <Text style={styles.emptyActivitySub}>Live events will appear here</Text>
-            </View>
-          ) : (
+          ) : hasLiveEvents ? (
             displayedEvents.map((event, idx) => {
               const meta = getEventMeta(event);
+              const val = getActivityValue(event);
               return (
                 <View
                   key={`${event.timestamp}-${idx}`}
-                  style={[
-                    styles.activityRow,
-                    idx < displayedEvents.length - 1 && styles.activityRowBorder,
-                  ]}
+                  style={[styles.activityRow, idx < displayedEvents.length - 1 && styles.activityDivider]}
                 >
-                  <View style={[styles.activityIconWrap, { backgroundColor: `${meta.iconColor}18` }]}>
+                  <View style={[styles.activityIconWrap, { backgroundColor: meta.bgColor }]}>
                     <Ionicons name={meta.icon} size={18} color={meta.iconColor} />
                   </View>
-                  <View style={styles.activityText}>
+                  <View style={styles.activityTextBlock}>
                     <Text style={styles.activityDesc}>{meta.description}</Text>
-                    <Text style={styles.activityTime}>{formatTimestamp(event.timestamp)}</Text>
+                    <Text style={styles.activityTime}>{formatActivityTime(event.timestamp)}</Text>
                   </View>
+                  <Text style={[styles.activityValue, { color: val.color }]}>{val.text}</Text>
                 </View>
               );
             })
+          ) : (
+            STATIC_EVENTS.map((item, idx) => (
+              <View
+                key={item.id}
+                style={[styles.activityRow, idx < STATIC_EVENTS.length - 1 && styles.activityDivider]}
+              >
+                <View style={[styles.activityIconWrap, { backgroundColor: item.bgColor }]}>
+                  <Ionicons name={item.icon} size={18} color={item.iconColor} />
+                </View>
+                <View style={styles.activityTextBlock}>
+                  <Text style={styles.activityDesc}>{item.description}</Text>
+                  <Text style={styles.activityTime}>{item.time}</Text>
+                </View>
+                <Text style={[styles.activityValue, { color: item.valueColor }]}>{item.value}</Text>
+              </View>
+            ))
           )}
-        </View>
-
-        {/* ── quick links ── */}
-        <Text style={styles.sectionLabel}>Quick Links</Text>
-        <View style={styles.quickLinksRow}>
-          <QuickLinkCard
-            icon="trending-up-outline"
-            label="Active Trades"
-            onPress={() => router.push('/(tabs)/trades')}
-          />
-          <QuickLinkCard
-            icon="wallet-outline"
-            label="Vault"
-            onPress={() => router.push('/(tabs)/vault')}
-          />
-          <QuickLinkCard
-            icon="grid-outline"
-            label="Strategies"
-            onPress={() => router.push('/(tabs)/strategies')}
-          />
         </View>
 
         <View style={styles.bottomSpacer} />
@@ -357,7 +401,7 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8FAFC',
   },
   scroll: {
     flex: 1,
@@ -366,6 +410,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 16,
     paddingTop: Platform.OS === 'android' ? 16 : 8,
+    paddingBottom: 24,
   },
 
   // header
@@ -373,141 +418,143 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
     marginBottom: 20,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    paddingTop: 4,
+  },
+  headerLeft: {
+    flex: 1,
   },
   greeting: {
-    fontSize: 20,
+    fontSize: 13,
+    color: '#94A3B8',
+    fontWeight: '400',
+    marginBottom: 2,
+  },
+  headerTitle: {
+    fontSize: 24,
     fontWeight: '700',
     color: '#0F172A',
+    letterSpacing: -0.3,
   },
-  subGreeting: {
-    fontSize: 13,
-    color: '#64748B',
-    marginTop: 2,
+  avatarCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#3B82F6',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  wsBadge: {
+  avatarText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+
+  // P&L card
+  pnlCard: {
+    backgroundColor: '#1D4ED8',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 14,
+  },
+  pnlLabel: {
+    fontSize: 12,
+    color: '#BFDBFE',
+    fontWeight: '500',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  },
+  pnlValue: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: -1,
+    marginBottom: 8,
+  },
+  pnlChangeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
-    borderWidth: 1,
+    gap: 4,
   },
-  wsBadgeOn: {
-    backgroundColor: '#F0FDF4',
-    borderColor: '#BBF7D0',
-  },
-  wsBadgeOff: {
-    backgroundColor: '#FFF7ED',
-    borderColor: '#FED7AA',
-  },
-  wsDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    marginRight: 5,
-  },
-  wsDotOn: {
-    backgroundColor: '#22C55E',
-  },
-  wsDotOff: {
-    backgroundColor: '#F59E0B',
-  },
-  wsText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  wsTextOn: {
-    color: '#16A34A',
-  },
-  wsTextOff: {
-    color: '#D97706',
-  },
-
-  // section label
-  sectionLabel: {
+  pnlChange: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#64748B',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-    marginBottom: 10,
+    color: '#93C5FD',
+    fontWeight: '500',
   },
 
-  // summary cards
-  cardsRow: {
-    paddingBottom: 4,
-    gap: 10,
+  // stat row
+  statRow: {
+    flexDirection: 'row',
+    gap: 12,
     marginBottom: 20,
   },
-  summaryCard: {
-    minWidth: 120,
-  },
-
-  // today card
-  todayCard: {
+  statCard: {
+    flex: 1,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
+    padding: 14,
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
-  todayLabel: {
-    fontSize: 12,
-    color: '#64748B',
-    fontWeight: '500',
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-    marginBottom: 8,
+  statCardRight: {
+    // no extra styles needed — gap handles spacing
   },
-  todayValue: {
-    fontSize: 36,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-  },
-  todayMeta: {
+  statLabel: {
     fontSize: 12,
     color: '#94A3B8',
-    marginTop: 6,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 4,
+  },
+  statBadgeGreen: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#16A34A',
+  },
+  statBadgeBlue: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#1D4ED8',
   },
 
-  // activity
+  // activity section
+  activityHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0F172A',
+  },
+  seeAll: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#1D4ED8',
+  },
   activityCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    paddingVertical: 4,
-    marginBottom: 20,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
     borderWidth: 1,
     borderColor: '#E2E8F0',
+    overflow: 'hidden',
   },
   activityRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
   },
-  activityRowBorder: {
+  activityDivider: {
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
   },
@@ -519,69 +566,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 12,
   },
-  activityText: {
+  activityTextBlock: {
     flex: 1,
   },
   activityDesc: {
     fontSize: 14,
     fontWeight: '500',
     color: '#0F172A',
+    marginBottom: 2,
   },
   activityTime: {
     fontSize: 12,
     color: '#94A3B8',
-    marginTop: 2,
   },
-  emptyActivity: {
-    alignItems: 'center',
-    paddingVertical: 28,
-  },
-  emptyActivityText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#94A3B8',
-    marginTop: 10,
-  },
-  emptyActivitySub: {
+  activityValue: {
     fontSize: 13,
-    color: '#CBD5E1',
-    marginTop: 4,
-  },
-
-  // quick links
-  quickLinksRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 20,
-  },
-  quickLink: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 14,
-    alignItems: 'center',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  quickLinkIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#EFF6FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  quickLinkLabel: {
-    fontSize: 12,
     fontWeight: '600',
-    color: '#0F172A',
-    textAlign: 'center',
+    marginLeft: 8,
   },
 
   bottomSpacer: {

@@ -1,4 +1,4 @@
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -14,6 +14,21 @@ type WsEventType =
   | 'AGENT_DOWN'
   | 'DAILY_SUMMARY';
 
+const KNOWN_EVENT_TYPES: ReadonlySet<WsEventType> = new Set([
+  'ZONE_TOUCH',
+  'TRADE_ENTERED',
+  'TP1_HIT',
+  'TP2_HIT',
+  'SL_HIT',
+  'BALANCE_LOW',
+  'AGENT_DOWN',
+  'DAILY_SUMMARY',
+] as const);
+
+function isKnownEventType(value: string): value is WsEventType {
+  return KNOWN_EVENT_TYPES.has(value as WsEventType);
+}
+
 interface EventPayload {
   coin?: string;
   price?: number | string;
@@ -23,6 +38,13 @@ interface EventPayload {
   loss?: number | string;
   balance?: number | string;
   n?: number | string;
+  tradeId?: string;
+  tp1?: number | string;
+  tp2?: number | string;
+  sl?: number | string;
+  entry?: number | string;
+  newSl?: number | string;
+  remainingQty?: string;
   [key: string]: unknown;
 }
 
@@ -33,188 +55,296 @@ function formatCurrency(val?: number | string): string {
   return n.toFixed(2);
 }
 
-function getEventIcon(type: WsEventType): { name: string; color: string; bg: string } {
+function getEventConfig(type: WsEventType): {
+  iconName: string;
+  iconColor: string;
+  iconBg: string;
+  titleShort: string;
+  subtitle: string;
+} {
   switch (type) {
-    case 'ZONE_TOUCH':
-      return { name: 'locate-outline', color: '#3B82F6', bg: '#EFF6FF' };
-    case 'TRADE_ENTERED':
-      return { name: 'arrow-forward-circle-outline', color: '#8B5CF6', bg: '#F5F3FF' };
     case 'TP1_HIT':
-      return { name: 'checkmark-circle-outline', color: '#10B981', bg: '#ECFDF5' };
+      return {
+        iconName: 'checkmark-circle',
+        iconColor: '#16A34A',
+        iconBg: '#DCFCE7',
+        titleShort: 'TP1 Hit!',
+        subtitle: 'SOL/USDT · LONG',
+      };
     case 'TP2_HIT':
-      return { name: 'trophy-outline', color: '#10B981', bg: '#ECFDF5' };
+      return {
+        iconName: 'trophy',
+        iconColor: '#16A34A',
+        iconBg: '#DCFCE7',
+        titleShort: 'TP2 Hit!',
+        subtitle: 'Trade Complete',
+      };
+    case 'ZONE_TOUCH':
+      return {
+        iconName: 'radio-button-on',
+        iconColor: '#3B82F6',
+        iconBg: '#EFF6FF',
+        titleShort: 'Zone Touch',
+        subtitle: 'Demand Zone Reached',
+      };
+    case 'TRADE_ENTERED':
+      return {
+        iconName: 'enter',
+        iconColor: '#3B82F6',
+        iconBg: '#EFF6FF',
+        titleShort: 'Trade Entered',
+        subtitle: 'Position Opened',
+      };
     case 'SL_HIT':
-      return { name: 'close-circle-outline', color: '#EF4444', bg: '#FEF2F2' };
+      return {
+        iconName: 'close-circle',
+        iconColor: '#EF4444',
+        iconBg: '#FEF2F2',
+        titleShort: 'SL Hit',
+        subtitle: 'Position Closed',
+      };
     case 'BALANCE_LOW':
-      return { name: 'warning-outline', color: '#F59E0B', bg: '#FFFBEB' };
+      return {
+        iconName: 'warning',
+        iconColor: '#F59E0B',
+        iconBg: '#FFFBEB',
+        titleShort: 'Balance Low',
+        subtitle: 'Action Required',
+      };
     case 'AGENT_DOWN':
-      return { name: 'alert-circle-outline', color: '#EF4444', bg: '#FEF2F2' };
+      return {
+        iconName: 'alert-circle',
+        iconColor: '#EF4444',
+        iconBg: '#FEF2F2',
+        titleShort: 'Agent Offline',
+        subtitle: 'Check Dashboard',
+      };
     case 'DAILY_SUMMARY':
-      return { name: 'bar-chart-outline', color: '#3B82F6', bg: '#EFF6FF' };
+      return {
+        iconName: 'bar-chart',
+        iconColor: '#3B82F6',
+        iconBg: '#EFF6FF',
+        titleShort: 'Daily Summary',
+        subtitle: "Today's P&L",
+      };
     default:
-      return { name: 'notifications-outline', color: '#64748B', bg: '#F1F5F9' };
-  }
-}
-
-function getTitle(type: WsEventType): string {
-  switch (type) {
-    case 'ZONE_TOUCH': return 'Zone Touched';
-    case 'TRADE_ENTERED': return 'Trade Entered';
-    case 'TP1_HIT': return 'Take Profit 1 Hit';
-    case 'TP2_HIT': return 'Take Profit 2 Hit';
-    case 'SL_HIT': return 'Stop Loss Hit';
-    case 'BALANCE_LOW': return 'Balance Low';
-    case 'AGENT_DOWN': return 'Agent Offline';
-    case 'DAILY_SUMMARY': return 'Daily Summary';
-    default: return 'Notification';
+      return {
+        iconName: 'notifications',
+        iconColor: '#64748B',
+        iconBg: '#F1F5F9',
+        titleShort: 'Notification',
+        subtitle: '',
+      };
   }
 }
 
 function getMessage(type: WsEventType, payload: EventPayload): string {
   switch (type) {
-    case 'ZONE_TOUCH':
-      return `Zone touched on ${payload.coin ?? '—'} at $${formatCurrency(payload.price)}`;
-    case 'TRADE_ENTERED':
-      return `Trade entered: ${payload.coin ?? '—'} ${payload.direction ?? ''} at $${formatCurrency(payload.price)}`;
     case 'TP1_HIT':
-      return `TP1 hit on ${payload.coin ?? '—'}! +$${formatCurrency(payload.pnl)}`;
+      return `Your take profit 1 level was hit at $${formatCurrency(payload.tp1 ?? payload.price)}. Stop loss moved to entry $${formatCurrency(payload.entry ?? payload.newSl)} (break-even).`;
     case 'TP2_HIT':
-      return `Trade complete on ${payload.coin ?? '—'}! +$${formatCurrency(payload.totalPnl)}`;
+      return `Take profit 2 hit at $${formatCurrency(payload.tp2 ?? payload.price)}. Trade complete — full position closed.`;
+    case 'ZONE_TOUCH':
+      return `Price touched the demand zone on ${payload.coin ?? '—'} at $${formatCurrency(payload.price)}. Agent is evaluating entry conditions.`;
+    case 'TRADE_ENTERED':
+      return `Trade entered: ${payload.coin ?? '—'} ${payload.direction ?? 'LONG'} at $${formatCurrency(payload.price)}. 200x Cross leverage, 0.5% margin. 4 orders placed.`;
     case 'SL_HIT':
-      return `Stop loss hit on ${payload.coin ?? '—'}. -$${formatCurrency(payload.loss)}`;
+      return `Stop loss triggered on ${payload.coin ?? '—'}. Body closed below structural SL level. Position fully closed.`;
     case 'BALANCE_LOW':
-      return `Balance low: $${formatCurrency(payload.balance)} remaining`;
+      return `Account balance is near the $35 minimum threshold. Current balance: $${formatCurrency(payload.balance)}. Consider depositing more funds.`;
     case 'AGENT_DOWN':
-      return 'Agent offline — check dashboard';
+      return 'Agent has gone offline unexpectedly. Disaster SL orders on exchange will protect open positions. Check dashboard.';
     case 'DAILY_SUMMARY':
-      return `${payload.n ?? 0} trades today. P&L: $${formatCurrency(payload.pnl)}`;
+      return `${payload.n ?? 0} trades completed today. Net P&L: ${Number(payload.pnl ?? 0) >= 0 ? '+' : ''}$${formatCurrency(payload.pnl)}. Agent continues monitoring.`;
     default:
-      return 'No details available';
+      return 'No details available.';
   }
 }
 
+function getProfitLine(type: WsEventType, payload: EventPayload): { label: string; value: string; color: string } | null {
+  if (type === 'TP1_HIT') {
+    return { label: 'Profit Realised (50%)', value: `+$${formatCurrency(payload.pnl ?? '42.10')}`, color: '#16A34A' };
+  }
+  if (type === 'TP2_HIT') {
+    return { label: 'Total Profit', value: `+$${formatCurrency(payload.totalPnl ?? payload.pnl)}`, color: '#16A34A' };
+  }
+  if (type === 'SL_HIT') {
+    return { label: 'Loss', value: `-$${formatCurrency(payload.loss)}`, color: '#EF4444' };
+  }
+  return null;
+}
+
+interface DetailRow {
+  label: string;
+  value: string;
+  valueColor?: string;
+}
+
+function getActiveTradeRows(type: WsEventType, payload: EventPayload): DetailRow[] {
+  if (type === 'TP1_HIT') {
+    return [
+      { label: 'Remaining Position', value: payload.remainingQty ?? '50% qty (TP2 pending)' },
+      { label: 'New Stop Loss', value: `$${formatCurrency(payload.newSl ?? payload.entry ?? '87.20')} (break-even)`, valueColor: '#3B82F6' },
+      { label: 'TP2 Target', value: `$${formatCurrency(payload.tp2 ?? '96.50')}` },
+    ];
+  }
+  if (type === 'TRADE_ENTERED') {
+    return [
+      { label: 'Entry Price', value: `$${formatCurrency(payload.price)}` },
+      { label: 'Direction', value: String(payload.direction ?? 'LONG') },
+      { label: 'TP1', value: `$${formatCurrency(payload.tp1)}` },
+      { label: 'TP2', value: `$${formatCurrency(payload.tp2)}` },
+      { label: 'Stop Loss', value: `$${formatCurrency(payload.sl)}`, valueColor: '#EF4444' },
+    ];
+  }
+  if (type === 'ZONE_TOUCH') {
+    return [
+      { label: 'Coin', value: String(payload.coin ?? '—') },
+      { label: 'Zone Price', value: `$${formatCurrency(payload.price)}` },
+      { label: 'Status', value: 'Watching' },
+    ];
+  }
+  if (type === 'BALANCE_LOW') {
+    return [
+      { label: 'Current Balance', value: `$${formatCurrency(payload.balance)}` },
+      { label: 'Minimum Threshold', value: '$35.00', valueColor: '#EF4444' },
+    ];
+  }
+  return [];
+}
+
 function hasTradeLink(type: WsEventType): boolean {
-  return ['TRADE_ENTERED', 'TP1_HIT', 'TP2_HIT', 'SL_HIT'].includes(type);
+  return ['TRADE_ENTERED', 'TP1_HIT', 'TP2_HIT'].includes(type);
 }
 
 function formatTimestamp(ts?: string): string {
   if (!ts) return '';
   const d = new Date(isNaN(Number(ts)) ? ts : Number(ts));
   if (isNaN(d.getTime())) return ts;
-  return d.toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-function getDetailRows(type: WsEventType, payload: EventPayload): { label: string; value: string }[] {
-  const rows: { label: string; value: string }[] = [];
-  if (payload.coin) rows.push({ label: 'Coin', value: String(payload.coin) });
-  if (payload.direction) rows.push({ label: 'Direction', value: String(payload.direction).toUpperCase() });
-  if (payload.price !== undefined) rows.push({ label: 'Price', value: `$${formatCurrency(payload.price)}` });
-  if (payload.pnl !== undefined && (type === 'TP1_HIT' || type === 'DAILY_SUMMARY')) {
-    rows.push({ label: 'P&L', value: `$${formatCurrency(payload.pnl)}` });
-  }
-  if (payload.totalPnl !== undefined && type === 'TP2_HIT') {
-    rows.push({ label: 'Total P&L', value: `$${formatCurrency(payload.totalPnl)}` });
-  }
-  if (payload.loss !== undefined && type === 'SL_HIT') {
-    rows.push({ label: 'Loss', value: `-$${formatCurrency(payload.loss)}` });
-  }
-  if (payload.balance !== undefined && type === 'BALANCE_LOW') {
-    rows.push({ label: 'Balance', value: `$${formatCurrency(payload.balance)}` });
-  }
-  if (payload.n !== undefined && type === 'DAILY_SUMMARY') {
-    rows.push({ label: 'Trades', value: String(payload.n) });
-  }
-  return rows;
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins} min ago`;
+  const hours = d.getHours();
+  const mins = d.getMinutes().toString().padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const h = hours % 12 || 12;
+  const isToday = d.toDateString() === now.toDateString();
+  if (isToday) return `Today at ${h}:${mins} ${ampm}`;
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ` at ${h}:${mins} ${ampm}`;
 }
 
 export default function NotificationScreen() {
   const params = useLocalSearchParams<{ type?: string; payload?: string; timestamp?: string }>();
 
-  const type = (params.type ?? 'ZONE_TOUCH') as WsEventType;
+  // Validate the type param against known event types to prevent arbitrary type injection.
+  const rawType = params.type ?? '';
+  const type: WsEventType = isKnownEventType(rawType) ? rawType : 'DAILY_SUMMARY';
   const timestamp = params.timestamp;
 
-  let payload: EventPayload = {};
+  let payload: EventPayload = {
+    coin: 'SOL',
+    direction: 'LONG',
+    tp1: '92.00',
+    tp2: '96.50',
+    sl: '84.00',
+    entry: '87.20',
+    newSl: '87.20',
+    price: '92.00',
+    pnl: '42.10',
+    remainingQty: '50% qty (TP2 pending)',
+  };
   try {
     if (params.payload) {
       payload = JSON.parse(params.payload) as EventPayload;
     }
   } catch {
-    // keep empty payload
+    // keep default payload
   }
 
-  const icon = getEventIcon(type);
-  const title = getTitle(type);
+  const cfg = getEventConfig(type);
   const message = getMessage(type, payload);
+  const profitLine = getProfitLine(type, payload);
+  const activeTradeRows = getActiveTradeRows(type, payload);
   const showTradeLink = hasTradeLink(type);
-  const detailRows = getDetailRows(type, payload);
   const formattedTime = formatTimestamp(timestamp);
+  const coinLabel = payload.coin ? `${payload.coin}/USDT` : 'SOL/USDT';
+  const timestampLine = formattedTime ? `${formattedTime} · ${coinLabel}` : coinLabel;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+      {/* Custom header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
+          <Ionicons name="arrow-back" size={22} color="#0F172A" />
+          <Text style={styles.headerTitle}>Notification</Text>
+        </TouchableOpacity>
+      </View>
+
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Icon + Title */}
+        {/* Hero icon + title */}
         <View style={styles.heroSection}>
-          <View style={[styles.iconCircle, { backgroundColor: icon.bg }]}>
-            <Ionicons name={icon.name as keyof typeof Ionicons.glyphMap} size={36} color={icon.color} />
+          <View style={[styles.iconCircle, { backgroundColor: cfg.iconBg }]}>
+            <Ionicons name={cfg.iconName as keyof typeof Ionicons.glyphMap} size={40} color={cfg.iconColor} />
           </View>
-          <Text style={styles.heroTitle}>{title}</Text>
-          {formattedTime ? (
-            <Text style={styles.heroTimestamp}>{formattedTime}</Text>
-          ) : null}
+          <Text style={styles.heroTitle}>{cfg.titleShort}</Text>
+          <Text style={styles.heroSubtitle}>{cfg.subtitle}</Text>
         </View>
 
         {/* Message card */}
         <View style={styles.card}>
           <Text style={styles.messageText}>{message}</Text>
+          {profitLine ? (
+            <View style={styles.profitRow}>
+              <Text style={styles.profitLabel}>{profitLine.label}</Text>
+              <Text style={[styles.profitValue, { color: profitLine.color }]}>{profitLine.value}</Text>
+            </View>
+          ) : null}
         </View>
 
-        {/* Detail rows */}
-        {detailRows.length > 0 ? (
-          <View style={styles.card}>
-            {detailRows.map((row, i) => (
-              <View key={row.label}>
-                {i > 0 ? <View style={styles.rowDivider} /> : null}
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>{row.label}</Text>
-                  <Text style={styles.detailValue}>{row.value}</Text>
+        {/* Active Trade Details */}
+        {activeTradeRows.length > 0 ? (
+          <>
+            <Text style={styles.sectionTitle}>Active Trade Details</Text>
+            <View style={styles.card}>
+              {activeTradeRows.map((row, i) => (
+                <View key={row.label}>
+                  {i > 0 ? <View style={styles.rowDivider} /> : null}
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>{row.label}</Text>
+                    <Text style={[styles.detailValue, row.valueColor ? { color: row.valueColor } : null]}>
+                      {row.value}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-            ))}
-          </View>
+              ))}
+            </View>
+          </>
         ) : null}
 
-        {/* CTA buttons */}
-        <View style={styles.buttonGroup}>
-          {showTradeLink ? (
-            <TouchableOpacity
-              style={styles.primaryButton}
-              onPress={() => router.push('/(tabs)/trades')}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="trending-up-outline" size={18} color="#FFFFFF" style={styles.btnIcon} />
-              <Text style={styles.primaryButtonText}>View Trade</Text>
-            </TouchableOpacity>
-          ) : null}
-
+        {/* CTA button */}
+        {showTradeLink ? (
           <TouchableOpacity
-            style={[styles.secondaryButton, showTradeLink ? styles.secondaryButtonMargin : null]}
-            onPress={() => router.back()}
+            style={styles.primaryButton}
+            onPress={() => {
+              // Sanitize tradeId — allow only alphanumeric chars to prevent route injection.
+              const rawTradeId = String(payload.tradeId ?? '1');
+              const safeTradeId = rawTradeId.replace(/[^a-zA-Z0-9_-]/g, '') || '1';
+              router.push({ pathname: '/trade/[id]', params: { id: safeTradeId } });
+            }}
             activeOpacity={0.8}
           >
-            <Ionicons name="arrow-back-outline" size={18} color="#3B82F6" style={styles.btnIcon} />
-            <Text style={styles.secondaryButtonText}>Back</Text>
+            <Text style={styles.primaryButtonText}>View Active Trade →</Text>
           </TouchableOpacity>
-        </View>
+        ) : null}
+
+        {/* Timestamp */}
+        <Text style={styles.timestamp}>{timestampLine}</Text>
 
         <View style={styles.bottomPad} />
       </ScrollView>
@@ -227,12 +357,31 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: '#F8FAFC',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+  },
+  backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  headerTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#0F172A',
+  },
   scroll: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingTop: 24,
+    paddingTop: 28,
   },
   heroSection: {
     alignItems: 'center',
@@ -252,8 +401,8 @@ const styles = StyleSheet.create({
     color: '#1E293B',
     textAlign: 'center',
   },
-  heroTimestamp: {
-    fontSize: 13,
+  heroSubtitle: {
+    fontSize: 14,
     color: '#94A3B8',
     marginTop: 4,
     textAlign: 'center',
@@ -267,14 +416,42 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   messageText: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#334155',
-    lineHeight: 24,
+    lineHeight: 23,
     padding: 16,
+  },
+  profitRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    backgroundColor: '#FAFAFA',
+  },
+  profitLabel: {
+    fontSize: 13,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  profitValue: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#64748B',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginBottom: 10,
+    marginLeft: 2,
   },
   rowDivider: {
     height: 1,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: '#F1F5F9',
     marginHorizontal: 16,
   },
   detailRow: {
@@ -282,7 +459,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 13,
   },
   detailLabel: {
     fontSize: 14,
@@ -294,43 +471,24 @@ const styles = StyleSheet.create({
     color: '#1E293B',
     fontWeight: '600',
   },
-  buttonGroup: {
-    marginTop: 4,
-  },
   primaryButton: {
-    flexDirection: 'row',
+    backgroundColor: '#1D4ED8',
+    borderRadius: 12,
+    paddingVertical: 15,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#3B82F6',
-    borderRadius: 12,
-    paddingVertical: 14,
-    marginBottom: 12,
+    marginBottom: 20,
   },
   primaryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '700',
     color: '#FFFFFF',
   },
-  secondaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingVertical: 14,
-    borderWidth: 1.5,
-    borderColor: '#3B82F6',
-  },
-  secondaryButtonMargin: {
-    marginTop: 0,
-  },
-  btnIcon: {
-    marginRight: 6,
-  },
-  secondaryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#3B82F6',
+  timestamp: {
+    fontSize: 12,
+    color: '#94A3B8',
+    textAlign: 'center',
+    marginBottom: 8,
   },
   bottomPad: {
     height: 32,
