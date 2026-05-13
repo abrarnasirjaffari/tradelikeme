@@ -96,3 +96,24 @@ infra/klinechart-pro/docs/
 *.tmp
 *.bak
 .cache/
+
+# ── Demo / media artefacts (large files, local only) ────
+demo-video/
+demo_voiceover.mp3
+generate_voiceover.py
+elevenlabs.md
+frontend/src/pages/demo-video/
+*.pdf
+
+# ── Session / scratch files ──────────────────────────────
+claude-session.jsonl
+claude.txt
+winners_p3.json
+winners_p4.json
+verification/data/
+google antigravity hackathon.md
+strategy.md
+mobile.pen
+
+# ── Claude memory (local only) ──────────────────────────
+.claude/

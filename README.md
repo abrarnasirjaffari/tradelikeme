@@ -1,6 +1,6 @@
 # TradeLikeMe
 
-**Marketplace for Verified AI Trading Strategies on Solana.**
+TradeLikeMe is a marketplace for verified AI trading strategies on Solana. Traders submit strategies, we verify them through an automated pipeline, and autonomous agents execute them 24/7 on-chain via a trustless Anchor vault — the agent can trade but can never withdraw user funds.
 
 [tradelikeme.xyz](https://tradelikeme.xyz) · [Live Demo](https://tradelikeme.xyz/dashboard)
 
@@ -8,12 +8,6 @@
 [![Solana](https://img.shields.io/badge/Solana-devnet%20live-9945FF)](https://solscan.io)
 [![Python](https://img.shields.io/badge/Python-3.11%20asyncio-3776AB)](https://python.org)
 [![Tests](https://img.shields.io/badge/tests-32%20passing-brightgreen)](tests/)
-
----
-
-## About
-
-TradeLikeMe is a marketplace for verified AI trading strategies on Solana. Traders submit strategies, we verify them through an automated pipeline, and autonomous agents execute them 24/7 on-chain via a trustless Anchor vault — the agent can trade but can never withdraw user funds.
 
 ---
 

@@ -60,8 +60,8 @@ async function openPhantomUrl(url: string): Promise<void> {
 }
 
 export interface PhantomDeepLinkHook {
-  deposit: (vaultId: string, serializedTx: string | Uint8Array) => Promise<void>;
-  withdraw: (vaultId: string, serializedTx: string | Uint8Array) => Promise<void>;
+  deposit: (vaultId?: string, serializedTx?: string | Uint8Array) => Promise<void>;
+  withdraw: (vaultId?: string, serializedTx?: string | Uint8Array) => Promise<void>;
   lastSignature: string | null;
   isProcessing: boolean;
 }
@@ -99,7 +99,8 @@ export function usePhantomDeepLink(): PhantomDeepLinkHook {
   }, []);
 
   const deposit = useCallback(
-    async (vaultId: string, serializedTx: string | Uint8Array) => {
+    async (vaultId?: string, serializedTx?: string | Uint8Array) => {
+      if (!vaultId || !serializedTx) return;
       setIsProcessing(true);
       try {
         const url = buildPhantomUrl(vaultId, serializedTx);
@@ -112,7 +113,8 @@ export function usePhantomDeepLink(): PhantomDeepLinkHook {
   );
 
   const withdraw = useCallback(
-    async (vaultId: string, serializedTx: string | Uint8Array) => {
+    async (vaultId?: string, serializedTx?: string | Uint8Array) => {
+      if (!vaultId || !serializedTx) return;
       setIsProcessing(true);
       try {
         const url = buildPhantomUrl(vaultId, serializedTx);

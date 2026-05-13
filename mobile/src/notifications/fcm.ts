@@ -1,6 +1,13 @@
 import { Alert, Platform } from 'react-native';
-import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
+
+// expo-notifications is native-only — dynamically import only on native
+// to avoid "invariant violation" errors in web environments.
+let Notifications: typeof import('expo-notifications') | null = null;
+if (Platform.OS !== 'web') {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  Notifications = require('expo-notifications');
+}
 
 const API_BASE = 'https://api.tradelikeme.xyz';
 
@@ -36,6 +43,11 @@ function routeForEventType(eventType: string): string {
 // Permission + token initialisation
 // ---------------------------------------------------------------------------
 export async function initNotifications(): Promise<void> {
+  if (Platform.OS === 'web' || !Notifications) {
+    // Push notifications are not supported on web — skip silently
+    return;
+  }
+
   // Set foreground presentation options before requesting permission
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -100,6 +112,10 @@ export async function registerForPushNotifications(userId: string): Promise<{
   expoPushToken: string | null;
   fcmToken: string | null;
 }> {
+  if (Platform.OS === 'web' || !Notifications) {
+    return { expoPushToken: null, fcmToken: null };
+  }
+
   let expoPushToken: string | null = null;
   let fcmToken: string | null = null;
 
@@ -136,10 +152,15 @@ export async function registerForPushNotifications(userId: string): Promise<{
 // ---------------------------------------------------------------------------
 // Notification handlers
 // ---------------------------------------------------------------------------
-let foregroundSubscription: Notifications.Subscription | null = null;
-let responseSubscription: Notifications.Subscription | null = null;
+let foregroundSubscription: { remove: () => void } | null = null;
+let responseSubscription: { remove: () => void } | null = null;
 
 export function setupNotificationHandlers(): () => void {
+  if (Platform.OS === 'web' || !Notifications) {
+    // Not supported on web — return a no-op cleanup
+    return () => {};
+  }
+
   // Foreground handler — show an alert while the app is active
   foregroundSubscription = Notifications.addNotificationReceivedListener(
     (notification) => {

@@ -76,3 +76,105 @@ export async function getPnl(userId: string): Promise<EpochSummary[]> {
     return MOCK_EPOCHS;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Risk mode
+// ---------------------------------------------------------------------------
+export type RiskMode = 'conservative' | 'medium' | 'aggressive';
+
+export interface RiskModeConfig {
+  mode: RiskMode;
+}
+
+export async function getRiskMode(userId?: string): Promise<RiskModeConfig> {
+  try {
+    const url = userId
+      ? `${BASE_URL}/users/${userId}/risk-mode`
+      : `${BASE_URL}/users/me/risk-mode`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('fetch failed');
+    return (await res.json()) as RiskModeConfig;
+  } catch {
+    return { mode: 'medium' };
+  }
+}
+
+export async function setRiskMode(
+  config: RiskModeConfig | { mode: RiskMode },
+  userId?: string
+): Promise<RiskModeConfig> {
+  try {
+    const url = userId
+      ? `${BASE_URL}/users/${userId}/risk-mode`
+      : `${BASE_URL}/users/me/risk-mode`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(config),
+    });
+    if (!res.ok) throw new Error('set risk-mode failed');
+    return (await res.json()) as RiskModeConfig;
+  } catch {
+    return config as RiskModeConfig;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Notification config
+// Supports both the internal shape (telegram/zoneTouch/…) and the
+// settings screen shape (push_enabled/telegram_enabled).
+// ---------------------------------------------------------------------------
+export interface NotifConfig {
+  push_enabled?: boolean;
+  telegram_enabled?: boolean;
+  telegram?: boolean;
+  zoneTouch?: boolean;
+  tp1Hit?: boolean;
+  tp2Hit?: boolean;
+  slHit?: boolean;
+  agentDown?: boolean;
+  dailySummary?: boolean;
+}
+
+const DEFAULT_NOTIF_CONFIG: NotifConfig = {
+  push_enabled: true,
+  telegram_enabled: true,
+  telegram: true,
+  zoneTouch: true,
+  tp1Hit: true,
+  tp2Hit: true,
+  slHit: true,
+  agentDown: true,
+  dailySummary: true,
+};
+
+export async function getNotifConfig(userId?: string): Promise<NotifConfig> {
+  try {
+    const headers: Record<string, string> = {};
+    if (userId) headers['X-User-Id'] = userId;
+    const res = await fetch(`${BASE_URL}/notifications/config`, { headers });
+    if (!res.ok) throw new Error('fetch failed');
+    return (await res.json()) as NotifConfig;
+  } catch {
+    return DEFAULT_NOTIF_CONFIG;
+  }
+}
+
+export async function setNotifConfig(
+  config: Partial<NotifConfig>,
+  userId?: string
+): Promise<NotifConfig> {
+  try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (userId) headers['X-User-Id'] = userId;
+    const res = await fetch(`${BASE_URL}/notifications/config`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(config),
+    });
+    if (!res.ok) throw new Error('set notif config failed');
+    return (await res.json()) as NotifConfig;
+  } catch {
+    return { ...DEFAULT_NOTIF_CONFIG, ...config };
+  }
+}

@@ -147,7 +147,7 @@ type Section =
 
 export default function VaultScreen() {
   const user = useAuthStore((s) => s.user);
-  const { isLoading: phantomLoading, deposit, withdraw } = usePhantomDeepLink();
+  const { isProcessing: phantomLoading, deposit, withdraw } = usePhantomDeepLink();
 
   const [vaults, setVaults] = useState<Vault[]>([]);
   const [epochs, setEpochs] = useState<EpochSummary[]>([]);
