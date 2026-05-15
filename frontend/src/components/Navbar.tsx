@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ArrowUpRight, X, LogOut } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '../context/AuthContext'
+import VoiceCallButton from './VoiceCallButton'
 
 function navigate(path: string) {
   window.history.pushState({}, '', path)
@@ -56,6 +57,7 @@ export default function Navbar() {
             >{label}</button>
           ))}
           <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.15)', margin: '0 6px', flexShrink: 0 }} />
+          <VoiceCallButton variant="navbar" />
           {displayName ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <span className="liquid-glass" style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 500, fontSize: '13px', color: shortWallet ? '#AB9FF2' : 'rgba(255,255,255,0.85)', padding: '8px 16px', borderRadius: 9999, letterSpacing: '0.01em' }}>
@@ -107,6 +109,7 @@ export default function Navbar() {
             >{label}</button>
           ))}
           <div style={{ width: 48, height: 1, background: 'rgba(255,255,255,0.1)', margin: '0.5rem 0' }} />
+          <VoiceCallButton variant="navbar" />
           {displayName ? (
             <button onClick={handleSignOut}
               style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 500, fontSize: '15px', color: 'rgba(255,255,255,0.6)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, marginTop: '0.5rem' }}

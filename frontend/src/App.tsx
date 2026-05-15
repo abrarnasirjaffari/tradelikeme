@@ -33,6 +33,7 @@ import TwoFactorSetupPage from './pages/TwoFactorSetupPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import PublicOnlyRoute from './components/PublicOnlyRoute'
 import SubmitStrategyPage from './pages/SubmitStrategyPage'
+import VoiceCallButton from './components/VoiceCallButton'
 
 const HR = <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.07)', margin: '0 10rem' }} />
 
@@ -106,6 +107,7 @@ export default function App() {
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="/2fa-setup" element={<ProtectedRoute><TwoFactorSetupPage /></ProtectedRoute>} />
       </Routes>
+      <VoiceCallButton variant="floating" />
     </>
   )
 }
