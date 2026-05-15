@@ -157,7 +157,7 @@ services:
       ENABLE_TELEMETRY: "false"
       FASTAPI_WORKERS: "1"
     ports:
-      - "127.0.0.1:8010:8000"
+      - "0.0.0.0:8010:8000"
     depends_on:
       dograh-postgres:
         condition: service_healthy
@@ -179,9 +179,12 @@ services:
   dograh-ui:
     image: dograhai/dograh-ui:latest
     environment:
-      BACKEND_URL: "http://dograh-api:8000"
+      BACKEND_URL: "http://api:8000"
       NODE_ENV: "oss"
       ENABLE_TELEMETRY: "false"
+    # 'api' alias maps to dograh-api container via network alias (Next.js rewrites use 'api:8000')
+    links:
+      - "dograh-api:api"
     ports:
       - "3010:3010"
     depends_on:
