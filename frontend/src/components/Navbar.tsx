@@ -11,11 +11,10 @@ function navigate(path: string) {
 }
 
 const NAV_LINKS = [
-  { label: 'Home',         path: '/' },
-  { label: 'How It Works', path: '/how-it-works' },
-  { label: 'Pricing',      path: '/pricing' },
-  { label: 'Blog',         path: '/blog' },
-  { label: 'Open Source',  path: '/open-source' },
+  { label: 'Home',        path: '/' },
+  { label: 'Pricing',     path: '/pricing' },
+  { label: 'Blog',        path: '/blog' },
+  { label: 'Open Source', path: '/open-source' },
 ]
 
 export default function Navbar() {
@@ -56,8 +55,6 @@ export default function Navbar() {
               onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.8)')}
             >{label}</button>
           ))}
-          <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.15)', margin: '0 6px', flexShrink: 0 }} />
-          <VoiceCallButton variant="navbar" />
           {displayName ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <span className="liquid-glass" style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 500, fontSize: '13px', color: shortWallet ? '#AB9FF2' : 'rgba(255,255,255,0.85)', padding: '8px 16px', borderRadius: 9999, letterSpacing: '0.01em' }}>

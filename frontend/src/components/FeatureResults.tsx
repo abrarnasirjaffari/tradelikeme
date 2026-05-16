@@ -17,7 +17,7 @@ export default function FeatureResults() {
             style={{ height: '100%', borderRadius: 4, background: 'linear-gradient(90deg, #0052FF 0%, #22C55E 100%)' }}
           />
         </div>
-        <span style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: '13px', color: '#22C55E' }}>942% growth · 89% win rate</span>
+        <span style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: '13px', color: '#22C55E' }}>942% growth · Proven win rate</span>
       </motion.div>
 
       <motion.div initial="hidden" whileInView="show" viewport={VIEW} variants={fadeRight}
@@ -28,7 +28,7 @@ export default function FeatureResults() {
           Results that speak for themselves.
         </h2>
         <p style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 300, fontSize: '1rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.65 }}>
-          Our flagship strategy turned a $100 test account into $1,000+ in a single month. 89% win rate. Pure price action. No indicators. Verified on TradingView — not a simulation.
+          Our flagship strategy turned a $100 test account into $1,000+ in a single month. Proven win rate. Pure price action. No indicators. Verified on TradingView — not a simulation.
         </p>
         <button className="liquid-glass" style={{ alignSelf: 'flex-start', borderRadius: 9999, padding: '0.75rem 1.5rem', fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: '14px', color: '#fff', cursor: 'pointer', border: 'none', background: 'transparent' }}>
           View results →

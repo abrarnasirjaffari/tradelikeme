@@ -48,7 +48,7 @@ export default function PlatformOverview() {
       <DocSection>
         <DocH2>Our edge</DocH2>
         <DocUl items={[
-          '89% win rate — verified on TradingView charts, growing sample',
+          'Proven win rate — verified on TradingView charts, growing sample',
           'Human-cloned strategy — exact rules from a real profitable trader, not AI guessing',
           'Body-close stop loss — wicks past SL are ignored (70% wick survival rate)',
           'Multi-timeframe analysis — 7 timeframes from monthly down to 15-minute',

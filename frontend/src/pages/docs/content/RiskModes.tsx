@@ -33,7 +33,7 @@ export default function RiskModes() {
       <DocSection>
         <DocH2>What "buffer" means</DocH2>
         <DocP>
-          The buffer is the number of consecutive full losses your balance can absorb before approaching the $35 minimum floor. At 89% win rate, consecutive losses are rare — but the buffer gives you a safety margin for drawdown periods.
+          The buffer is the number of consecutive full losses your balance can absorb before approaching the $35 minimum floor. With a proven win rate, consecutive losses are rare — but the buffer gives you a safety margin for drawdown periods.
         </DocP>
         <DocUl items={[
           'Conservative (20+ buffer): extremely unlikely to hit the floor in any realistic drawdown',

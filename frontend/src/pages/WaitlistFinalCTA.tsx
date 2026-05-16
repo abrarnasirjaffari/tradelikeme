@@ -23,17 +23,17 @@ export default function WaitlistFinalCTA() {
           viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.1 }}
           style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 300, fontSize: '1.125rem', color: 'rgba(255,255,255,0.8)', lineHeight: 1.56, maxWidth: '48ch' }}
         >
-          Be first to access TradeLikeMe when we launch. No spam — just one email when we go live.
+          Pick a verified strategy. Deposit. Let proven agents compound your capital 24/7.
         </motion.p>
         <motion.div
           initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }}
         >
           <button
-            onClick={() => navigate('/join-waitlist')}
+            onClick={() => navigate('/signup')}
             style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: '15px', background: '#fff', color: '#0052FF', borderRadius: 9999, padding: '14px 28px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
           >
-            Join Waitlist <ArrowUpRight size={16} />
+            Start Trading <ArrowUpRight size={16} />
           </button>
         </motion.div>
       </div>

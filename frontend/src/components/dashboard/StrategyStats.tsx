@@ -69,7 +69,7 @@ export default function StrategyStats({ pnl }: Props) {
           letterSpacing: '0.01em',
           flexShrink: 0,
         }}>
-          89% Win Rate
+          Proven Win Rate
         </div>
       </div>
 

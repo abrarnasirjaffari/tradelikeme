@@ -208,9 +208,9 @@ export default function BlogPostPage() {
                 fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
                 color: '#fff', margin: 0, lineHeight: 1.1, letterSpacing: '-1px',
                 fontSize: 'clamp(1.75rem, 3vw, 2.5rem)', maxWidth: '22ch',
-              }}>Join the waitlist. First 100 get early access.</h2>
+              }}>Ready to let a proven agent trade for you?</h2>
               <button
-                onClick={() => navigate('/join-waitlist')}
+                onClick={() => navigate('/signup')}
                 style={{
                   fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: '14px',
                   background: '#0052FF', color: '#fff', borderRadius: 9999,
@@ -218,7 +218,7 @@ export default function BlogPostPage() {
                   display: 'flex', alignItems: 'center', gap: 6,
                 }}
               >
-                Join waitlist <ArrowUpRight size={14} />
+                Start Trading <ArrowUpRight size={14} />
               </button>
             </motion.div>
           </section>

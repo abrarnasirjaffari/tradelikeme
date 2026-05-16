@@ -59,7 +59,7 @@ export default function TermsPage() {
             <div style={s.section}>
               <h2 style={s.h2}>2. Not Financial Advice</h2>
               <p style={s.p}>
-                TradeLikeMe is a technology platform that automates a trading strategy. Nothing on this platform constitutes financial advice, investment advice, or a recommendation to buy or sell any asset. Past performance — including the 89% win rate referenced — does not guarantee future results. Trading perpetual contracts involves significant risk of loss, including loss of your entire deposit. You are solely responsible for your trading decisions.
+                TradeLikeMe is a technology platform that automates a trading strategy. Nothing on this platform constitutes financial advice, investment advice, or a recommendation to buy or sell any asset. Past performance does not guarantee future results. Trading perpetual contracts involves significant risk of loss, including loss of your entire deposit. You are solely responsible for your trading decisions.
               </p>
             </div>
 

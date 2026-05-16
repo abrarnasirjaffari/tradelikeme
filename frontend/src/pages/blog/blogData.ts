@@ -15,7 +15,7 @@ export const posts: BlogPost[] = [
     slug: 'why-89-percent-win-rate',
     category: 'Strategy',
     categoryColor: '#22C55E',
-    title: 'Why our 89% win rate is real — and how we verified it',
+    title: 'Why our win rate is real — and how we verified it',
     excerpt: 'Every AI trading platform claims results. We show the receipts: TradingView charts, trade-by-trade breakdowns, and the exact methodology behind 36 verified trades.',
     date: 'Apr 28, 2026',
     readTime: '8 min read',
@@ -35,7 +35,7 @@ If any of those conditions couldn't be confirmed from the chart, the trade was e
 
 ## The 36-trade sample
 
-Our current verified sample is 36 trades. That's not a large number statistically, but every single one was verified manually. The 89% win rate means 32 winners and 4 losers.
+Our current verified sample is 36 trades. That's not a large number statistically, but every single one was verified manually. 32 winners and 4 losers — a proven win rate across real market conditions.
 
 Average winner: +4.2%. Average loser: -2.8%. Risk-reward ratio: 1.5:1.
 

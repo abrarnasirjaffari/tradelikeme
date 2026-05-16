@@ -11,7 +11,7 @@ const faqs = [
   },
   {
     q: 'What is the expected monthly return?',
-    a: 'Based on verified historical performance, the strategy averages approximately 8% per month. This is not guaranteed — past performance does not guarantee future results. The win rate is 89% with an average winner of +4.2% and average loser of -2.8%.',
+    a: 'Based on verified historical performance, the strategy averages approximately 8% per month. This is not guaranteed — past performance does not guarantee future results. The strategy has a proven win rate with an average winner of +4.2% and average loser of -2.8%.',
   },
   {
     q: 'Can I lose more than I deposit?',
@@ -38,7 +38,7 @@ const faqs = [
     a: 'In Mode A, you can withdraw up to your available balance minus margin held in open positions. In Mode B, your exchange balance is yours to withdraw at any time — open positions are independent.',
   },
   {
-    q: 'Is the 89% win rate real?',
+    q: 'Is the win rate real?',
     a: 'Yes. It is verified on TradingView charts — not self-reported screenshots, not backtests, but live chart verification of real trades. The sample is ongoing and growing. You can view the verification data in the Strategy Proof section.',
   },
 ]

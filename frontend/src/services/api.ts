@@ -376,7 +376,7 @@ export const MOCK_AGENT_STATUS: AgentStatusData = {
 export const MOCK_STRATEGY_INFO: StrategyInfoData = {
   id: 'sd-zones-v1',
   name: 'S/D Zone Trading',
-  description: 'Human-cloned supply & demand zone strategy with 89% verified win rate. Structural entries with body-close stop loss.',
+  description: 'Human-cloned supply & demand zone strategy with a proven win rate. Structural entries with body-close stop loss.',
   rules: [
     'Entry at S/D zone reversal on 4H + 15M confirmation',
     'BTC 1D macro must align with trade direction',

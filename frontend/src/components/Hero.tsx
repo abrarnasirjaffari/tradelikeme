@@ -17,14 +17,6 @@ export default function Hero() {
 
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10, padding: PAD, paddingBottom: '2.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
-        {/* Badge */}
-        <motion.div {...fadeUp(0.4)} style={{ display: 'flex' }}>
-          <div className="liquid-glass" style={{ borderRadius: 9999, display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '4px 4px' }}>
-            <span style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 600, background: '#0052FF', color: '#fff', borderRadius: 9999, padding: '4px 12px', fontSize: '11px' }}>New</span>
-            <span style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 400, fontSize: '13px', color: 'rgba(255,255,255,0.88)', paddingRight: '0.75rem' }}>89% Win Rate — Pure Price Action — Now on Solana</span>
-          </div>
-        </motion.div>
-
         {/* Headline */}
         <BlurText
           text="Verified strategies. Automated for you."
@@ -50,7 +42,7 @@ export default function Hero() {
 
           <motion.div {...fadeUp(1.3)} style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
             {[
-              { value: '89%', label: 'Verified Win Rate' },
+              { value: 'Proven', label: 'Win Rate' },
               { value: '$0 Fees', label: '20% Profit Share Only' },
               { value: '24/7', label: 'Agent Runs Non-Stop' },
             ].map((s) => (

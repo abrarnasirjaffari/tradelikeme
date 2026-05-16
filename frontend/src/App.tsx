@@ -63,10 +63,6 @@ function HomePage() {
           {HR}
           <FeatureDualMode />
           {HR}
-          <FeatureResults />
-          {HR}
-          <HowItWorks />
-          {HR}
           <OpenSource />
           {HR}
           <Pricing />

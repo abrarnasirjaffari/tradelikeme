@@ -55,10 +55,10 @@ export default function OpenSourcePage() {
             </motion.p>
             <motion.div variants={fadeUp}>
               <button
-                onClick={() => { window.history.pushState({}, '', '/join-waitlist'); window.scrollTo(0, 0); window.dispatchEvent(new PopStateEvent('popstate')) }}
+                onClick={() => { window.history.pushState({}, '', '/signup'); window.scrollTo(0, 0); window.dispatchEvent(new PopStateEvent('popstate')) }}
                 style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: '14px', background: '#0052FF', color: '#fff', borderRadius: 9999, padding: '12px 24px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
               >
-                Join the waitlist <ArrowUpRight size={15} />
+                Start Trading <ArrowUpRight size={15} />
               </button>
             </motion.div>
           </motion.div>
@@ -135,7 +135,7 @@ export default function OpenSourcePage() {
                 </h3>
               </div>
               <p style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 300, fontSize: '14px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.65, margin: 0 }}>
-                Join the waitlist and get notified the moment the platform and full source code go live. Fork it, inspect it, build on it.
+                Sign up and get access the moment the platform and full source code go live. Fork it, inspect it, build on it.
               </p>
               {[
                 'Full MIT source code on day one',
@@ -150,10 +150,10 @@ export default function OpenSourcePage() {
                 </div>
               ))}
               <button
-                onClick={() => { window.history.pushState({}, '', '/join-waitlist'); window.scrollTo(0, 0); window.dispatchEvent(new PopStateEvent('popstate')) }}
+                onClick={() => { window.history.pushState({}, '', '/signup'); window.scrollTo(0, 0); window.dispatchEvent(new PopStateEvent('popstate')) }}
                 style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: '14px', background: '#0052FF', color: '#fff', borderRadius: 9999, padding: '12px 24px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: '0.25rem' }}
               >
-                Join Waitlist <ArrowUpRight size={15} />
+                Start Trading <ArrowUpRight size={15} />
               </button>
             </motion.div>
           </section>

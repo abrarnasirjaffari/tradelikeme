@@ -2,9 +2,9 @@ import { motion } from 'framer-motion'
 import { VIEW, fadeRight, fadeUp, stagger } from '../lib/animate'
 
 const strategies = [
-  { name: 'TradeLikeMe Strategy', type: 'Pure Price Action', wr: '89% WR', fee: '20% profit share' },
-  { name: 'Alpha Scalper',        type: 'Momentum + Volume', wr: '76% WR', fee: '12% profit share' },
-  { name: 'Swing Master',         type: 'Multi-TF Trend',    wr: '68% WR', fee: '10% profit share' },
+  { name: 'TradeLikeMe Strategy', type: 'Pure Price Action', wr: '89% WR · 1.5 RRR' },
+  { name: 'Alpha Scalper',        type: 'Momentum + Volume', wr: '76% WR' },
+  { name: 'Swing Master',         type: 'Multi-TF Trend',    wr: '68% WR' },
 ]
 
 export default function FeatureMarketplace() {
@@ -25,7 +25,6 @@ export default function FeatureMarketplace() {
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: '14px', color: '#22C55E' }}>{s.wr}</div>
-              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: '12px', color: 'rgba(255,255,255,0.38)', marginTop: 2 }}>{s.fee}</div>
             </div>
           </motion.div>
         ))}

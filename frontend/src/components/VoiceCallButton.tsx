@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Mic, MicOff, X, PhoneCall } from 'lucide-react'
+import { Phone, PhoneOff, X, PhoneCall } from 'lucide-react'
 
 const DOGRAH_URL = import.meta.env.VITE_DOGRAH_URL ?? 'http://localhost:3010'
 
@@ -138,7 +138,7 @@ export default function VoiceCallButton({ variant }: VoiceCallButtonProps) {
           e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,82,255,0.45)'
         }}
       >
-        <Mic size={22} />
+        <Phone size={22} />
         {/* Floating pulse ring */}
         <span
           style={{
@@ -282,7 +282,7 @@ function VoiceModal({ status, statusLabel, isPulsing, onStartCall, onClose }: Mo
             flexShrink: 0,
           }}
         >
-          {status === 'connected' ? <MicOff size={30} /> : <Mic size={30} />}
+          {status === 'connected' ? <PhoneOff size={30} /> : <Phone size={30} />}
         </button>
 
         {/* Status text */}

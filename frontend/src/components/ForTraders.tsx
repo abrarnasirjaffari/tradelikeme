@@ -13,7 +13,7 @@ export default function ForTraders() {
           Got a winning strategy? Share it.
         </h2>
         <p style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 300, fontSize: '1rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, maxWidth: '52ch' }}>
-          Submit your rules. If your strategy passes verification (55%+ win rate, 50+ trades), our agent automates it for thousands of users. You earn from every deposit — zero work, zero risk, zero cost.
+          Submit your rules. If your strategy passes verification, our agent automates it for thousands of users. You earn from every deposit — zero work, zero risk, zero cost.
         </p>
       </motion.div>
 
@@ -23,9 +23,9 @@ export default function ForTraders() {
         <motion.div variants={fadeUp} className="liquid-glass"
           style={{ flex: 1, borderRadius: '1rem', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center', textAlign: 'center' }}
         >
-          <span style={{ fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', color: '#fff', fontSize: '2.25rem', lineHeight: 1 }}>$5k/mo</span>
-          <span style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 400, fontSize: '13px', color: 'rgba(255,255,255,0.48)' }}>Trading alone ($50k capital)</span>
-          <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: '12px', color: 'rgba(255,255,255,0.28)', marginTop: 2 }}>8–12 hrs/day, own money at risk</span>
+          <span style={{ fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', color: '#fff', fontSize: '1.5rem', lineHeight: 1.2 }}>Trading alone</span>
+          <span style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 400, fontSize: '13px', color: 'rgba(255,255,255,0.48)' }}>Your capital, your risk</span>
+          <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: '12px', color: 'rgba(255,255,255,0.28)', marginTop: 2 }}>8–12 hrs/day, income stops when you stop</span>
         </motion.div>
 
         <motion.div variants={fadeUp} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 48, flexShrink: 0 }}>
@@ -35,9 +35,9 @@ export default function ForTraders() {
         <motion.div variants={fadeUp}
           style={{ flex: 1, borderRadius: '1rem', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center', textAlign: 'center', background: 'rgba(0,82,255,0.08)', border: '1px solid rgba(0,82,255,0.22)' }}
         >
-          <span style={{ fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', color: '#0052FF', fontSize: '2.25rem', lineHeight: 1 }}>$14k/mo</span>
-          <span style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 400, fontSize: '13px', color: 'rgba(255,255,255,0.65)' }}>On TradeLikeMe ($2M user deposits)</span>
-          <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: '12px', color: 'rgba(255,255,255,0.38)', marginTop: 2 }}>0 hours/day, $0 risk, agent runs 24/7</span>
+          <span style={{ fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', color: '#0052FF', fontSize: '1.5rem', lineHeight: 1.2 }}>On TradeLikeMe</span>
+          <span style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 400, fontSize: '13px', color: 'rgba(255,255,255,0.65)' }}>User deposits, zero risk</span>
+          <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: '12px', color: 'rgba(255,255,255,0.38)', marginTop: 2 }}>0 hours/day, agent runs 24/7</span>
         </motion.div>
       </motion.div>
     </section>

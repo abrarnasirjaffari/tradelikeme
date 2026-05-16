@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import { VIEW, stagger, fadeUp } from '../lib/animate'
 
 const stats = [
-  { value: '89%',   label: 'Win Rate' },
+  { value: 'Proven',   label: 'Win Rate' },
   { value: '100%',  label: 'Pure Price Action' },
   { value: '24/7',  label: 'Agent Runs Non-Stop' },
   { value: '20%',   label: 'Our Strategy Fee' },
