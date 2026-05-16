@@ -20,6 +20,7 @@ import AccountSettings from '../components/dashboard/AccountSettings'
 import OnChainVerification from '../components/dashboard/OnChainVerification'
 import VaultHistory from '../components/dashboard/VaultHistory'
 import StrategyVerification from '../components/dashboard/StrategyVerification'
+import ReferralCard from '../components/dashboard/ReferralCard'
 import DashboardSidebar from '../components/dashboard/DashboardSidebar'
 import type { DashboardPage } from '../components/dashboard/DashboardSidebar'
 import {
@@ -51,6 +52,7 @@ const PAGE_TITLES: Record<DashboardPage, string> = {
   vault: 'Vault',
   settings: 'Settings',
   verification: 'Strategy Verification',
+  referral: 'Referral Program',
 }
 
 export default function DashboardPage() {
@@ -144,6 +146,7 @@ export default function DashboardPage() {
               <StrategyStats pnl={pnl} />
             </div>
             <StatCards pnl={pnl} vault={vaults[0]} />
+            <ReferralCard onFullPage={() => setActivePage('referral')} />
           </>
         )
       case 'positions':
@@ -180,6 +183,8 @@ export default function DashboardPage() {
         )
       case 'verification':
         return <StrategyVerification />
+      case 'referral':
+        return <ReferralCard onFullPage={() => navigate('/referral')} />
       default:
         return null
     }

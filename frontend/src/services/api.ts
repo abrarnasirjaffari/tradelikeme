@@ -1,4 +1,5 @@
 const API_BASE = import.meta.env.VITE_API_URL ?? ''
+const HAS_BACKEND = !!import.meta.env.VITE_API_URL
 
 export type Vault = {
   id: string
@@ -119,16 +120,19 @@ export async function fetchApi(path: string, options: RequestInit = {}): Promise
 }
 
 export async function getVaults(userId: string): Promise<Vault[]> {
+  if (!HAS_BACKEND) return MOCK_VAULTS
   const res = await fetchApi(`/users/${userId}/vaults`)
   return res.json()
 }
 
 export async function getTrades(userId: string): Promise<Trade[]> {
+  if (!HAS_BACKEND) return MOCK_TRADES
   const res = await fetchApi(`/users/${userId}/trades`)
   return res.json()
 }
 
 export async function getPnl(userId: string): Promise<PnlSummary> {
+  if (!HAS_BACKEND) return MOCK_PNL
   const res = await fetchApi(`/users/${userId}/pnl`)
   return res.json()
 }
@@ -200,26 +204,31 @@ export async function confirmWithdraw(
 }
 
 export async function getPositions(userId: string): Promise<Position[]> {
+  if (!HAS_BACKEND) return MOCK_POSITIONS
   const res = await fetchApi(`/users/${userId}/positions`)
   return res.json()
 }
 
 export async function getAgentStatus(): Promise<AgentStatusData> {
+  if (!HAS_BACKEND) return MOCK_AGENT_STATUS
   const res = await fetchApi('/agent/sd-zones-v1/status')
   return res.json()
 }
 
 export async function getStrategyInfo(id: string): Promise<StrategyInfoData> {
+  if (!HAS_BACKEND) return MOCK_STRATEGY_INFO
   const res = await fetchApi(`/strategies/${id}`)
   return res.json()
 }
 
 export async function getVaultHistory(vaultId: string): Promise<VaultHistoryItem[]> {
+  if (!HAS_BACKEND) return MOCK_VAULT_HISTORY
   const res = await fetchApi(`/vaults/${vaultId}/history`)
   return res.json()
 }
 
 export async function getRiskMode(userId: string): Promise<RiskMode> {
+  if (!HAS_BACKEND) return 'medium'
   const res = await fetchApi(`/users/${userId}/risk-mode`)
   return res.json()
 }

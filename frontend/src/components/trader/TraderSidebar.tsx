@@ -1,33 +1,29 @@
-import { LayoutDashboard, Target, BarChart2, BookOpen, Bot, Wallet, Settings, FlaskConical, Gift } from 'lucide-react'
+import { LayoutDashboard, TrendingUp, BarChart2, DollarSign, BookOpen, Users, Plus } from 'lucide-react'
 
-export type DashboardPage = 'overview' | 'positions' | 'trades' | 'strategy' | 'agent' | 'vault' | 'settings' | 'verification' | 'referral'
+export type TraderPage = 'overview' | 'performance' | 'trades' | 'earnings' | 'strategy' | 'subscribers' | 'submit'
 
 interface Props {
-  activePage: DashboardPage
-  onNavigate: (page: DashboardPage) => void
-  user: { name?: string | null; email?: string | null; image?: string | null } | null
-  agentStatus: 'running' | 'stopped' | 'scanning'
-  openPositionCount: number
+  activePage: TraderPage
+  onNavigate: (p: TraderPage) => void
+  user: { name?: string | null; email?: string | null } | null
 }
 
-const navItems: { id: DashboardPage; label: string; icon: React.ReactNode }[] = [
-  { id: 'overview', label: 'Overview', icon: <LayoutDashboard size={15} /> },
-  { id: 'positions', label: 'Positions', icon: <Target size={15} /> },
-  { id: 'trades', label: 'Trades', icon: <BarChart2 size={15} /> },
-  { id: 'strategy', label: 'Strategy', icon: <BookOpen size={15} /> },
-  { id: 'agent', label: 'Agent', icon: <Bot size={15} /> },
-  { id: 'vault', label: 'Vault', icon: <Wallet size={15} /> },
-  { id: 'settings', label: 'Settings', icon: <Settings size={15} /> },
-  { id: 'verification', label: 'Verification', icon: <FlaskConical size={15} /> },
-  { id: 'referral', label: 'Referral', icon: <Gift size={15} /> },
+const navItems: { id: TraderPage; label: string; icon: React.ReactNode }[] = [
+  { id: 'overview',     label: 'Overview',     icon: <LayoutDashboard size={15} /> },
+  { id: 'performance',  label: 'Performance',  icon: <TrendingUp size={15} /> },
+  { id: 'trades',       label: 'Trades',       icon: <BarChart2 size={15} /> },
+  { id: 'earnings',     label: 'Earnings',     icon: <DollarSign size={15} /> },
+  { id: 'strategy',     label: 'Strategy',     icon: <BookOpen size={15} /> },
+  { id: 'subscribers',  label: 'Subscribers',  icon: <Users size={15} /> },
+  { id: 'submit',       label: 'Submit Trade', icon: <Plus size={15} /> },
 ]
 
-export default function DashboardSidebar({ activePage, onNavigate, user, agentStatus, openPositionCount }: Props) {
+export default function TraderSidebar({ activePage, onNavigate, user }: Props) {
   return (
     <>
       <style>{`
         @media (max-width: 767px) {
-          .dash-sidebar {
+          .trader-sidebar {
             top: auto !important;
             bottom: 0 !important;
             left: 0 !important;
@@ -37,9 +33,9 @@ export default function DashboardSidebar({ activePage, onNavigate, user, agentSt
             border-right: none !important;
             border-top: 1px solid rgba(255,255,255,0.07) !important;
           }
-          .dash-sidebar-logo { display: none !important; }
-          .dash-sidebar-user { display: none !important; }
-          .dash-nav-list {
+          .trader-sidebar-logo { display: none !important; }
+          .trader-sidebar-user { display: none !important; }
+          .trader-nav-list {
             flex-direction: row !important;
             align-items: center !important;
             justify-content: space-around !important;
@@ -47,7 +43,7 @@ export default function DashboardSidebar({ activePage, onNavigate, user, agentSt
             overflow: visible !important;
             padding: 0 !important;
           }
-          .dash-nav-item {
+          .trader-nav-item {
             flex: 1 !important;
             flex-direction: column !important;
             gap: 0.2rem !important;
@@ -57,13 +53,12 @@ export default function DashboardSidebar({ activePage, onNavigate, user, agentSt
             align-items: center !important;
             justify-content: center !important;
           }
-          .dash-nav-label { font-size: 9px !important; }
-          .dash-nav-badge { display: none !important; }
+          .trader-nav-label { font-size: 9px !important; }
         }
       `}</style>
 
       <div
-        className="dash-sidebar"
+        className="trader-sidebar"
         style={{
           position: 'fixed',
           left: 0,
@@ -79,15 +74,35 @@ export default function DashboardSidebar({ activePage, onNavigate, user, agentSt
           zIndex: 50,
         }}
       >
-        <div className="dash-sidebar-logo" style={{ padding: '1.5rem 1.25rem 1rem' }}>
+        {/* Logo */}
+        <div className="trader-sidebar-logo" style={{ padding: '1.5rem 1.25rem 1rem' }}>
           <span style={{ fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', fontSize: '1.1rem', color: '#fff', letterSpacing: '-0.3px' }}>
             TradeLikeMe
           </span>
         </div>
-        <div className="dash-sidebar-logo" style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '0 1rem' }} />
+        <div className="trader-sidebar-logo" style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '0 1rem' }} />
 
+        {/* Trader badge */}
+        <div className="trader-sidebar-logo" style={{ padding: '0.75rem 1.25rem 0.25rem' }}>
+          <span style={{
+            fontFamily: "'Barlow', sans-serif",
+            fontSize: '10px',
+            fontWeight: 600,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase' as const,
+            color: '#f97316',
+            background: 'rgba(249,115,22,0.12)',
+            border: '1px solid rgba(249,115,22,0.25)',
+            borderRadius: 6,
+            padding: '3px 8px',
+          }}>
+            Trader Portal
+          </span>
+        </div>
+
+        {/* Nav */}
         <div
-          className="dash-nav-list"
+          className="trader-nav-list"
           style={{
             flex: 1,
             overflowY: 'auto',
@@ -101,7 +116,7 @@ export default function DashboardSidebar({ activePage, onNavigate, user, agentSt
             return (
               <button
                 key={item.id}
-                className="dash-nav-item"
+                className="trader-nav-item"
                 onClick={() => onNavigate(item.id)}
                 style={{
                   padding: '0.65rem 1rem',
@@ -113,8 +128,8 @@ export default function DashboardSidebar({ activePage, onNavigate, user, agentSt
                   border: 'none',
                   cursor: 'pointer',
                   transition: 'all 0.15s',
-                  background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
-                  color: isActive ? '#fff' : 'rgba(255,255,255,0.45)',
+                  background: isActive ? 'rgba(249,115,22,0.12)' : 'transparent',
+                  color: isActive ? '#f97316' : 'rgba(255,255,255,0.45)',
                   width: 'calc(100% - 1.5rem)',
                   textAlign: 'left',
                 }}
@@ -133,63 +148,20 @@ export default function DashboardSidebar({ activePage, onNavigate, user, agentSt
               >
                 {item.icon}
                 <span
-                  className="dash-nav-label"
+                  className="trader-nav-label"
                   style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 500, fontSize: '13.5px' }}
                 >
                   {item.label}
                 </span>
-
-                {item.id === 'positions' && openPositionCount > 0 && (
-                  <span
-                    className="dash-nav-badge"
-                    style={{
-                      marginLeft: 'auto',
-                      fontFamily: "'Barlow', sans-serif",
-                      fontWeight: 600,
-                      fontSize: '10px',
-                      background: '#0052FF',
-                      color: '#fff',
-                      borderRadius: 9999,
-                      padding: '1px 7px',
-                      minWidth: 18,
-                      textAlign: 'center',
-                    }}
-                  >
-                    {openPositionCount}
-                  </span>
-                )}
-
-                {item.id === 'agent' && (
-                  <span
-                    style={{
-                      marginLeft: 'auto',
-                      width: 7,
-                      height: 7,
-                      borderRadius: '50%',
-                      flexShrink: 0,
-                      background:
-                        agentStatus === 'running'
-                          ? '#22c55e'
-                          : agentStatus === 'scanning'
-                          ? '#60a5fa'
-                          : 'rgba(255,255,255,0.3)',
-                      boxShadow:
-                        agentStatus === 'running'
-                          ? '0 0 5px #22c55e'
-                          : agentStatus === 'scanning'
-                          ? '0 0 5px #60a5fa'
-                          : 'none',
-                    }}
-                  />
-                )}
               </button>
             )
           })}
         </div>
 
-        <div className="dash-sidebar-user" style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '0 1rem' }} />
+        {/* User section */}
+        <div className="trader-sidebar-user" style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '0 1rem' }} />
         <div
-          className="dash-sidebar-user"
+          className="trader-sidebar-user"
           style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.65rem' }}
         >
           <div
@@ -197,7 +169,7 @@ export default function DashboardSidebar({ activePage, onNavigate, user, agentSt
               width: 30,
               height: 30,
               borderRadius: '50%',
-              background: '#0052FF',
+              background: '#f97316',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

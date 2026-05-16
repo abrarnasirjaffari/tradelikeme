@@ -33,14 +33,27 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
+const DEV_BYPASS_AUTH = import.meta.env.DEV
+
+const DEV_USER: User = {
+  id: 'dev-user',
+  name: 'Dev User',
+  email: 'dev@localhost',
+  emailVerified: true,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  walletAddress: null,
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<User | null>(DEV_BYPASS_AUTH ? DEV_USER : null)
   const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!DEV_BYPASS_AUTH)
 
   const walletAddress = user?.walletAddress ?? null
 
   useEffect(() => {
+    if (DEV_BYPASS_AUTH) return
     authClient.getSession().then(({ data }) => {
       setUser((data?.user as User) ?? null)
       setSession((data?.session as Session) ?? null)

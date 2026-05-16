@@ -34,6 +34,25 @@ import ProtectedRoute from './components/ProtectedRoute'
 import PublicOnlyRoute from './components/PublicOnlyRoute'
 import SubmitStrategyPage from './pages/SubmitStrategyPage'
 import VoiceCallButton from './components/VoiceCallButton'
+import AdminPage from './pages/admin/AdminPage'
+import StrategiesPage from './pages/investor/StrategiesPage'
+import StrategyDetailPage from './pages/investor/StrategyDetailPage'
+import VaultsPage from './pages/investor/VaultsPage'
+import ConnectPage from './pages/investor/ConnectPage'
+import TradeHistoryPage from './pages/investor/TradeHistoryPage'
+import ActiveTradesPage from './pages/investor/ActiveTradesPage'
+import AnalyticsPage from './pages/investor/AnalyticsPage'
+import RiskSettingsPage from './pages/investor/RiskSettingsPage'
+import NotificationSettingsPage from './pages/investor/NotificationSettingsPage'
+import AccountSettingsPage from './pages/investor/AccountSettingsPage'
+import ReferralPage from './pages/investor/ReferralPage'
+import TraderEarningsPage from './pages/trader/TraderEarningsPage'
+import TraderStrategyPage from './pages/trader/TraderStrategyPage'
+import TraderOverviewPage from './pages/trader/TraderOverviewPage'
+import TraderPerformancePage from './pages/trader/TraderPerformancePage'
+import TraderTradeLogPage from './pages/trader/TraderTradeLogPage'
+import TraderSubscribersPage from './pages/trader/TraderSubscribersPage'
+import TraderSubmitStrategyPage from './pages/trader/TraderSubmitStrategyPage'
 
 const HR = <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.07)', margin: '0 10rem' }} />
 
@@ -102,6 +121,31 @@ export default function App() {
         <Route path="/submit-strategy" element={<SubmitStrategyPage />} />
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="/2fa-setup" element={<ProtectedRoute><TwoFactorSetupPage /></ProtectedRoute>} />
+        <Route path="/admin/*" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
+
+        {/* Investor — public */}
+        <Route path="/strategies" element={<StrategiesPage />} />
+        <Route path="/strategies/:id" element={<StrategyDetailPage />} />
+        <Route path="/connect" element={<ConnectPage />} />
+
+        {/* Investor — protected */}
+        <Route path="/vaults" element={<ProtectedRoute><VaultsPage /></ProtectedRoute>} />
+        <Route path="/trades" element={<ProtectedRoute><TradeHistoryPage /></ProtectedRoute>} />
+        <Route path="/trades/active" element={<ProtectedRoute><ActiveTradesPage /></ProtectedRoute>} />
+        <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
+        <Route path="/settings/risk" element={<ProtectedRoute><RiskSettingsPage /></ProtectedRoute>} />
+        <Route path="/settings/notifications" element={<ProtectedRoute><NotificationSettingsPage /></ProtectedRoute>} />
+        <Route path="/settings/account" element={<ProtectedRoute><AccountSettingsPage /></ProtectedRoute>} />
+        <Route path="/referral" element={<ProtectedRoute><ReferralPage /></ProtectedRoute>} />
+
+        {/* Trader */}
+        <Route path="/trader" element={<ProtectedRoute><TraderOverviewPage /></ProtectedRoute>} />
+        <Route path="/trader/performance" element={<ProtectedRoute><TraderPerformancePage /></ProtectedRoute>} />
+        <Route path="/trader/trades" element={<ProtectedRoute><TraderTradeLogPage /></ProtectedRoute>} />
+        <Route path="/trader/earnings" element={<ProtectedRoute><TraderEarningsPage /></ProtectedRoute>} />
+        <Route path="/trader/strategy" element={<ProtectedRoute><TraderStrategyPage /></ProtectedRoute>} />
+        <Route path="/trader/subscribers" element={<ProtectedRoute><TraderSubscribersPage /></ProtectedRoute>} />
+        <Route path="/trader/submit" element={<ProtectedRoute><TraderSubmitStrategyPage /></ProtectedRoute>} />
       </Routes>
       <VoiceCallButton variant="floating" />
     </>
