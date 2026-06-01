@@ -101,8 +101,7 @@ export default function ContactPage() {
 
               <motion.div {...fadeUp(0.15)} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {[
-                  { icon: Mail, label: 'Email', value: 'team@tradelikeme.xyz' },
-                  { icon: MessageSquare, label: 'Telegram', value: '@tradelikeme' },
+                  { icon: Mail, label: 'Email', value: 'abrarnasir@tradelikeme.xyz' },
                 ].map(({ icon: Icon, label, value }) => (
                   <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
                     <div style={{ width: 38, height: 38, borderRadius: '0.75rem', background: 'rgba(0,82,255,0.12)', border: '1px solid rgba(0,82,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>

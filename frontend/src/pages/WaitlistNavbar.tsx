@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { label: 'Home',        path: '/' },
   { label: 'Pricing',     path: '/pricing' },
   { label: 'Open Source', path: '/open-source' },
+  { label: 'Contact',     path: '/contact' },
 ]
 
 export default function WaitlistNavbar() {
