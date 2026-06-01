@@ -102,7 +102,7 @@ export default function App() {
     <>
       <ScrollToTop />
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<Waitlist />} />
         <Route path="/waitlist" element={<Waitlist />} />
         <Route path="/join-waitlist" element={<JoinWaitlist />} />
         <Route path="/how-it-works" element={<HowItWorksPage />} />

@@ -23,17 +23,17 @@ export default function WaitlistFinalCTA() {
           viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.1 }}
           style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 300, fontSize: '1.125rem', color: 'rgba(255,255,255,0.8)', lineHeight: 1.56, maxWidth: '48ch' }}
         >
-          Pick a verified strategy. Deposit. Let proven agents compound your capital 24/7.
+          Join the waitlist and be first in line when we launch.
         </motion.p>
         <motion.div
           initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }}
         >
           <button
-            onClick={() => navigate('/signup')}
+            onClick={() => navigate('/join-waitlist')}
             style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: '15px', background: '#fff', color: '#0052FF', borderRadius: 9999, padding: '14px 28px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
           >
-            Start Trading <ArrowUpRight size={16} />
+            Join Waitlist <ArrowUpRight size={16} />
           </button>
         </motion.div>
       </div>

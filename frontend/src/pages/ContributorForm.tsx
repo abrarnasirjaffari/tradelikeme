@@ -4,7 +4,7 @@ import { ArrowUpRight } from 'lucide-react'
 import { defaultContributorFields, ROLES, EXPERIENCE_OPTIONS, AREAS } from './contributorFormState'
 import type { ContributorFields } from './contributorFormState'
 import { inputStyle, labelStyle, fieldWrap, chipBase } from './formStyles'
-import { supabase } from '../lib/supabase'
+import { pb } from '../lib/pocketbase'
 
 const fadeIn = {
   initial: { opacity: 0, y: 16 },
@@ -36,26 +36,28 @@ export default function ContributorForm({ onBack, onDone }: Props) {
     if (!f.email.trim()) return
     setSubmitting(true)
     setSubmitError(null)
-    const { error } = await supabase.from('waitlist').insert({
-      role: 'contributor',
-      name: f.name,
-      email: f.email,
-      github: f.github || null,
-      contributor_role: f.role === 'other' ? (f.customRole || 'other') : (f.role || null),
-      experience: f.experience || null,
-      contribution_areas: f.areas.length ? f.areas : null,
-      anything_else: f.anythingElse || null,
-      open_source_before: f.openSource || null,
-      whatsapp: f.whatsapp || null,
-      telegram: f.telegram || null,
-      heard_from: f.heardFrom || null,
-    })
-    setSubmitting(false)
-    if (error) {
+    try {
+      await pb.collection('waitlist').create({
+        role: 'contributor',
+        name: f.name,
+        email: f.email,
+        github: f.github || null,
+        contributor_role: f.role === 'other' ? (f.customRole || 'other') : (f.role || null),
+        experience: f.experience || null,
+        contribution_areas: f.areas.length ? f.areas : null,
+        anything_else: f.anythingElse || null,
+        open_source_before: f.openSource || null,
+        whatsapp: f.whatsapp || null,
+        telegram: f.telegram || null,
+        heard_from: f.heardFrom || null,
+      })
+    } catch (err) {
+      setSubmitting(false)
       setSubmitError('Something went wrong. Please try again.')
-      console.error('Waitlist insert error:', error)
+      console.error('Waitlist insert error:', err)
       return
     }
+    setSubmitting(false)
     onDone()
   }
 
@@ -88,7 +90,7 @@ export default function ContributorForm({ onBack, onDone }: Props) {
           Join the waitlist.
         </h2>
         <p style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 300, fontSize: '0.875rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, margin: 0 }}>
-          Code drops on 9 May 2026. Be first to know and start contributing from day one.
+          Launching soon. Be first to know and start contributing from day one.
         </p>
       </div>
 
@@ -290,7 +292,7 @@ export default function ContributorForm({ onBack, onDone }: Props) {
       </form>
 
       <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: '12px', color: 'rgba(255,255,255,0.2)', textAlign: 'center', margin: 0 }}>
-        No commitment. Code drops 9 May 2026.
+        No commitment. Launching soon.
       </p>
     </div>
   )

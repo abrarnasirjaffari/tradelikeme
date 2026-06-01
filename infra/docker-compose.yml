@@ -1,18 +1,37 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: tradelikeme
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: tradelikeme
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tradelikeme"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - default
+    restart: unless-stopped
+
   backend:
     build:
       context: ..
       dockerfile: infra/Dockerfile.backend
     ports:
-      - "127.0.0.1:8001:8000"
+      - "0.0.0.0:8001:8000"
     env_file:
       - ../.env
     environment:
       - FRONTEND_URL=https://tradelikeme.xyz
-      - SUPABASE_DATABASE_URL=${SUPABASE_DATABASE_URL}
+      - DATABASE_URL=postgresql://tradelikeme:${POSTGRES_PASSWORD}@postgres:5432/tradelikeme
     networks:
       - default
-      - supabase_default
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -30,15 +49,17 @@ services:
       context: ../auth
       dockerfile: Dockerfile
     ports:
-      - "127.0.0.1:3002:3001"
+      - "0.0.0.0:3002:3001"
     env_file:
       - ../.env
     environment:
-      - SUPABASE_DB_URL=${SUPABASE_DATABASE_URL}
+      - DATABASE_URL=postgresql://tradelikeme:${POSTGRES_PASSWORD}@postgres:5432/tradelikeme
       - BETTER_AUTH_URL=https://auth.tradelikeme.xyz
     networks:
       - default
-      - supabase_default
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
@@ -138,6 +159,23 @@ services:
     profiles:
       - dograh
 
+  speaches:
+    image: ghcr.io/speaches-ai/speaches:latest-cpu
+    environment:
+      WHISPER__MODEL: "Systran/faster-whisper-large-v3"
+      TTS__MODEL: "hexgrad/Kokoro-82M"
+      TTS__VOICE: "af_heart"
+    volumes:
+      - speaches_models:/home/user/.cache/huggingface
+    networks:
+      - dograh-net
+    profiles:
+      - dograh
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+
   dograh-api:
     image: dograhai/dograh-api:latest
     environment:
@@ -165,6 +203,8 @@ services:
         condition: service_healthy
       dograh-minio:
         condition: service_healthy
+      speaches:
+        condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health').read()\""]
       interval: 30s
@@ -203,13 +243,13 @@ services:
 
 networks:
   default: {}
-  supabase_default:
-    external: true
   dograh-net:
     driver: bridge
 
 volumes:
+  postgres_data:
   agent_data:
   dograh_postgres_data:
   dograh_redis_data:
   dograh_minio_data:
+  speaches_models:

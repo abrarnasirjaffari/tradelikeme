@@ -45,11 +45,11 @@ export const investorFAQs = [
   },
   {
     q: 'When does the platform go live?',
-    a: 'We launch on 9 May 2026 at 5:00 PM PKT. The full platform — website, agent code, and Solana vault — goes live and open source on the same day.',
+    a: 'We are launching soon. The full platform is already open source on GitHub (github.com/abrarnasirjaffari/tradelikeme) — website, agent code, and Solana vault.',
   },
   {
     q: 'Is TradeLikeMe open source?',
-    a: 'Yes. The entire platform — website and agent code — is released under MIT license on launch day (9 May 2026). The trading strategy itself is private IP, but everything else is fully open for anyone to inspect, fork, or build on.',
+    a: 'Yes. The entire platform — website and agent code — is MIT licensed and already live on GitHub (github.com/abrarnasirjaffari/tradelikeme). The trading strategy itself is private IP, but everything else is fully open for anyone to inspect, fork, or build on.',
   },
   {
     q: 'What if I want to invest more than $10,000?',
@@ -60,7 +60,7 @@ export const investorFAQs = [
 export const traderFAQs = [
   {
     q: 'How do I become a trader on the marketplace?',
-    a: 'Right now, join the waitlist as a Trader and our team will contact you directly to discuss your strategy and get you onboarded early. After launch on 9 May 2026, you can simply sign up on the platform and apply to join the marketplace — submit your strategy, we review your track record, verify your trades, run a short paper test, and you are live. No complicated process.',
+    a: 'Right now, join the waitlist as a Trader and our team will contact you directly to discuss your strategy and get you onboarded early. Once we launch, you can sign up on the platform and apply to join the marketplace — submit your strategy, we review your track record, verify your trades, run a short paper test, and you are live. No complicated process.',
   },
   {
     q: 'How much can I earn as a marketplace trader?',

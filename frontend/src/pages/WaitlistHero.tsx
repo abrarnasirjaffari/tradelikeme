@@ -1,35 +1,6 @@
 import { motion, type Transition } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
-import { useState, useEffect } from 'react'
 import BlurText from '../components/BlurText'
-
-const LAUNCH = new Date('2026-05-09T12:00:00Z') // 5PM PKT = UTC+5
-
-function useCountdown() {
-  const calc = () => {
-    const diff = Math.max(0, LAUNCH.getTime() - Date.now())
-    return {
-      d: Math.floor(diff / 86400000),
-      h: Math.floor((diff % 86400000) / 3600000),
-      m: Math.floor((diff % 3600000) / 60000),
-      s: Math.floor((diff % 60000) / 1000),
-    }
-  }
-  const [t, setT] = useState(calc)
-  useEffect(() => { const id = setInterval(() => setT(calc()), 1000); return () => clearInterval(id) }, [])
-  return t
-}
-
-function useLocalLaunchTime() {
-  const [label] = useState(() =>
-    LAUNCH.toLocaleString(undefined, {
-      month: 'short', day: 'numeric', year: 'numeric',
-      hour: 'numeric', minute: '2-digit',
-      timeZoneName: 'short',
-    })
-  )
-  return label
-}
 
 const fadeUp = (delay: number) => ({
   initial: { filter: 'blur(10px)', opacity: 0, y: 20 } as const,
@@ -40,11 +11,8 @@ const fadeUp = (delay: number) => ({
 const PAD = '0 clamp(1.25rem, 5vw, 5rem)'
 
 export default function WaitlistHero() {
-  const { d, h, m, s } = useCountdown()
-  const localLaunchTime = useLocalLaunchTime()
-  const pad = (n: number) => String(n).padStart(2, '0')
-
   return (
+    <>
     <section id="waitlist" style={{ position: 'relative', height: '100vh', background: 'transparent', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '65%', background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 65%, transparent 100%)', pointerEvents: 'none', zIndex: 0 }} />
 
@@ -60,28 +28,17 @@ export default function WaitlistHero() {
           We're launching TradeLikeMe — a marketplace where proven traders share their strategies and our agent automates them for you. No monthly fees. We only earn when you profit.
         </motion.p>
 
-        {/* countdown */}
-        <motion.div {...fadeUp(0.95)} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+
+        <motion.div {...fadeUp(0.95)}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexWrap: 'wrap' }}>
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22C55E', display: 'inline-block', boxShadow: '0 0 8px #22C55E', flexShrink: 0 }} />
             <span style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 700, fontSize: '14px', color: '#fff', letterSpacing: '0.01em' }}>
-              {localLaunchTime ? `Launching ${localLaunchTime}` : 'Launching 9 May 2026'}
+              Launching Soon
             </span>
             <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.25)', display: 'inline-block', flexShrink: 0 }} />
             <span style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 400, fontSize: '13px', color: 'rgba(255,255,255,0.45)' }}>
-              Full open source release on the same day
+              Fully open source on GitHub
             </span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.375rem' }}>
-            {[{ val: d, label: 'Days' }, { val: h, label: 'Hours' }, { val: m, label: 'Min' }, { val: s, label: 'Sec' }].map((unit, i) => (
-              <div key={unit.label} style={{ display: 'flex', alignItems: 'flex-end', gap: '0.375rem' }}>
-                <div className="liquid-glass countdown-box" style={{ borderRadius: '0.875rem', padding: '0.875rem 1.375rem', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '80px' }}>
-                  <span style={{ fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', fontSize: 'clamp(1.75rem, 4vh, 3rem)', color: '#fff', lineHeight: 1, letterSpacing: '-2px' }}>{pad(unit.val)}</span>
-                  <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: '10px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.12em', marginTop: '5px' }}>{unit.label}</span>
-                </div>
-                {i < 3 && <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '2rem', lineHeight: 1, marginBottom: '1.75rem' }}>:</span>}
-              </div>
-            ))}
           </div>
         </motion.div>
 
@@ -97,5 +54,25 @@ export default function WaitlistHero() {
 
       </div>
     </section>
+
+    <section style={{ background: 'rgba(2,4,12,0.92)', backdropFilter: 'blur(2px)', padding: 'clamp(2.5rem, 5vw, 4rem) clamp(1.25rem, 5vw, 5rem)' }}>
+      <motion.div
+        initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.4 }} transition={{ duration: 0.7, ease: 'easeOut' }}
+        className="liquid-glass"
+        style={{ borderRadius: '1.5rem', padding: 'clamp(2rem, 4vw, 3.5rem)', display: 'flex', flexDirection: 'column', gap: '1.25rem', maxWidth: 720 }}
+      >
+        <span style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 700, fontSize: '11px', color: '#22C55E', letterSpacing: '0.12em', textTransform: 'uppercase' }}>VERIFIED RESULTS</span>
+        <p style={{ fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', fontSize: 'clamp(2rem, 4.5vw, 3.25rem)', color: '#fff', lineHeight: 1.05, letterSpacing: '-1.5px', margin: 0 }}>
+          We cloned a real trader's strategy that turned{' '}
+          <span style={{ color: '#22C55E' }}>$100 into $500,000</span>{' '}
+          in 3 years.
+        </p>
+        <p style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 300, fontSize: '0.9rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, margin: 0, maxWidth: '52ch' }}>
+          The same strategy now runs as an automated agent — for you.
+        </p>
+      </motion.div>
+    </section>
+    </>
   )
 }

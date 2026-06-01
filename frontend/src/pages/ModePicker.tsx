@@ -12,8 +12,8 @@ interface Props {
 }
 
 const modeCards: { val: Mode; label: string; sub: string }[] = [
-  { val: 'solana', label: 'Solana Vault',  sub: 'Phantom wallet — trustless, on-chain' },
-  { val: 'cex',    label: 'CEX API',       sub: 'Connect your exchange API key' },
+  { val: 'solana', label: 'Solana Vault',  sub: 'Connect Phantom Wallet — trustless, on-chain' },
+  { val: 'cex',    label: 'CEX API',       sub: 'Connect your exchange — Binance, Bybit, etc.' },
 ]
 
 export default function ModePicker({ mode, exchanges, otherExchange, onMode, onToggleExchange, onOther }: Props) {
@@ -39,7 +39,7 @@ export default function ModePicker({ mode, exchanges, otherExchange, onMode, onT
 
       {mode === 'cex' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem', marginTop: '0.5rem' }}>
-          <label style={{ ...labelStyle, fontSize: '10px' }}>Select your exchange(s)</label>
+          <label style={{ ...labelStyle, fontSize: '10px' }}>Which exchange(s) do you use?</label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
             {EXCHANGES.map(({ val, label }) => (
               <button key={val} type="button"
@@ -48,9 +48,6 @@ export default function ModePicker({ mode, exchanges, otherExchange, onMode, onT
               >{label}</button>
             ))}
           </div>
-          <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: '11px', color: 'rgba(255,255,255,0.25)', margin: 0 }}>
-            More exchanges coming soon
-          </p>
           {exchanges.includes('other') && (
             <input type="text" placeholder="Exchange name" value={otherExchange}
               onChange={e => onOther(e.target.value)}

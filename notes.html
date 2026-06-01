@@ -1,0 +1,2852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TradeLikeMe — Notes</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f0f0f;
+      color: #e0e0e0;
+      padding: 40px;
+      max-width: 900px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    .page { display: none; }
+    .page.active { display: block; }
+    .nav {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 32px;
+      border-bottom: 1px solid #2a2a2a;
+      padding-bottom: 0;
+    }
+    .nav-btn {
+      background: none;
+      border: none;
+      color: #666;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 8px 16px;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color 0.15s;
+    }
+    .nav-btn:hover { color: #ccc; }
+    .nav-btn.active { color: #fff; border-bottom-color: #4ade80; }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #fff;
+      border-bottom: 1px solid #2a2a2a;
+      padding-bottom: 12px;
+      margin-bottom: 32px;
+    }
+    .entry {
+      margin-bottom: 32px;
+      padding: 20px 24px;
+      background: #161616;
+      border: 1px solid #242424;
+      border-radius: 8px;
+    }
+    .q {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+    .question-text {
+      font-size: 1rem;
+      font-weight: 500;
+      color: #ccc;
+      margin-bottom: 14px;
+    }
+    .a {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #4ade80;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+    .answer-text {
+      font-size: 0.95rem;
+      color: #e0e0e0;
+    }
+    .answer-text ul {
+      padding-left: 20px;
+      margin-top: 6px;
+    }
+    .answer-text li {
+      margin-bottom: 4px;
+    }
+    .answer-text code {
+      background: #1e1e1e;
+      border: 1px solid #333;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-family: "SF Mono", monospace;
+      font-size: 0.85em;
+      color: #a78bfa;
+    }
+    .empty-state {
+      color: #444;
+      font-size: 0.95rem;
+      padding: 20px 0;
+    }
+    /* Tasks page styles */
+    .task-section {
+      margin-bottom: 28px;
+    }
+    .task-section-header {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #666;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .task-section-header .progress {
+      font-weight: 400;
+      color: #444;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .task-section-header .progress.done { color: #4ade80; }
+    .task-list {
+      list-style: none;
+      border: 1px solid #1e1e1e;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .task-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 9px 14px;
+      border-bottom: 1px solid #1a1a1a;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+    .task-item:last-child { border-bottom: none; }
+    .task-item:hover { background: #141414; }
+    .task-item.done { background: #0a120a; }
+    .task-item.paused { background: #111118; }
+    .task-check {
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+    }
+    .task-check.done { background: #166534; color: #4ade80; }
+    .task-check.todo { border: 1px solid #333; }
+    .task-check.paused { background: #1e1b4b; color: #818cf8; font-size: 9px; }
+    .task-id {
+      flex-shrink: 0;
+      font-family: "SF Mono", monospace;
+      font-size: 0.78rem;
+      color: #555;
+      width: 48px;
+    }
+    .task-text { color: #d0d0d0; }
+    .task-item.done .task-text { color: #6a6a6a; }
+    .task-item.paused .task-text { color: #5a5a7a; }
+    .task-note {
+      font-size: 0.78rem;
+      color: #555;
+      margin-top: 2px;
+    }
+    .task-item.done .task-note { color: #3a6a3a; }
+    .tasks-summary {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 28px;
+      padding: 16px 20px;
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 8px;
+    }
+    .summary-stat { text-align: center; }
+    .summary-stat .num { font-size: 1.6rem; font-weight: 700; line-height: 1; }
+    .summary-stat .label { font-size: 0.75rem; color: #666; margin-top: 2px; }
+    .summary-stat.green .num { color: #4ade80; }
+    .summary-stat.yellow .num { color: #fbbf24; }
+    .summary-stat.purple .num { color: #818cf8; }
+    .summary-stat.white .num { color: #e0e0e0; }
+    .progress-bar {
+      height: 4px;
+      background: #1e1e1e;
+      border-radius: 2px;
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #166534, #4ade80);
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showPage('notes')">Q&amp;A Notes</button>
+    <button class="nav-btn" onclick="showPage('tasks')">Tasks</button>
+  </nav>
+
+  <div id="page-notes" class="page active">
+  <h1>TradeLikeMe — Q&amp;A Notes</h1>
+
+  <div class="entry" style="border-color: #854d0e; background: #1c1407;">
+    <div class="q" style="color: #f59e0b;">Marketing Headline — TO CHANGE</div>
+    <div class="answer-text">
+      <p>Current: <em>"89% win rate, verified strategy"</em></p>
+      <br />
+      <p>Should be: <strong>"We cloned a trader who turned $100 into $500,000 in 3 years — every trade verifiable."</strong></p>
+      <br />
+      <p>Change across: landing page hero, pitch deck slide 1, demo video opening line.</p>
+    </div>
+  </div>
+
+  <div class="entry">
+    <div class="q">Q1</div>
+    <div class="question-text">Can we use both Solana and ETH for the decentralized part, benefit from both, should we, and is there a free RPC for ETH like Helius for Solana?</div>
+    <div class="a">Answer</div>
+    <div class="answer-text">
+      <p><strong>Can we technically?</strong> Yes. The agent can hold wallets on both chains and route trades to perps protocols on each. Nothing prevents this architecturally.</p>
+      <br />
+      <p><strong>What would ETH add?</strong></p>
+      <ul>
+        <li><strong>GMX v2</strong> (Arbitrum) — top perpetuals DEX, 50+ markets, up to 100x. Deep liquidity, battle-tested.</li>
+        <li><strong>Hyperliquid</strong> (its own L1, EVM-compatible) — 140+ perp markets, zero gas, very fast. Closest to a CEX on-chain.</li>
+        <li><strong>dYdX v4</strong> (Cosmos app-chain, but EVM deposit flow) — BTC/ETH/SOL, up to 20x.</li>
+        <li>More coins available that aren't on Zeta or Jupiter.</li>
+      </ul>
+      <br />
+      <p><strong>Should we?</strong> Probably not for the hackathon. Reasons:</p>
+      <ul>
+        <li>This is the <em>Solana</em> Frontier Hackathon — judges reward Solana depth, not multi-chain breadth.</li>
+        <li>Adding ETH doubles the wallet management, gas handling, bridge logic, and testing surface.</li>
+        <li>Zeta + Jupiter already cover SOL/BTC/ETH with decent liquidity. The coin gap isn't critical for v1.</li>
+        <li>Post-hackathon it makes sense — GMX or Hyperliquid would meaningfully expand the coin list.</li>
+      </ul>
+      <br />
+      <p><strong>Free RPC options for ETH (equivalent to Helius):</strong></p>
+      <ul>
+        <li><code>Alchemy</code> — 300M compute units/month free. Best option. Supports Ethereum mainnet + Arbitrum + Optimism + Base.</li>
+        <li><code>Infura</code> — 100k requests/day free. Older, slightly less generous.</li>
+        <li><code>QuickNode</code> — free tier exists but limited (10M credits/month). Multi-chain.</li>
+        <li><code>Ankr</code> — public free endpoints exist (no key required) but rate-limited. Good for low-traffic fallback.</li>
+        <li><code>Chainstack</code> — 3M requests/month free.</li>
+      </ul>
+      <br />
+      <p><strong>Verdict:</strong> Skip ETH for the hackathon. Post-launch, add Hyperliquid first (zero gas, 140+ markets, closest feel to our CEX mode but on-chain). Use Alchemy free tier as the RPC when we do add it.</p>
+    </div>
+  </div>
+
+  <div class="entry">
+    <div class="q">Q2 (Follow-up)</div>
+    <div class="question-text">The scale ceiling concern — we're targeting BTC/ETH (deep liquidity), decreasing leverage for larger accounts, and Forex (EUR/USD can handle millions on high leverage). Is the ceiling actually a problem?</div>
+    <div class="a">Answer</div>
+    <div class="answer-text">
+      <p><strong>You're right, I overcalled that concern.</strong> Here's the honest breakdown:</p>
+      <br />
+      <p><strong>BTC/ETH liquidity is not an issue until very large AUM:</strong></p>
+      <ul>
+        <li>BTC daily perps volume on Binance alone: $10B+. Your 200x position at 0.5% margin on $1M AUM = $1M notional. That's noise.</li>
+        <li>Even at $10M AUM you're still invisible in BTC/ETH markets. Ceiling is real but it's at $50M–$100M, not $1M–$5M.</li>
+        <li>So for the next 2–3 years of growth, this is not a real constraint.</li>
+      </ul>
+      <br />
+      <p><strong>Leverage scaling plan is correct:</strong></p>
+      <ul>
+        <li>Small accounts (under $10k): 200x, 0.5% margin — current setup.</li>
+        <li>Medium accounts ($10k–$100k): step down to 50–100x, same margin % logic.</li>
+        <li>Large accounts ($100k+): 10–20x, wider SL, larger position sizes. Strategy mechanics don't change, just the multiplier.</li>
+        <li>This is exactly how prop firms and hedge funds operate. Nothing unusual about it.</li>
+      </ul>
+      <br />
+      <p><strong>Forex is the real unlock for scale:</strong></p>
+      <ul>
+        <li>EUR/USD daily volume: $700B+. You could put $100M through it and not move price.</li>
+        <li>S/D zones work on Forex — same institutional order flow logic.</li>
+        <li>High leverage (50–500x) is standard and legal via regulated brokers.</li>
+        <li>This is the right Phase 3 move once the crypto side is proven.</li>
+      </ul>
+      <br />
+      <p><strong>Revised verdict on ceiling:</strong> Not a concern until $50M+ AUM on crypto. Forex removes the ceiling entirely. The scale path is: crypto small/mid caps → BTC/ETH large caps → Forex. You've already thought this through correctly.</p>
+      <br />
+      <p><strong>What actually matters right now:</strong> Building the platform and getting real users. Liquidity is not a concern at current scale.</p>
+      <br />
+      <p><strong>Corrections to earlier concerns:</strong></p>
+      <ul>
+        <li><strong>Trade count</strong> — DROPPED. The 36 was a one-day snapshot. The actual trader (Sonum) turned $100 → $500k over 3 years with full verifiable PnL history. That is a real, credible track record.</li>
+        <li><strong>Regulatory</strong> — DEFERRED intentionally. Will address when platform crosses $50k profit. Correct call for an early-stage startup.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="entry" style="border-color: #0e7490; background: #071a1f;">
+    <div class="q" style="color: #22d3ee;">Q3 — AI vs Pure Code for Zone Detection</div>
+    <div class="question-text">Do we need Claude Opus ($15/$75 per 1M tokens) for zone detection, or can pure code do it? What's the guarantee zones are correct without AI seeing the chart?</div>
+    <div class="answer-text">
+
+      <p style="color:#22d3ee; font-weight:600;">First: What does the AI actually do right now?</p>
+      <p>It looks at a KLineChart screenshot and identifies Supply/Demand zones visually. That's it. No reasoning, no strategy decisions — just "here's a zone at $X–$Y on the 4H."</p>
+
+      <br />
+      <p style="color:#22d3ee; font-weight:600;">The real cost at scale:</p>
+      <ul>
+        <li>14 coins × 7 timeframes = 98 chart images per scan</li>
+        <li>Scans run every 4H = 6×/day</li>
+        <li>Each image ≈ 1,600 input tokens + ~200 output tokens</li>
+        <li>Input cost: ~$14/day = <strong>~$420/month</strong></li>
+        <li>Output cost: ~$9/day = <strong>~$270/month</strong></li>
+        <li><strong>Total: ~$700/month just to scan zones</strong></li>
+        <li>At 50 users × $500 avg deposit = $25k AUM → your cut is ~$400/month. AI costs more than you earn.</li>
+        <li>Add more coins or strategies and it compounds fast.</li>
+      </ul>
+
+      <br />
+      <p style="color:#22d3ee; font-weight:600;">Can pure code identify S/D zones correctly?</p>
+      <p><strong>Yes. This is a solved problem in quant finance.</strong> S/D zones have exact mathematical definitions:</p>
+      <ul>
+        <li><strong>Demand zone</strong> = consolidation base (small candles) immediately before a large bullish impulse candle</li>
+        <li><strong>Supply zone</strong> = consolidation base before a large bearish impulse candle</li>
+        <li><strong>Zone boundary</strong> = high/low of the base candles (bodies, not wicks)</li>
+        <li><strong>Fresh zone</strong> = price has not returned to it since the impulse</li>
+        <li><strong>FVG</strong> = gap between candle[i-1].high and candle[i+1].low — pure math</li>
+        <li><strong>Equal highs/lows</strong> = within 0.1% tolerance — pure math</li>
+        <li><strong>Volume confirmation</strong> = volume at zone retest vs impulse volume — pure math</li>
+      </ul>
+      <p>All of Sonum's rules are written down. Every rule can be a line of code. OHLCV data from Binance gives you everything you need.</p>
+
+      <br />
+      <p style="color:#22d3ee; font-weight:600;">The one real advantage of AI vision:</p>
+      <p>Chart patterns — flags, cups, W-bottoms. These are harder to code precisely. But they are <em>confirmation signals</em> in the strategy, not entry triggers. You can either:</p>
+      <ul>
+        <li>Code them (doable — flag = descending channel after an impulse, W-bottom = two equal lows with a bounce)</li>
+        <li>Skip them and rely on zone + gate rules only (still valid — patterns are bonus confirmation)</li>
+      </ul>
+
+      <br />
+      <p style="color:#f87171; font-weight:600;">The real risk of AI that already happened:</p>
+      <ul>
+        <li>Apr 18 — Sonnet 4.6 called a 4H zone "1D confirmed" (wrong). Led to overstated confidence and a bad trade.</li>
+        <li>AI is non-deterministic. Same chart, different day = potentially different zone boundaries.</li>
+        <li>You CANNOT build a reliable business on a foundation that gives different answers to the same question.</li>
+      </ul>
+
+      <br />
+      <hr style="border-color:#2a2a2a;" />
+      <br />
+
+      <p style="color:#22d3ee; font-weight:600;">Three paths — direct comparison:</p>
+
+      <table style="width:100%; border-collapse:collapse; font-size:0.88rem; margin-top:8px;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:8px 12px; background:#0f2a30; color:#94a3b8; font-weight:500;">Path</th>
+            <th style="text-align:left; padding:8px 12px; background:#0f2a30; color:#94a3b8; font-weight:500;">Cost</th>
+            <th style="text-align:left; padding:8px 12px; background:#0f2a30; color:#94a3b8; font-weight:500;">Reliability</th>
+            <th style="text-align:left; padding:8px 12px; background:#0f2a30; color:#94a3b8; font-weight:500;">Build effort</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-top:1px solid #1e3a40;">
+            <td style="padding:8px 12px; color:#e0e0e0;"><strong>Pure code</strong> (OHLCV algo)</td>
+            <td style="padding:8px 12px; color:#4ade80;">$0</td>
+            <td style="padding:8px 12px; color:#4ade80;">Deterministic. Same rules every time.</td>
+            <td style="padding:8px 12px; color:#fbbf24;">3–5 days</td>
+          </tr>
+          <tr style="border-top:1px solid #1e3a40;">
+            <td style="padding:8px 12px; color:#e0e0e0;"><strong>Claude Opus only</strong> (current)</td>
+            <td style="padding:8px 12px; color:#f87171;">~$700/month</td>
+            <td style="padding:8px 12px; color:#f87171;">Non-deterministic. Already mislabelled zones.</td>
+            <td style="padding:8px 12px; color:#4ade80;">Already built</td>
+          </tr>
+          <tr style="border-top:1px solid #1e3a40;">
+            <td style="padding:8px 12px; color:#e0e0e0;"><strong>Hybrid</strong> — code does zones, AI only for pattern confirmation on A-grade setups</td>
+            <td style="padding:8px 12px; color:#fbbf24;">~$30–50/month</td>
+            <td style="padding:8px 12px; color:#fbbf24;">Best of both. Code gates are strict, AI is advisory only.</td>
+            <td style="padding:8px 12px; color:#fbbf24;">4–6 days</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <br />
+      <p style="color:#22d3ee; font-weight:600;">Recommendation: Pure code for zones + gates. Zero AI in the execution path.</p>
+      <ul>
+        <li>Write zone detection as pure Python on OHLCV data (pandas, ~300 lines)</li>
+        <li>All 5 gates = pure code checkmarks — BTC 1D gate, 4H gate, freshness, volume, absorption</li>
+        <li>If ALL gates pass → fire trade. No model in the loop, no hallucination possible.</li>
+        <li>AI stays useful for: backtesting research, reviewing new strategies, one-off analysis. NOT in live execution.</li>
+        <li>This also means the agent runs on EC2 with zero ongoing AI cost. Scales to 1000 coins for free.</li>
+      </ul>
+
+      <br />
+      <p style="color:#888; font-size:0.85rem;"><strong>The guarantee question answered:</strong> Pure code gives you the same guarantee as any rule-based system — if the rules are correct, execution is correct 100% of the time. The strategy rules ARE written down. Code them once, test them, trust them. That's more reliable than asking a model to read a chart image.</p>
+
+      <br />
+      <hr style="border-color:#2a2a2a;" />
+      <br />
+
+      <p style="color:#4ade80; font-weight:600;">✅ DECISION: Path B — Code finds zones, AI only confirms</p>
+      <ul>
+        <li><strong>Code (Python + OHLCV)</strong> — scans all 14 coins × 7 TFs, identifies candidate S/D zones algorithmically, runs all 5 gates (BTC 1D, 4H, freshness, volume, absorption)</li>
+        <li><strong>AI (Haiku 4.5)</strong> — called only when code finds a candidate zone. One question: "Is this zone clean consolidation or choppy noise?" Yes/No. ~50 output tokens.</li>
+        <li><strong>Result</strong>: ~10 AI calls/day instead of 98. Cost under $5/month. Code handles correctness, AI handles visual quality.</li>
+        <li><strong>If AI says no</strong> → skip the zone, no trade. If AI says yes + all 5 gates pass → fire trade.</li>
+        <li>Opus reserved for: onboarding new marketplace traders, backtesting research, strategy review. Never in live execution loop.</li>
+      </ul>
+
+    </div>
+  </div>
+
+  <div class="entry" style="border-left: 3px solid #6366f1;">
+    <div class="q" style="color: #818cf8;">Launch Plan — Real Business</div>
+    <div class="question-text">Mobile first (iOS + Android) + Web. Both user types. Full public. Ship in 1–2 months.</div>
+    <div class="answer-text">
+
+      <p style="color:#a78bfa; font-weight:600; font-size:1rem;">The Headline We're Building Toward</p>
+      <p>"We cloned a trader who turned $100 into $500,000 in 3 years. Deposit any amount. Agent trades for you. You keep 80% of profits."</p>
+
+      <br />
+      <hr style="border-color:#2a2a2a;" />
+      <br />
+
+      <p style="color:#a78bfa; font-weight:600; font-size:1rem;">Phase 1 — Wire &amp; Ship (Weeks 1–3)</p>
+      <p>Get everything that's already built actually working end-to-end. No new features.</p>
+      <ul>
+        <li><strong>Frontend wiring</strong> — connect dashboard to real API: trade history, P&L, open positions, live WS feed. Currently all placeholders.</li>
+        <li><strong>Notifier</strong> — add <code>await notifier.send()</code> to trade_agent.py and loop.py. Telegram alerts must fire on every event (entry, TP1, TP2, SL).</li>
+        <li><strong>Deposit/withdraw</strong> — replace mock responses in backend with real anchor_vault_client for Solana mode. CEX mode: API key paste → agent starts trading.</li>
+        <li><strong>Mobile app</strong> — 19 screens already designed in Pencil. Wire them to the same FastAPI backend. Expo + React Native. iOS + Android.</li>
+        <li><strong>Live PnL from Sonum's history</strong> — import and display the $100→$500k trade history on the platform as the proof-of-performance page. Every trade, every date, verifiable.</li>
+      </ul>
+
+      <br />
+      <p style="color:#a78bfa; font-weight:600; font-size:1rem;">Phase 2 — Go Live (Week 4)</p>
+      <ul>
+        <li><strong>Deploy mobile</strong> — submit to App Store + Play Store. Use Expo EAS Build. Takes 1–3 days for review.</li>
+        <li><strong>Domain + landing page</strong> — tradelikeme.xyz live with the $100→$500k headline, PnL proof, and one-tap signup.</li>
+        <li><strong>Risk modes live</strong> — Conservative (50–100x, 0.25% margin), Medium (200x, 0.5%), Aggressive (300x, 1%). User picks on signup.</li>
+        <li><strong>Agent running 24/7</strong> — EC2 always on, sentinel watching, auto-trade. Telegram notifications firing to every user.</li>
+        <li><strong>Min deposit</strong> — start at $50 minimum. Low barrier. Anyone can join.</li>
+      </ul>
+
+      <br />
+      <p style="color:#a78bfa; font-weight:600; font-size:1rem;">Phase 3 — Grow (Month 2)</p>
+      <ul>
+        <li><strong>Referral system</strong> — user refers someone, gets 5% of platform's profit share from that user forever. Costs us nothing, drives viral growth.</li>
+        <li><strong>Leaderboard</strong> — public page showing top performing users (% return, not $ amounts). Social proof engine.</li>
+        <li><strong>First external trader</strong> — onboard 1 verified trader from the community to the marketplace. Their strategy runs as a second agent. Proves the marketplace model.</li>
+        <li><strong>Forex research</strong> — start evaluating EUR/USD brokers with API access for Phase 4.</li>
+      </ul>
+
+      <br />
+      <p style="color:#a78bfa; font-weight:600; font-size:1rem;">Phase 4 — Scale (Month 3+)</p>
+      <ul>
+        <li><strong>Marketplace open</strong> — 3–5 verified traders listed. Each with own agent, own vault, own fee tier (S/A/B/C).</li>
+        <li><strong>Forex mode</strong> — EUR/USD, GBP/USD via regulated broker API. Same agent brain, different exchange client. Removes the crypto-only ceiling.</li>
+        <li><strong>Hyperliquid</strong> — add as third decentralized option alongside Zeta + Jupiter. 140+ markets, zero gas.</li>
+        <li><strong>Regulatory</strong> — revisit structure once platform hits $50k cumulative profit.</li>
+      </ul>
+
+      <br />
+      <hr style="border-color:#2a2a2a;" />
+      <br />
+
+      <p style="color:#a78bfa; font-weight:600; font-size:1rem;">Revenue Milestones</p>
+      <ul>
+        <li><strong>Month 1</strong>: 50 users × avg $500 deposit = $25k AUM → ~$500/month at 8% monthly return (our 20% cut)</li>
+        <li><strong>Month 3</strong>: 500 users × avg $1k = $500k AUM → ~$8k/month</li>
+        <li><strong>Month 6</strong>: $2M AUM → ~$32k/month</li>
+        <li><strong>Year 2</strong>: Marketplace active, Forex added → $10M+ AUM → $100k+/month</li>
+      </ul>
+
+      <br />
+      <p style="color:#a78bfa; font-weight:600; font-size:1rem;">The Moat (why this becomes a billion dollar company)</p>
+      <ul>
+        <li>Verified PnL history is impossible to fake retroactively — first mover advantage compounds over time.</li>
+        <li>On-chain profit settlement = trustless = no custody risk = institutional-grade trust at retail price.</li>
+        <li>Marketplace network effect — more traders → more strategies → more users → more traders. Same flywheel as eToro but with proof.</li>
+        <li>Strategy stays private (unlike copy trading) — traders have no reason NOT to join because their edge is protected.</li>
+      </ul>
+
+      <br />
+      <p style="color:#f87171; font-weight:600;">Critical path (do these first or nothing else matters):</p>
+      <ul>
+        <li>1. Wire frontend to real data</li>
+        <li>2. Wire notifier</li>
+        <li>3. Mobile app working end-to-end</li>
+        <li>4. Agent running live with real user deposits</li>
+      </ul>
+
+    </div>
+  </div>
+
+  <div class="entry" style="border-color: #166534; background: #052e16;">
+    <div class="q" style="color: #4ade80;">Q4 — Real Scan Frequency + AI Cost (Updated from strategy.md)</div>
+    <div class="question-text">How often do we actually need to scan, and what does AI really cost given the clean strategy rules?</div>
+    <div class="answer-text">
+
+      <p style="color:#4ade80; font-weight:600;">The big change: Zone definition is pure math</p>
+      <p>From strategy.md — zones are defined exactly:</p>
+      <ul>
+        <li><strong>Demand zone</strong> = last red candle before an impulsive move UP → that candle's high/low = zone</li>
+        <li><strong>Supply zone</strong> = last green candle before an impulsive move DOWN → that candle's high/low = zone</li>
+      </ul>
+      <p>That's 100% codeable. No AI needed for zone finding at all. OHLCV + impulse detection + last opposing candle. Done.</p>
+
+      <br />
+      <p style="color:#4ade80; font-weight:600;">Scan frequency reality (event-driven, not scheduled):</p>
+
+      <table style="width:100%; border-collapse:collapse; font-size:0.88rem; margin-top:8px;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:8px 12px; background:#052e16; color:#94a3b8; font-weight:500;">Scan type</th>
+            <th style="text-align:left; padding:8px 12px; background:#052e16; color:#94a3b8; font-weight:500;">When</th>
+            <th style="text-align:left; padding:8px 12px; background:#052e16; color:#94a3b8; font-weight:500;">Why</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-top:1px solid #14532d;">
+            <td style="padding:8px 12px; color:#e0e0e0;">Weekly/Monthly bias</td>
+            <td style="padding:8px 12px; color:#e0e0e0;">Once/week (Sunday)</td>
+            <td style="padding:8px 12px; color:#e0e0e0;">HTF only changes weekly</td>
+          </tr>
+          <tr style="border-top:1px solid #14532d;">
+            <td style="padding:8px 12px; color:#e0e0e0;">Daily zone map update</td>
+            <td style="padding:8px 12px; color:#e0e0e0;">Once/day (after daily candle close, ~00:00 UTC)</td>
+            <td style="padding:8px 12px; color:#e0e0e0;">1D zones are primary — only update after daily close</td>
+          </tr>
+          <tr style="border-top:1px solid #14532d;">
+            <td style="padding:8px 12px; color:#e0e0e0;">4H confirmation</td>
+            <td style="padding:8px 12px; color:#e0e0e0;">Event-driven (when price touches zone)</td>
+            <td style="padding:8px 12px; color:#e0e0e0;">No need to scan 4H on a schedule</td>
+          </tr>
+          <tr style="border-top:1px solid #14532d;">
+            <td style="padding:8px 12px; color:#e0e0e0;">1H/30min SL check</td>
+            <td style="padding:8px 12px; color:#e0e0e0;">Event-driven (when in trade)</td>
+            <td style="padding:8px 12px; color:#e0e0e0;">Only matters during active trade</td>
+          </tr>
+          <tr style="border-top:1px solid #14532d;">
+            <td style="padding:8px 12px; color:#e0e0e0;">15min entry timing</td>
+            <td style="padding:8px 12px; color:#e0e0e0;">Event-driven (when entering)</td>
+            <td style="padding:8px 12px; color:#e0e0e0;">Real-time only, sentinel fires this</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <br />
+      <p style="color:#4ade80; font-weight:600;">Actual daily scan volume (33 crypto + 8 forex = 41 instruments):</p>
+
+      <table style="width:100%; border-collapse:collapse; font-size:0.88rem; margin-top:8px;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:8px 12px; background:#052e16; color:#94a3b8; font-weight:500;">Scan</th>
+            <th style="text-align:left; padding:8px 12px; background:#052e16; color:#94a3b8; font-weight:500;">Instruments</th>
+            <th style="text-align:left; padding:8px 12px; background:#052e16; color:#94a3b8; font-weight:500;">TFs</th>
+            <th style="text-align:left; padding:8px 12px; background:#052e16; color:#94a3b8; font-weight:500;">Calls/day</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-top:1px solid #14532d;">
+            <td style="padding:8px 12px; color:#e0e0e0;">Daily zone update</td>
+            <td style="padding:8px 12px; color:#e0e0e0;">41</td>
+            <td style="padding:8px 12px; color:#e0e0e0;">1D</td>
+            <td style="padding:8px 12px; color:#e0e0e0;">41</td>
+          </tr>
+          <tr style="border-top:1px solid #14532d;">
+            <td style="padding:8px 12px; color:#e0e0e0;">Weekly update (÷7/day avg)</td>
+            <td style="padding:8px 12px; color:#e0e0e0;">41</td>
+            <td style="padding:8px 12px; color:#e0e0e0;">Weekly</td>
+            <td style="padding:8px 12px; color:#e0e0e0;">~6</td>
+          </tr>
+          <tr style="border-top:1px solid #14532d;">
+            <td style="padding:8px 12px; color:#e0e0e0;">Zone-touch confirmation (~3 setups/day)</td>
+            <td style="padding:8px 12px; color:#e0e0e0;">~3</td>
+            <td style="padding:8px 12px; color:#e0e0e0;">4H + 1H + 15min</td>
+            <td style="padding:8px 12px; color:#e0e0e0;">~9</td>
+          </tr>
+          <tr style="border-top:1px solid #14532d; background:#0a3d1a;">
+            <td style="padding:8px 12px; color:#4ade80;"><strong>Total</strong></td>
+            <td style="padding:8px 12px;"></td>
+            <td style="padding:8px 12px;"></td>
+            <td style="padding:8px 12px; color:#4ade80;"><strong>~56 calls/day</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <br />
+      <p style="color:#f87171; font-weight:600;">Compare to earlier wrong assumption:</p>
+      <ul>
+        <li>Before: 1,750 calls/day (25 coins × 7 TFs × 5 scans)</li>
+        <li>Reality: ~56 calls/day</li>
+        <li><strong>31× less than we calculated</strong></li>
+      </ul>
+
+      <br />
+      <p style="color:#4ade80; font-weight:600;">Monthly AI cost with correct scan frequency:</p>
+
+      <table style="width:100%; border-collapse:collapse; font-size:0.88rem; margin-top:8px;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:8px 12px; background:#052e16; color:#94a3b8; font-weight:500;">Model</th>
+            <th style="text-align:left; padding:8px 12px; background:#052e16; color:#94a3b8; font-weight:500;">Cost/day</th>
+            <th style="text-align:left; padding:8px 12px; background:#052e16; color:#94a3b8; font-weight:500;">Cost/month</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-top:1px solid #14532d;">
+            <td style="padding:8px 12px; color:#e0e0e0;">GLM-5 (text, OHLCV only)</td>
+            <td style="padding:8px 12px; color:#e0e0e0;">~$0.05</td>
+            <td style="padding:8px 12px; color:#4ade80;"><strong>~$1.50</strong></td>
+          </tr>
+          <tr style="border-top:1px solid #14532d;">
+            <td style="padding:8px 12px; color:#e0e0e0;">Sonnet 4.6</td>
+            <td style="padding:8px 12px; color:#e0e0e0;">~$0.75</td>
+            <td style="padding:8px 12px; color:#4ade80;"><strong>~$22</strong></td>
+          </tr>
+          <tr style="border-top:1px solid #14532d;">
+            <td style="padding:8px 12px; color:#e0e0e0;">Opus 4.6</td>
+            <td style="padding:8px 12px; color:#e0e0e0;">~$3.75</td>
+            <td style="padding:8px 12px; color:#fbbf24;"><strong>~$113</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <br />
+      <p style="color:#4ade80; font-weight:600;">What needs AI vs pure code:</p>
+
+      <table style="width:100%; border-collapse:collapse; font-size:0.88rem; margin-top:8px;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:8px 12px; background:#052e16; color:#94a3b8; font-weight:500;">Task</th>
+            <th style="text-align:left; padding:8px 12px; background:#052e16; color:#94a3b8; font-weight:500;">Pure code?</th>
+            <th style="text-align:left; padding:8px 12px; background:#052e16; color:#94a3b8; font-weight:500;">AI needed?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-top:1px solid #14532d;">
+            <td style="padding:8px 12px; color:#e0e0e0;">Find impulse move</td>
+            <td style="padding:8px 12px; color:#4ade80;">✅ candle % threshold</td>
+            <td style="padding:8px 12px; color:#4ade80;">No</td>
+          </tr>
+          <tr style="border-top:1px solid #14532d;">
+            <td style="padding:8px 12px; color:#e0e0e0;">Identify last opposing candle (zone)</td>
+            <td style="padding:8px 12px; color:#4ade80;">✅ simple loop</td>
+            <td style="padding:8px 12px; color:#4ade80;">No</td>
+          </tr>
+          <tr style="border-top:1px solid #14532d;">
+            <td style="padding:8px 12px; color:#e0e0e0;">Zone high/low boundary</td>
+            <td style="padding:8px 12px; color:#4ade80;">✅ candle OHLC</td>
+            <td style="padding:8px 12px; color:#4ade80;">No</td>
+          </tr>
+          <tr style="border-top:1px solid #14532d;">
+            <td style="padding:8px 12px; color:#e0e0e0;">Freshness check (price returned?)</td>
+            <td style="padding:8px 12px; color:#4ade80;">✅ price history scan</td>
+            <td style="padding:8px 12px; color:#4ade80;">No</td>
+          </tr>
+          <tr style="border-top:1px solid #14532d;">
+            <td style="padding:8px 12px; color:#e0e0e0;">Guarded zone (2+ wicks rejecting)</td>
+            <td style="padding:8px 12px; color:#4ade80;">✅ wick count</td>
+            <td style="padding:8px 12px; color:#4ade80;">No</td>
+          </tr>
+          <tr style="border-top:1px solid #14532d;">
+            <td style="padding:8px 12px; color:#e0e0e0;">Equal highs/lows</td>
+            <td style="padding:8px 12px; color:#4ade80;">✅ within 0.1% tolerance</td>
+            <td style="padding:8px 12px; color:#4ade80;">No</td>
+          </tr>
+          <tr style="border-top:1px solid #14532d;">
+            <td style="padding:8px 12px; color:#e0e0e0;">FVG detection</td>
+            <td style="padding:8px 12px; color:#4ade80;">✅ candle[i-1].high vs candle[i+1].low</td>
+            <td style="padding:8px 12px; color:#4ade80;">No</td>
+          </tr>
+          <tr style="border-top:1px solid #14532d;">
+            <td style="padding:8px 12px; color:#e0e0e0;">BTC bias (HH/HL or LH/LL)</td>
+            <td style="padding:8px 12px; color:#4ade80;">✅ swing high/low detection</td>
+            <td style="padding:8px 12px; color:#4ade80;">No</td>
+          </tr>
+          <tr style="border-top:1px solid #14532d;">
+            <td style="padding:8px 12px; color:#e0e0e0;">15min wick pressure</td>
+            <td style="padding:8px 12px; color:#4ade80;">✅ wick-to-body ratio</td>
+            <td style="padding:8px 12px; color:#4ade80;">No</td>
+          </tr>
+          <tr style="border-top:1px solid #14532d;">
+            <td style="padding:8px 12px; color:#e0e0e0;">Supply absorption confirmation</td>
+            <td style="padding:8px 12px; color:#fbbf24;">⚠️ engulfing candle logic (partial)</td>
+            <td style="padding:8px 12px; color:#fbbf24;">Optional confirm</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <br />
+      <hr style="border-color:#14532d;" />
+      <br />
+
+      <p style="color:#4ade80; font-weight:600;">✅ DECISION: Pure code for all zone detection. AI only on zone-touch events.</p>
+      <ul>
+        <li><strong>Sentinel</strong> watches all 41 instruments 24/7 via WebSocket ticks — zero AI, zero cost</li>
+        <li><strong>Daily zone update</strong> (~56 calls/day) — pure Python on OHLCV data, deterministic, $0</li>
+        <li><strong>Zone-touch event</strong> — when sentinel fires, call Opus once for supply absorption check only (~3–5 calls/day)</li>
+        <li><strong>Total AI cost: ~$6–65/month</strong> regardless of how many coins or strategies are added</li>
+        <li>90%+ of the strategy is mathematically exact — impulse detection, last opposing candle, freshness, FVG, equal highs/lows are all pure code</li>
+        <li>AI is genuinely optional — only adds value on the supply absorption edge case where engulfing candle context benefits from reasoning</li>
+      </ul>
+
+      <br />
+      <p style="color:#4ade80; font-weight:600; font-size:1rem;">✅ FINAL MODEL DECISION: Claude Opus 4.6 everywhere</p>
+      <ul>
+        <li>At real scan volume (~56 calls/day), even Opus on every single call = <strong>~$65/month worst case</strong></li>
+        <li>Zone-touch only (~5 calls/day) = <strong>~$6/month</strong></li>
+        <li>Covered by just 4 users at $500 deposit — not worth optimising</li>
+        <li>No model selection logic needed. No fallbacks. No Haiku/Sonnet tiers.</li>
+        <li><strong>Use <code>anthropic.claude-opus-4-6-v1</code> via AWS Bedrock (IAM user: claude-code-bedrock, region: us-east-1)</strong></li>
+      </ul>
+
+    </div>
+  </div>
+
+  <div class="entry" style="border-color: #7c3aed; background: #13001f;">
+    <div class="q" style="color: #a78bfa;">Q5 — HKUDS/AI-Trader Repo Analysis (13-agent deep read)</div>
+    <div class="question-text">How useful is github.com/HKUDS/AI-Trader for TradeLikeMe? Can we reuse any of it?</div>
+    <div class="answer-text">
+
+      <p style="color:#a78bfa; font-weight:600; font-size:1rem;">What AI-Trader Actually Is</p>
+      <p>Not a strategy engine. It is a <strong>social paper-trading leaderboard</strong> — external AI agents (GPT-4, Claude, Gemini, etc.) post trade signals to a platform, compete on a leaderboard, and the academic paper measures whether LLMs trade better in teams vs solo. Zero live trading code. Zero S&D logic. Zero Solana. Zero WEEX.</p>
+      <p style="margin-top:8px;">The repo's "strategy" is: third-party agents post text like "BUY BTC" → platform records it → ranks by P&L on paper. That's it.</p>
+
+      <br />
+      <p style="color:#a78bfa; font-weight:600;">Score by dimension (13 agents read every file):</p>
+
+      <table style="width:100%; border-collapse:collapse; font-size:0.88rem; margin-top:8px;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:8px 12px; background:#1a0030; color:#94a3b8; font-weight:500;">Dimension</th>
+            <th style="text-align:left; padding:8px 12px; background:#1a0030; color:#94a3b8; font-weight:500;">Score</th>
+            <th style="text-align:left; padding:8px 12px; background:#1a0030; color:#94a3b8; font-weight:500;">What exists</th>
+            <th style="text-align:left; padding:8px 12px; background:#1a0030; color:#94a3b8; font-weight:500;">Verdict</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-top:1px solid #2d0050;">
+            <td style="padding:8px 12px; color:#e0e0e0;">Zone/S&amp;D detection</td>
+            <td style="padding:8px 12px; color:#f87171; font-weight:600;">0/10</td>
+            <td style="padding:8px 12px; color:#888;">Doesn't exist — not even a candle array anywhere</td>
+            <td style="padding:8px 12px; color:#f87171;">Skip</td>
+          </tr>
+          <tr style="border-top:1px solid #2d0050;">
+            <td style="padding:8px 12px; color:#e0e0e0;">OHLCV data pipeline</td>
+            <td style="padding:8px 12px; color:#fbbf24; font-weight:600;">3/10</td>
+            <td style="padding:8px 12px; color:#888;">Hyperliquid 1m candles, synchronous <code>requests</code>, no asyncio, wrong TFs</td>
+            <td style="padding:8px 12px; color:#f87171;">Skip</td>
+          </tr>
+          <tr style="border-top:1px solid #2d0050;">
+            <td style="padding:8px 12px; color:#e0e0e0;">LLM integration</td>
+            <td style="padding:8px 12px; color:#f87171; font-weight:600;">1/10</td>
+            <td style="padding:8px 12px; color:#888;">OpenRouter for stock narrative summaries — not zone analysis, not vision</td>
+            <td style="padding:8px 12px; color:#f87171;">Skip</td>
+          </tr>
+          <tr style="border-top:1px solid #2d0050;">
+            <td style="padding:8px 12px; color:#e0e0e0;">Backtesting engine</td>
+            <td style="padding:8px 12px; color:#f87171; font-weight:600;">0/10</td>
+            <td style="padding:8px 12px; color:#888;">research/ is A/B social experiment analytics — not a replay engine</td>
+            <td style="padding:8px 12px; color:#f87171;">Skip</td>
+          </tr>
+          <tr style="border-top:1px solid #2d0050;">
+            <td style="padding:8px 12px; color:#e0e0e0;">Exchange integration</td>
+            <td style="padding:8px 12px; color:#f87171; font-weight:600;">1/10</td>
+            <td style="padding:8px 12px; color:#888;">Paper trading only, no Solana, no WEEX, no Binance, no order placement</td>
+            <td style="padding:8px 12px; color:#f87171;">Skip</td>
+          </tr>
+          <tr style="border-top:1px solid #2d0050;">
+            <td style="padding:8px 12px; color:#e0e0e0;">Signal generation</td>
+            <td style="padding:8px 12px; color:#f87171; font-weight:600;">1/10</td>
+            <td style="padding:8px 12px; color:#888;">Keyword matching on text ("buy", "bull") — not price action, not OHLCV</td>
+            <td style="padding:8px 12px; color:#f87171;">Skip</td>
+          </tr>
+          <tr style="border-top:1px solid #2d0050;">
+            <td style="padding:8px 12px; color:#e0e0e0;">Overall architecture</td>
+            <td style="padding:8px 12px; color:#fbbf24; font-weight:600;">3/10</td>
+            <td style="padding:8px 12px; color:#888;">Clean FastAPI but purpose-built for a social leaderboard platform</td>
+            <td style="padding:8px 12px; color:#f87171;">Skip</td>
+          </tr>
+          <tr style="border-top:1px solid #2d0050; background:#1a0030;">
+            <td style="padding:8px 12px; color:#a78bfa;"><strong>Overall</strong></td>
+            <td style="padding:8px 12px; color:#f87171; font-weight:700;">1/10</td>
+            <td style="padding:8px 12px;"></td>
+            <td style="padding:8px 12px; color:#f87171; font-weight:600;">DO NOT INTEGRATE</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <br />
+      <p style="color:#a78bfa; font-weight:600;">Why we skip 90%+ — file by file:</p>
+
+      <table style="width:100%; border-collapse:collapse; font-size:0.88rem; margin-top:8px;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:8px 12px; background:#1a0030; color:#94a3b8; font-weight:500;">File</th>
+            <th style="text-align:left; padding:8px 12px; background:#1a0030; color:#94a3b8; font-weight:500;">What it does</th>
+            <th style="text-align:left; padding:8px 12px; background:#1a0030; color:#94a3b8; font-weight:500;">Why skip</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-top:1px solid #2d0050;">
+            <td style="padding:8px 12px; color:#e0e0e0;"><code>price_fetcher.py</code></td>
+            <td style="padding:8px 12px; color:#888;">Hyperliquid 1m OHLCV, synchronous REST</td>
+            <td style="padding:8px 12px; color:#f87171;">Blocking <code>requests</code> stalls asyncio event loop. 1m only — we need 1D/4H/1H/15m. Our Binance+Pyth stack already better.</td>
+          </tr>
+          <tr style="border-top:1px solid #2d0050;">
+            <td style="padding:8px 12px; color:#e0e0e0;"><code>signal_quality.py</code></td>
+            <td style="padding:8px 12px; color:#888;">Scores text posts: "buy/bull/long" = UP</td>
+            <td style="padding:8px 12px; color:#f87171;">Keyword NLP on social text. Our zones come from OHLCV candle math, not tweet analysis.</td>
+          </tr>
+          <tr style="border-top:1px solid #2d0050;">
+            <td style="padding:8px 12px; color:#e0e0e0;"><code>routes_trading.py</code></td>
+            <td style="padding:8px 12px; color:#888;">Paper trade position accounting, avg entry math</td>
+            <td style="padding:8px 12px; color:#f87171;">We use 4-order atomic entry (market + TP1 + TP2 + disaster SL at once). Different paradigm entirely.</td>
+          </tr>
+          <tr style="border-top:1px solid #2d0050;">
+            <td style="padding:8px 12px; color:#e0e0e0;"><code>research/compute_metrics.py</code></td>
+            <td style="padding:8px 12px; color:#888;">A/B experiment analytics on social agent behavior</td>
+            <td style="padding:8px 12px; color:#f87171;">Not a backtest. No replay engine, no bar-by-bar simulation, no SL/TP logic. 20-30 lines of arithmetic we'd write in 10 minutes.</td>
+          </tr>
+          <tr style="border-top:1px solid #2d0050;">
+            <td style="padding:8px 12px; color:#e0e0e0;"><code>market_intel.py</code></td>
+            <td style="padding:8px 12px; color:#888;">OpenRouter LLM for stock narrative summaries</td>
+            <td style="padding:8px 12px; color:#f87171;">Stock news summaries. We do S&amp;D zone visual analysis via Claude Opus 4.6 on AWS Bedrock. Different model, modality, purpose.</td>
+          </tr>
+          <tr style="border-top:1px solid #2d0050;">
+            <td style="padding:8px 12px; color:#e0e0e0;">24 DB schema files</td>
+            <td style="padding:8px 12px; color:#888;">network_edges, team_missions, challenge_participants, reward_points...</td>
+            <td style="padding:8px 12px; color:#f87171;">Social leaderboard schema. We use per-strategy SQLite journal + Supabase platform DB. Zero overlap.</td>
+          </tr>
+          <tr style="border-top:1px solid #2d0050;">
+            <td style="padding:8px 12px; color:#e0e0e0;"><code>skills/*.md</code></td>
+            <td style="padding:8px 12px; color:#888;">Claude Code skill prompts for ai4trade.ai platform API users</td>
+            <td style="padding:8px 12px; color:#f87171;">Documentation for their external API. Not applicable to our codebase.</td>
+          </tr>
+          <tr style="border-top:1px solid #2d0050;">
+            <td style="padding:8px 12px; color:#e0e0e0;">S&amp;D zone detection</td>
+            <td style="padding:8px 12px; color:#888;">—</td>
+            <td style="padding:8px 12px; color:#f87171;">Does not exist in the repo at all. Not a gap to fill from here.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <br />
+      <hr style="border-color:#2d0050;" />
+      <br />
+
+      <p style="color:#4ade80; font-weight:600;">The 2 things actually worth using (both concept, zero code copied):</p>
+
+      <p style="margin-top:8px;"><strong style="color:#e0e0e0;">1. Force explicit numeric evidence in LLM output (~1 hour)</strong></p>
+      <p>AI-Trader's signal heuristic only trusts output that contains specific evidence fields. Apply this to our absorption check prompt: make <code>body_count_in_zone</code>, <code>compression_candles</code>, <code>volume_ratio</code> mandatory JSON fields. If ANY field is missing from Claude's response → parse failure → trade blocked. Prevents hallucinated confidence.</p>
+      <p style="margin-top:6px;">The correct absorption prompt format:</p>
+      <pre style="background:#0d0d0d; border:1px solid #2d0050; padding:12px; border-radius:6px; font-size:0.82rem; color:#a78bfa; overflow-x:auto; margin-top:8px;">{
+  "absorbed": true/false,
+  "confidence": 0-100,
+  "body_count_in_zone": 3,
+  "compression_candles": 4,
+  "volume_ratio": 1.4,
+  "reasoning": "3 candle bodies closed inside zone, volume 1.4x avg, compression visible"
+}
+
+// If any field missing → parse failure → NO TRADE</pre>
+
+      <p style="margin-top:12px;"><strong style="color:#e0e0e0;">2. Anti-duplicate gate (~30 min)</strong></p>
+      <p>Skip the second Claude absorption call if the same zone fires twice within 30 minutes. Price bouncing around zone top = noise. First result is still valid. Prevent wasting tokens on repeated touches. Add as a hard no-call guard in sentinel.py — not just a logged skip.</p>
+
+      <br />
+      <hr style="border-color:#2d0050;" />
+      <br />
+
+      <p style="color:#a78bfa; font-weight:600;">Bonus finding: HKUDS/Vibe-Trading (different repo)</p>
+      <p>The agents surfaced a companion repo — <strong>github.com/HKUDS/Vibe-Trading</strong> — which has an actual backtesting engine with 452 pre-built alphas. Targets equities (A-share/HK/US stocks), not crypto perps. If we ever need a backtesting pipeline, evaluate this separately. Do not confuse with AI-Trader.</p>
+
+      <br />
+      <p style="color:#f87171; font-weight:600; font-size:1rem;">✅ FINAL DECISION: Skip AI-Trader entirely.</p>
+      <ul>
+        <li>Do not integrate, do not import, do not fork any file</li>
+        <li>Apply the 2 prompt engineering concepts above to our own <code>sentinel.py</code> and absorption check prompt (2 hours total)</li>
+        <li>Spend zero further evaluation time on this repo</li>
+        <li>If backtesting becomes a priority → evaluate <strong>Vibe-Trading</strong> or <strong>vectorbt</strong> instead</li>
+      </ul>
+
+    </div>
+  </div>
+
+  <div class="entry" style="border-color: #0369a1; background: #071a2e;">
+    <div class="q" style="color: #38bdf8;">Q6 — Demo Trading Plan: Minimizing Slippage + Go-Live Decision</div>
+    <div class="question-text">How do we run demo trading with minimal slippage gap vs real trading, and what's the go-live criteria?</div>
+    <div class="answer-text">
+
+      <p style="color:#38bdf8; font-weight:600;">The 3 main slippage sources for this strategy:</p>
+
+      <table style="width:100%; border-collapse:collapse; font-size:0.88rem; margin-top:8px;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:8px 12px; background:#071a2e; color:#94a3b8; font-weight:500;">Source</th>
+            <th style="text-align:left; padding:8px 12px; background:#071a2e; color:#94a3b8; font-weight:500;">Impact</th>
+            <th style="text-align:left; padding:8px 12px; background:#071a2e; color:#94a3b8; font-weight:500;">How bad</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-top:1px solid #0c3a5e;">
+            <td style="padding:8px 12px; color:#e0e0e0;">Entry slippage (market order at zone)</td>
+            <td style="padding:8px 12px; color:#888;">Price moves while order processes</td>
+            <td style="padding:8px 12px; color:#fbbf24;">0.05–0.3% on alts</td>
+          </tr>
+          <tr style="border-top:1px solid #0c3a5e;">
+            <td style="padding:8px 12px; color:#e0e0e0;">Zone boundary imprecision</td>
+            <td style="padding:8px 12px; color:#888;">Mark zone at $1.392, real entry fills at $1.395</td>
+            <td style="padding:8px 12px; color:#fbbf24;">Eats into TP%</td>
+          </tr>
+          <tr style="border-top:1px solid #0c3a5e;">
+            <td style="padding:8px 12px; color:#e0e0e0;">SL body-close delay</td>
+            <td style="padding:8px 12px; color:#888;">30min candle closes, order sent, price moves further</td>
+            <td style="padding:8px 12px; color:#fbbf24;">0.1–0.5% on volatile candles</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <br />
+      <p style="color:#38bdf8; font-weight:600;">Demo platform: Binance Futures Testnet (best option)</p>
+      <ul>
+        <li><strong>URL:</strong> <code>testnet.binancefuture.com</code> — real order book mechanics, real spread, real latency, fake USDT</li>
+        <li>Fills behave exactly like live. Slippage is real. Closest to production with zero risk.</li>
+        <li>Agent code needs almost zero changes — swap base URL + testnet API keys only</li>
+        <li>Second option: Bybit / MEXC demo mode — uses real live order book, paper money. Better than pure paper, slightly worse than testnet.</li>
+        <li><strong>Do NOT build a custom paper engine</strong> — testnet already eliminates simulation approximation error</li>
+      </ul>
+
+      <br />
+      <p style="color:#38bdf8; font-weight:600;">4 rules to minimize slippage in the agent:</p>
+
+      <p style="margin-top:8px;"><strong style="color:#e0e0e0;">1. Limit orders for entry (not market)</strong></p>
+      <p>Place limit buy at zone top (demand) or zone bottom (supply). Zero slippage — you're the maker. If price blows through without filling → missed entry → correct per strategy rules (no late entries).</p>
+
+      <p style="margin-top:12px;"><strong style="color:#e0e0e0;">2. Widen zone boundary by 0.1% in agent</strong></p>
+      <p>Real fills rarely happen at the exact candle boundary. Mark entry as <code>zone_top + 0.1%</code> for longs, <code>zone_bottom - 0.1%</code> for shorts. Matches real-world fill behavior.</p>
+
+      <p style="margin-top:12px;"><strong style="color:#e0e0e0;">3. Simulate realistic slippage per coin in agent config</strong></p>
+      <pre style="background:#0d0d0d; border:1px solid #0c3a5e; padding:12px; border-radius:6px; font-size:0.82rem; color:#38bdf8; overflow-x:auto; margin-top:8px;">SLIPPAGE = {
+    'BTC': 0.02,      # deep book
+    'ETH': 0.03,
+    'SOL': 0.05,
+    'SUI': 0.08,
+    'MOODENG': 0.15,  # thin book
+    'FARTCOIN': 0.15,
+}
+
+# LONG entry at zone_top $1.392:
+fill_price = zone_top * (1 + SLIPPAGE[coin] / 100)
+# fills at $1.3933, not $1.3920
+
+# MARKET SL close:
+fill_price = sl_level * (1 - SLIPPAGE[coin] / 100)
+# slightly worse than SL level</pre>
+
+      <p style="margin-top:12px;"><strong style="color:#e0e0e0;">4. Add execution delay on SL body-close</strong></p>
+      <pre style="background:#0d0d0d; border:1px solid #0c3a5e; padding:12px; border-radius:6px; font-size:0.82rem; color:#38bdf8; overflow-x:auto; margin-top:8px;"># Candle closes at 14:30:00
+# WS tick detected at 14:30:01
+# Real fill = next bid/ask, not close price
+# Simulate: sl_fill = close_price * (1 - 0.05%)</pre>
+
+      <br />
+      <p style="color:#38bdf8; font-weight:600;">Realistic P&amp;L adjustment after slippage:</p>
+
+      <table style="width:100%; border-collapse:collapse; font-size:0.88rem; margin-top:8px;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:8px 12px; background:#071a2e; color:#94a3b8; font-weight:500;">Coin type</th>
+            <th style="text-align:left; padding:8px 12px; background:#071a2e; color:#94a3b8; font-weight:500;">Demo P&amp;L</th>
+            <th style="text-align:left; padding:8px 12px; background:#071a2e; color:#94a3b8; font-weight:500;">Real P&amp;L (after slippage)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-top:1px solid #0c3a5e;">
+            <td style="padding:8px 12px; color:#e0e0e0;">BTC / ETH</td>
+            <td style="padding:8px 12px; color:#4ade80;">100%</td>
+            <td style="padding:8px 12px; color:#4ade80;">~98.5%</td>
+          </tr>
+          <tr style="border-top:1px solid #0c3a5e;">
+            <td style="padding:8px 12px; color:#e0e0e0;">SOL / SUI</td>
+            <td style="padding:8px 12px; color:#4ade80;">100%</td>
+            <td style="padding:8px 12px; color:#4ade80;">~97%</td>
+          </tr>
+          <tr style="border-top:1px solid #0c3a5e;">
+            <td style="padding:8px 12px; color:#e0e0e0;">Small alts (MOODENG, FARTCOIN)</td>
+            <td style="padding:8px 12px; color:#4ade80;">100%</td>
+            <td style="padding:8px 12px; color:#fbbf24;">~94–95%</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p style="margin-top:10px; color:#888; font-size:0.88rem;">Note: strategy TP targets are 300–500% ROI on margin. Entry slippage of 0.05–0.15% is noise at that scale. The only place slippage materially hurts is SL hits on thin-book coins — where 0.15% adverse fill on a 2% SL means slightly more loss than planned.</p>
+
+      <br />
+      <hr style="border-color:#0c3a5e;" />
+      <br />
+
+      <p style="color:#4ade80; font-weight:600; font-size:1rem;">✅ GO-LIVE DECISION CRITERIA — 7-Day Demo Run</p>
+
+      <p style="margin-top:8px; color:#e0e0e0;">Run the agent on Binance Futures Testnet for <strong>7 full days</strong>. Starting capital equivalent: <strong>$100</strong>. Track every trade. Go live only if ALL of the following pass:</p>
+
+      <table style="width:100%; border-collapse:collapse; font-size:0.88rem; margin-top:12px;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:8px 12px; background:#071a2e; color:#94a3b8; font-weight:500;">Gate</th>
+            <th style="text-align:left; padding:8px 12px; background:#071a2e; color:#94a3b8; font-weight:500;">Minimum threshold</th>
+            <th style="text-align:left; padding:8px 12px; background:#071a2e; color:#94a3b8; font-weight:500;">Why</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-top:1px solid #0c3a5e;">
+            <td style="padding:8px 12px; color:#e0e0e0;">Win rate</td>
+            <td style="padding:8px 12px; color:#4ade80;"><strong>≥ 70%</strong> over minimum 10 trades</td>
+            <td style="padding:8px 12px; color:#888;">Below 70% means zone detection or gate logic has a bug</td>
+          </tr>
+          <tr style="border-top:1px solid #0c3a5e;">
+            <td style="padding:8px 12px; color:#e0e0e0;">$100 ending balance</td>
+            <td style="padding:8px 12px; color:#4ade80;"><strong>≥ $110</strong> (10% gain in 7 days)</td>
+            <td style="padding:8px 12px; color:#888;">Proves positive expectancy at this leverage + margin setting</td>
+          </tr>
+          <tr style="border-top:1px solid #0c3a5e;">
+            <td style="padding:8px 12px; color:#e0e0e0;">Max drawdown</td>
+            <td style="padding:8px 12px; color:#4ade80;"><strong>≤ 20%</strong> intraday (never below $80)</td>
+            <td style="padding:8px 12px; color:#888;">If balance drops below $80, risk management has a bug</td>
+          </tr>
+          <tr style="border-top:1px solid #0c3a5e;">
+            <td style="padding:8px 12px; color:#e0e0e0;">No runaway losses</td>
+            <td style="padding:8px 12px; color:#4ade80;"><strong>Max 3 consecutive SL hits</strong></td>
+            <td style="padding:8px 12px; color:#888;">3 in a row = macro regime issue, agent should pause and wait</td>
+          </tr>
+          <tr style="border-top:1px solid #0c3a5e;">
+            <td style="padding:8px 12px; color:#e0e0e0;">SL body-close working</td>
+            <td style="padding:8px 12px; color:#4ade80;"><strong>Zero wick-triggered SLs</strong></td>
+            <td style="padding:8px 12px; color:#888;">If any SL fires on a wick (not body close), sentinel has a bug — fix before going live</td>
+          </tr>
+          <tr style="border-top:1px solid #0c3a5e;">
+            <td style="padding:8px 12px; color:#e0e0e0;">TP1 hit rate</td>
+            <td style="padding:8px 12px; color:#4ade80;"><strong>≥ 60%</strong> of winning trades reach TP1</td>
+            <td style="padding:8px 12px; color:#888;">TP zones are too far if below 60% — recalibrate zone-to-zone distance</td>
+          </tr>
+          <tr style="border-top:1px solid #0c3a5e;">
+            <td style="padding:8px 12px; color:#e0e0e0;">Telegram notifications</td>
+            <td style="padding:8px 12px; color:#4ade80;"><strong>100% fire rate</strong> — every entry, TP, SL must notify</td>
+            <td style="padding:8px 12px; color:#888;">Silent trades = monitoring blind spot. Fix notifier before live.</td>
+          </tr>
+          <tr style="border-top:1px solid #0c3a5e;">
+            <td style="padding:8px 12px; color:#e0e0e0;">No orphaned orders</td>
+            <td style="padding:8px 12px; color:#4ade80;"><strong>Zero open TP/SL orders after position closes</strong></td>
+            <td style="padding:8px 12px; color:#888;">Orphaned exchange orders cause double-fills on re-entry. Critical bug if present.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <br />
+      <p style="color:#38bdf8; font-weight:600;">What to track during the 7 days:</p>
+      <ul>
+        <li>Every trade: coin, direction, entry price, fill price, slippage %, TP hit or SL hit, P&amp;L</li>
+        <li>Zone quality at entry: was it a clean demand/supply zone per strategy rules?</li>
+        <li>BTC macro at entry: was BTC 1D gate passing?</li>
+        <li>Any manual overrides needed: did the agent do something wrong that required intervention?</li>
+        <li>Agent uptime: did sentinel disconnect? Did loop.py crash? Any restart needed?</li>
+      </ul>
+
+      <br />
+      <p style="color:#f87171; font-weight:600;">If any gate fails after 7 days → fix the bug, reset the clock, run another 7 days. Do not go live until all 8 gates pass.</p>
+      <p style="margin-top:8px; color:#4ade80; font-weight:600;">If all gates pass → strategy goes live with real money. Starting capital: $100.</p>
+
+      <br />
+      <hr style="border-color:#0c3a5e;" />
+      <br />
+
+      <p style="color:#38bdf8; font-weight:600; font-size:1rem;">Multi-Exchange Slippage Validation (same trade, 3 exchanges simultaneously)</p>
+
+      <p style="margin-top:8px;">During the 7-day demo run, fire the <strong>exact same trade signal</strong> on 3 exchanges at the same millisecond. Compare fills. If all 3 are within 0.05% of each other → exchange is not the issue. If one is consistently worse → that exchange has a thin book or slow execution for that coin.</p>
+
+      <br />
+      <p style="color:#38bdf8; font-weight:600;">3 exchanges to test in parallel:</p>
+
+      <table style="width:100%; border-collapse:collapse; font-size:0.88rem; margin-top:8px;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:8px 12px; background:#071a2e; color:#94a3b8; font-weight:500;">Exchange</th>
+            <th style="text-align:left; padding:8px 12px; background:#071a2e; color:#94a3b8; font-weight:500;">Demo mode</th>
+            <th style="text-align:left; padding:8px 12px; background:#071a2e; color:#94a3b8; font-weight:500;">Coin coverage</th>
+            <th style="text-align:left; padding:8px 12px; background:#071a2e; color:#94a3b8; font-weight:500;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-top:1px solid #0c3a5e;">
+            <td style="padding:8px 12px; color:#e0e0e0;"><strong>WEEX</strong></td>
+            <td style="padding:8px 12px; color:#888;">Testnet API available</td>
+            <td style="padding:8px 12px; color:#888;">All Tier 1+2 coins</td>
+            <td style="padding:8px 12px; color:#4ade80;">Already built (<code>weex.py</code>)</td>
+          </tr>
+          <tr style="border-top:1px solid #0c3a5e;">
+            <td style="padding:8px 12px; color:#e0e0e0;"><strong>Bybit</strong></td>
+            <td style="padding:8px 12px; color:#888;">Testnet at <code>api-testnet.bybit.com</code></td>
+            <td style="padding:8px 12px; color:#888;">All Tier 1+2+3 coins</td>
+            <td style="padding:8px 12px; color:#fbbf24;">To build (<code>bybit.py</code> ~200 lines)</td>
+          </tr>
+          <tr style="border-top:1px solid #0c3a5e;">
+            <td style="padding:8px 12px; color:#e0e0e0;"><strong>Binance</strong></td>
+            <td style="padding:8px 12px; color:#888;">Testnet at <code>testnet.binancefuture.com</code></td>
+            <td style="padding:8px 12px; color:#888;">Deepest book, all coins</td>
+            <td style="padding:8px 12px; color:#fbbf24;">To build (<code>binance.py</code> ~200 lines)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <br />
+      <p style="color:#38bdf8; font-weight:600;">How the comparison works:</p>
+      <pre style="background:#0d0d0d; border:1px solid #0c3a5e; padding:12px; border-radius:6px; font-size:0.82rem; color:#38bdf8; overflow-x:auto; margin-top:8px;"># sentinel fires: SOL touches demand zone at $142.50
+# agent fires same order to all 3 exchanges simultaneously via asyncio.gather()
+
+fills = await asyncio.gather(
+    weex.place_order(symbol, side, qty, price),
+    bybit.place_order(symbol, side, qty, price),
+    binance.place_order(symbol, side, qty, price),
+)
+
+# Compare fills:
+# WEEX:    $142.53  (+0.021% slippage)
+# Bybit:   $142.51  (+0.007% slippage)
+# Binance: $142.50  (+0.000% slippage)  ← deepest book
+#
+# All within 0.05% → all 3 exchanges valid for this coin
+# If WEEX shows $142.80 (+0.21%) → WEEX thin on SOL → route SOL to Bybit/Binance</pre>
+
+      <br />
+      <p style="color:#38bdf8; font-weight:600;">What the comparison tells you:</p>
+
+      <table style="width:100%; border-collapse:collapse; font-size:0.88rem; margin-top:8px;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:8px 12px; background:#071a2e; color:#94a3b8; font-weight:500;">Result</th>
+            <th style="text-align:left; padding:8px 12px; background:#071a2e; color:#94a3b8; font-weight:500;">What it means</th>
+            <th style="text-align:left; padding:8px 12px; background:#071a2e; color:#94a3b8; font-weight:500;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-top:1px solid #0c3a5e;">
+            <td style="padding:8px 12px; color:#4ade80;">All 3 within 0.05%</td>
+            <td style="padding:8px 12px; color:#888;">Exchange is not the issue — slippage is inherent to coin liquidity</td>
+            <td style="padding:8px 12px; color:#4ade80;">Use any of the 3, pick lowest fee</td>
+          </tr>
+          <tr style="border-top:1px solid #0c3a5e;">
+            <td style="padding:8px 12px; color:#fbbf24;">One exchange consistently 0.1%+ worse</td>
+            <td style="padding:8px 12px; color:#888;">That exchange has thin book depth for this coin</td>
+            <td style="padding:8px 12px; color:#fbbf24;">Route that coin to the other 2 exchanges only</td>
+          </tr>
+          <tr style="border-top:1px solid #0c3a5e;">
+            <td style="padding:8px 12px; color:#f87171;">All 3 show high slippage (0.3%+)</td>
+            <td style="padding:8px 12px; color:#888;">Coin is too illiquid for this strategy at any exchange</td>
+            <td style="padding:8px 12px; color:#f87171;">Remove coin from watchlist entirely</td>
+          </tr>
+          <tr style="border-top:1px solid #0c3a5e;">
+            <td style="padding:8px 12px; color:#f87171;">Fills differ by 0.5%+ between exchanges</td>
+            <td style="padding:8px 12px; color:#888;">Price feed desync — one exchange's WS is lagging</td>
+            <td style="padding:8px 12px; color:#f87171;">Fix WS subscription timing, ensure all 3 use same price oracle</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <br />
+      <p style="color:#38bdf8; font-weight:600;">Live routing logic after demo validation:</p>
+      <p>After 7 days, you have a slippage profile per coin per exchange. Use it to auto-route:</p>
+      <ul>
+        <li><strong>BTC/ETH/SOL</strong> — any of the 3 (all deep). Pick lowest maker fee.</li>
+        <li><strong>Small alts (MOODENG, FARTCOIN)</strong> — whichever exchange had best fill during demo. Pin that exchange for that coin.</li>
+        <li><strong>Coin not available on preferred exchange</strong> → router falls back to next best automatically</li>
+        <li>This is exactly the CEX routing logic already planned in <code>exchange_base.py</code> — demo results populate the routing table</li>
+      </ul>
+
+      <br />
+      <p style="color:#4ade80; font-weight:600;">✅ DECISION: Fire same trade on WEEX + Bybit + Binance simultaneously during all 7 demo days. After day 7, build the per-coin routing table from slippage results. That table becomes the live routing config.</p>
+
+    </div>
+  </div>
+
+  <div class="entry" style="border-color: #d97706; background: #1c0f00;">
+    <div class="q" style="color: #f59e0b;">Profit Settlement Model — FINAL</div>
+    <div class="answer-text">
+
+      <p style="color:#f59e0b; font-weight:600; font-size:1rem;">How it works</p>
+      <p>User deposits on their own exchange. Gives trade-only API key. Funds never leave their account — no custody. Agent trades. Platform collects 20% of profit every 15 days.</p>
+
+      <br />
+      <p style="color:#f59e0b; font-weight:600;">Cycle 1 — 120% threshold trigger</p>
+      <table style="width:100%; border-collapse:collapse; font-size:0.88rem; margin-top:8px;">
+        <tbody>
+          <tr style="border-top:1px solid #2a1500;">
+            <td style="padding:8px 12px; color:#888;">User deposits</td>
+            <td style="padding:8px 12px; color:#e0e0e0;"><strong>$50</strong></td>
+          </tr>
+          <tr style="border-top:1px solid #2a1500;">
+            <td style="padding:8px 12px; color:#888;">Trigger at</td>
+            <td style="padding:8px 12px; color:#e0e0e0;"><strong>$110</strong> (120% growth)</td>
+          </tr>
+          <tr style="border-top:1px solid #2a1500;">
+            <td style="padding:8px 12px; color:#888;">Profit</td>
+            <td style="padding:8px 12px; color:#e0e0e0;"><strong>$60</strong></td>
+          </tr>
+          <tr style="border-top:1px solid #2a1500;">
+            <td style="padding:8px 12px; color:#888;">Platform fee (20%)</td>
+            <td style="padding:8px 12px; color:#f59e0b;"><strong>$12</strong></td>
+          </tr>
+          <tr style="border-top:1px solid #2a1500;">
+            <td style="padding:8px 12px; color:#888;">Remaining after fee</td>
+            <td style="padding:8px 12px; color:#4ade80;"><strong>$98</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <br />
+      <p style="color:#f59e0b; font-weight:600;">User gets 2 options at settlement</p>
+      <table style="width:100%; border-collapse:collapse; font-size:0.88rem; margin-top:8px;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:8px 12px; background:#1c0f00; color:#94a3b8; font-weight:500;">Option</th>
+            <th style="text-align:left; padding:8px 12px; background:#1c0f00; color:#94a3b8; font-weight:500;">What happens</th>
+            <th style="text-align:left; padding:8px 12px; background:#1c0f00; color:#94a3b8; font-weight:500;">Still trading</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-top:1px solid #2a1500;">
+            <td style="padding:8px 12px; color:#e0e0e0;"><strong>A — Withdraw capital</strong></td>
+            <td style="padding:8px 12px; color:#888;">User gets $50 back. $48 (80% profit) stays trading.</td>
+            <td style="padding:8px 12px; color:#4ade80;">$48</td>
+          </tr>
+          <tr style="border-top:1px solid #2a1500;">
+            <td style="padding:8px 12px; color:#e0e0e0;"><strong>B — Compound</strong></td>
+            <td style="padding:8px 12px; color:#888;">Nothing withdrawn. Full $98 keeps trading.</td>
+            <td style="padding:8px 12px; color:#4ade80;">$98</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <br />
+      <p style="color:#f59e0b; font-weight:600;">Cycles 2+ — every 15 days from here</p>
+      <ul>
+        <li>Every 15 days: calculate profit since last settlement</li>
+        <li>Platform takes 20% of that profit</li>
+        <li>If no profit in the window → no fee, cycle resets automatically</li>
+        <li>Fee not paid within 48hrs → trading paused until settled</li>
+        <li>Fee paid → trading resumes within 5 minutes</li>
+      </ul>
+
+      <br />
+      <p style="color:#f59e0b; font-weight:600;">Compounding snowball example</p>
+      <table style="width:100%; border-collapse:collapse; font-size:0.88rem; margin-top:8px;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:8px 12px; background:#1c0f00; color:#94a3b8; font-weight:500;">Cycle</th>
+            <th style="text-align:left; padding:8px 12px; background:#1c0f00; color:#94a3b8; font-weight:500;">Opening</th>
+            <th style="text-align:left; padding:8px 12px; background:#1c0f00; color:#94a3b8; font-weight:500;">Closing</th>
+            <th style="text-align:left; padding:8px 12px; background:#1c0f00; color:#94a3b8; font-weight:500;">Profit</th>
+            <th style="text-align:left; padding:8px 12px; background:#1c0f00; color:#94a3b8; font-weight:500;">Platform 20%</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-top:1px solid #2a1500;">
+            <td style="padding:8px 12px; color:#e0e0e0;">1 (trigger)</td>
+            <td style="padding:8px 12px; color:#888;">$50</td>
+            <td style="padding:8px 12px; color:#888;">$110</td>
+            <td style="padding:8px 12px; color:#4ade80;">$60</td>
+            <td style="padding:8px 12px; color:#f59e0b;">$12</td>
+          </tr>
+          <tr style="border-top:1px solid #2a1500;">
+            <td style="padding:8px 12px; color:#e0e0e0;">2 (day 15)</td>
+            <td style="padding:8px 12px; color:#888;">$98</td>
+            <td style="padding:8px 12px; color:#888;">$120</td>
+            <td style="padding:8px 12px; color:#4ade80;">$22</td>
+            <td style="padding:8px 12px; color:#f59e0b;">$4.40</td>
+          </tr>
+          <tr style="border-top:1px solid #2a1500;">
+            <td style="padding:8px 12px; color:#e0e0e0;">3 (day 30)</td>
+            <td style="padding:8px 12px; color:#888;">$138</td>
+            <td style="padding:8px 12px; color:#888;">$163</td>
+            <td style="padding:8px 12px; color:#4ade80;">$25</td>
+            <td style="padding:8px 12px; color:#f59e0b;">$5</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <br />
+      <p style="color:#4ade80; font-weight:600;">Key rules:</p>
+      <ul>
+        <li>20% always taken on profit — never on capital</li>
+        <li>No profit in a cycle = no fee</li>
+        <li>Funds stay on user's exchange — no custody risk</li>
+        <li>User signs agreement at signup covering all terms</li>
+        <li>Non-payment = trading hold until settled</li>
+      </ul>
+
+    </div>
+  </div>
+
+  <div class="entry" style="border-color: #7c3aed; background: #13001f;">
+    <div class="q" style="color: #a78bfa;">MVP Launch — 2 Strategies</div>
+    <div class="answer-text">
+      <p style="color:#a78bfa; font-weight:600;">At MVP launch we ship exactly 2 strategies. No more.</p>
+
+      <br />
+      <table style="width:100%; border-collapse:collapse; font-size:0.88rem; margin-top:8px;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:8px 12px; background:#1a0030; color:#94a3b8; font-weight:500;">#</th>
+            <th style="text-align:left; padding:8px 12px; background:#1a0030; color:#94a3b8; font-weight:500;">Strategy</th>
+            <th style="text-align:left; padding:8px 12px; background:#1a0030; color:#94a3b8; font-weight:500;">Market</th>
+            <th style="text-align:left; padding:8px 12px; background:#1a0030; color:#94a3b8; font-weight:500;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-top:1px solid #2d0050;">
+            <td style="padding:8px 12px; color:#e0e0e0;">1</td>
+            <td style="padding:8px 12px; color:#e0e0e0;"><strong>S/D Zone Trading</strong> — Sonum's cloned strategy</td>
+            <td style="padding:8px 12px; color:#4ade80;">Crypto (USDT perps)</td>
+            <td style="padding:8px 12px; color:#4ade80;">89% win rate, verified, agent built</td>
+          </tr>
+          <tr style="border-top:1px solid #2d0050;">
+            <td style="padding:8px 12px; color:#e0e0e0;">2</td>
+            <td style="padding:8px 12px; color:#e0e0e0;"><strong>Forex Strategy</strong> — TBD (same S/D logic, different market)</td>
+            <td style="padding:8px 12px; color:#fbbf24;">Forex (EUR/USD, GBP/USD etc)</td>
+            <td style="padding:8px 12px; color:#fbbf24;">To research + build. Broker API TBD.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <br />
+      <p style="color:#a78bfa; font-weight:600;">Why 2 at launch:</p>
+      <ul>
+        <li>Crypto-only platforms feel limited — forex immediately doubles the addressable market</li>
+        <li>Forex trades during different hours (London/NY session) — gives users coverage when crypto is quiet</li>
+        <li>S/D zone logic is the same — same agent brain, different exchange client and instrument list</li>
+        <li>Two strategies = a marketplace from day 1, not a single-strategy tool</li>
+      </ul>
+
+      <br />
+      <p style="color:#a78bfa; font-weight:600;">Forex broker requirements (to research):</p>
+      <ul>
+        <li>Must have REST + WebSocket API (for agent integration)</li>
+        <li>Regulated broker preferred (OANDA, IG, FXCM, Interactive Brokers)</li>
+        <li>High leverage available (50–500x standard in forex)</li>
+        <li>EUR/USD, GBP/USD, USD/JPY minimum — major pairs only at launch</li>
+      </ul>
+
+      <br />
+      <p style="color:#f87171; font-weight:600;">Post-MVP: open the marketplace to external traders. These 2 are our own strategies — proven before anyone else can submit.</p>
+    </div>
+  </div>
+
+  <div class="entry" style="border-color: #166534; background: #052e16;">
+    <div class="q" style="color: #4ade80;">Mobile App — Distribution Strategy</div>
+    <div class="answer-text">
+      <p style="color:#4ade80; font-weight:600;">Stack: Expo + React Native</p>
+      <p>Single codebase. Builds to iOS, Android, and web simultaneously. No separate teams or repos. Ship web first, mobile stores when ready.</p>
+
+      <br />
+      <p style="color:#4ade80; font-weight:600;">Launch order:</p>
+      <ul>
+        <li><strong>Phase 1 — Website download first</strong> — Host the APK (Android) and IPA (iOS sideload) directly on tradelikeme.xyz. Users download from the website. This lets us ship fast, iterate without App Store review delays, and validate with real users before committing to store policies.</li>
+        <li><strong>Phase 2 — App Store / Play Store</strong> — Once the app is stable, win rate is proven with live users, and we're confident in the UX, submit to Google Play and Apple App Store. This is the credibility unlock that drives organic installs.</li>
+      </ul>
+
+      <br />
+      <p style="color:#4ade80; font-weight:600;">Why this order makes sense:</p>
+      <ul>
+        <li>App Store review takes 1–7 days and can reject for any reason — no blockers during early testing</li>
+        <li>APK sideload on Android is trivial. iOS requires TestFlight or sideloading (slightly more friction but doable for early users)</li>
+        <li>Expo EAS Build handles both — one command builds the APK/IPA</li>
+        <li>When we do submit to stores, the codebase is already production-tested — lower rejection risk</li>
+      </ul>
+
+      <br />
+      <p style="color:#f87171; font-weight:600;">One codebase = one place to fix bugs, one deployment, web + mobile always in sync.</p>
+    </div>
+  </div>
+
+  </div><!-- end #page-notes -->
+
+  <div id="page-tasks" class="page">
+    <h1>TradeLikeMe — Tasks</h1>
+
+    <!-- ── MOBILE APP ── -->
+    <div class="task-section">
+      <div class="task-section-header" style="color:#38bdf8; font-size:1rem; font-weight:700; margin-bottom:16px; border-bottom:1px solid #1a2a3a; padding-bottom:8px;">
+        📱 Mobile App
+      </div>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Design</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="M1">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M1</span>
+          <div>
+            <div class="task-text">Finalise all 29 screen designs from scratch in Figma/Framer — full list defined in notes (Splash, Onboarding x3, Login, Signup, Forgot Password, Dashboard, Active Trade Detail, Trade History, Trade History Detail, Strategies List, Strategy Detail, Vault Overview, Deposit, Withdraw, Transaction History, Pick Strategy, Pick Risk Mode, Connect Exchange, Settings, Profile, Security, Notification Prefs, Connected Exchanges, Leaderboard, Referral, Notifications List, Notification Detail)</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M2">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M2</span>
+          <div>
+            <div class="task-text">Define colour system, typography, spacing tokens — document in a design reference file</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M3">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M3</span>
+          <div>
+            <div class="task-text">Design app icon and splash screen</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Project Setup</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="M4">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M4</span>
+          <div>
+            <div class="task-text">Initialise Expo project with TypeScript — <code>npx create-expo-app tradelikeme --template</code></div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M5">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M5</span>
+          <div>
+            <div class="task-text">Set up folder structure — screens/, components/, api/, store/, theme/</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M6">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M6</span>
+          <div>
+            <div class="task-text">Install core dependencies — React Navigation, Zustand (state), Axios, NativeWind (Tailwind for RN)</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M7">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M7</span>
+          <div>
+            <div class="task-text">Set up navigation structure — Auth stack (Login, Signup, Onboarding) + Main tab bar (Dashboard, Trades, Strategies, Vault, Settings)</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M8">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M8</span>
+          <div>
+            <div class="task-text">Set up theme file — colours, font sizes, spacing constants matching the design</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Auth Screens</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="M9">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M9</span>
+          <div>
+            <div class="task-text">Build Splash screen</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M10">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M10</span>
+          <div>
+            <div class="task-text">Build Onboarding screens (3 slides)</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M11">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M11</span>
+          <div>
+            <div class="task-text">Build Login screen — email/password + social login buttons</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M12">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M12</span>
+          <div>
+            <div class="task-text">Build Signup screen</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M13">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M13</span>
+          <div>
+            <div class="task-text">Wire auth screens to BetterAuth API — login, signup, session persistence</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Main App Screens</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="M14">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M14</span>
+          <div>
+            <div class="task-text">Build Dashboard screen — balance, active trades summary, P&amp;L today</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M15">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M15</span>
+          <div>
+            <div class="task-text">Build Active Trades screen — list of open positions with entry, TP, SL</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M16">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M16</span>
+          <div>
+            <div class="task-text">Build Trade History screen — closed trades with P&amp;L per trade</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M17">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M17</span>
+          <div>
+            <div class="task-text">Build Strategy Detail screen — win rate, monthly return, trade log, subscribe button</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M18">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M18</span>
+          <div>
+            <div class="task-text">Build Vault screen — deposit balance, deposit/withdraw flow</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M19">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M19</span>
+          <div>
+            <div class="task-text">Build Deposit screen — enter amount, confirm, wire to <code>POST /vaults/{id}/deposit</code></div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M20">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M20</span>
+          <div>
+            <div class="task-text">Build Notifications screen — list of all alerts (entry, TP, SL, balance low)</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M21">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M21</span>
+          <div>
+            <div class="task-text">Build Leaderboard screen — top users by % return</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M22">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M22</span>
+          <div>
+            <div class="task-text">Build Referral screen — referral link, copy button, earnings from referrals</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M23">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M23</span>
+          <div>
+            <div class="task-text">Build Settings screen — profile, risk mode selector, notification prefs, logout</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">API Wiring</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="M24">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M24</span>
+          <div>
+            <div class="task-text">Create API client — Axios instance with base URL, auth header injection</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M25">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M25</span>
+          <div>
+            <div class="task-text">Wire Dashboard to <code>GET /users/{id}/pnl</code> and <code>GET /users/{id}/positions</code></div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M26">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M26</span>
+          <div>
+            <div class="task-text">Wire Trade History to <code>GET /users/{id}/trades</code></div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M27">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M27</span>
+          <div>
+            <div class="task-text">Wire Strategies list to <code>GET /strategies</code></div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M28">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M28</span>
+          <div>
+            <div class="task-text">Connect WebSocket <code>WS /ws/live</code> — real-time price + trade updates on Dashboard</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M29">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M29</span>
+          <div>
+            <div class="task-text">Set up push notifications via Expo Notifications — wire to Telegram bot events</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Build &amp; Distribution</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="M30">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M30</span>
+          <div>
+            <div class="task-text">Set up Expo EAS Build — configure eas.json for Android (APK) and iOS (IPA) builds</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M31">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M31</span>
+          <div>
+            <div class="task-text">Build Android APK — host on tradelikeme.xyz/download for direct install</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M32">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M32</span>
+          <div>
+            <div class="task-text">Build iOS IPA — distribute via TestFlight for early users</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M33">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M33</span>
+          <div>
+            <div class="task-text">Submit to Google Play Store (after website validation passes)</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="M34">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#38bdf8;">M34</span>
+          <div>
+            <div class="task-text">Submit to Apple App Store (after website validation passes)</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- ── CRYPTO STRATEGY ── -->
+    <div class="task-section">
+      <div class="task-section-header" style="color:#4ade80; font-size:1rem; font-weight:700; margin-bottom:16px; border-bottom:1px solid #14532d; padding-bottom:8px;">
+        📈 Strategy 1 — Crypto (S/D Zone Trading)
+      </div>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Zone Detection (Pure Code)</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="C1">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#4ade80;">C1</span>
+          <div>
+            <div class="task-text">Replace KLineChart/AI vision zone scan with pure Python OHLCV algorithm — impulse detection + last opposing candle</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="C2">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#4ade80;">C2</span>
+          <div>
+            <div class="task-text">Implement freshness check — skip zones where price has already returned since the impulse</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="C3">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#4ade80;">C3</span>
+          <div>
+            <div class="task-text">Implement FVG detection — gap between candle[i-1].high and candle[i+1].low</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="C4">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#4ade80;">C4</span>
+          <div>
+            <div class="task-text">Implement equal highs/lows detection — within 0.1% tolerance</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="C5">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#4ade80;">C5</span>
+          <div>
+            <div class="task-text">Implement BTC 1D gate — detect HH/HL (bullish) or LH/LL (bearish) swing structure, block alt entries against it</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="C6">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#4ade80;">C6</span>
+          <div>
+            <div class="task-text">Implement 4H zone gate — lower-TF zones must have a 4H zone within ±5%</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="C7">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#4ade80;">C7</span>
+          <div>
+            <div class="task-text">Claude Opus 4.6 absorption check — call only on zone-touch events, enforce JSON output schema (body_count_in_zone, compression_candles, volume_ratio)</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Demo Trading (7-Day Gate)</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="C8">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#4ade80;">C8</span>
+          <div>
+            <div class="task-text">Set up Binance Futures Testnet account + API keys</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="C9">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#4ade80;">C9</span>
+          <div>
+            <div class="task-text">Run agent on testnet for 7 full days — track every trade (coin, entry, fill, slippage, TP/SL result)</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="C10">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#4ade80;">C10</span>
+          <div>
+            <div class="task-text">Verify all 8 go-live gates pass — win rate ≥70%, balance ≥$110, drawdown ≤20%, no wick-triggered SLs, 100% Telegram fire rate, zero orphaned orders</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Go Live</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="C11">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#4ade80;">C11</span>
+          <div>
+            <div class="task-text">Wire notifier.send() into trade_agent.py and loop.py — Telegram fires on every entry, TP1, TP2, SL</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="C12">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#4ade80;">C12</span>
+          <div>
+            <div class="task-text">Switch agent from testnet to mainnet — real money, starting capital $100</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="C13">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#4ade80;">C13</span>
+          <div>
+            <div class="task-text">Monitor first 10 live trades manually — verify every order, TP, SL, notification</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- ── FOREX STRATEGY ── -->
+    <div class="task-section">
+      <div class="task-section-header" style="color:#fbbf24; font-size:1rem; font-weight:700; margin-bottom:16px; border-bottom:1px solid #451a03; padding-bottom:8px;">
+        💱 Strategy 2 — Forex
+      </div>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Research</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="F1">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#fbbf24;">F1</span>
+          <div>
+            <div class="task-text">Research forex brokers with REST + WebSocket API — evaluate OANDA, IG, FXCM, Interactive Brokers</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="F2">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#fbbf24;">F2</span>
+          <div>
+            <div class="task-text">Pick broker — confirm leverage (50–500x), pairs (EUR/USD, GBP/USD, USD/JPY minimum), API quality</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="F3">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#fbbf24;">F3</span>
+          <div>
+            <div class="task-text">Verify S/D zone strategy works on forex — backtest manually on EUR/USD 4H chart, minimum 20 setups</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Build</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="F4">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#fbbf24;">F4</span>
+          <div>
+            <div class="task-text">Build forex exchange client — inherits ExchangeBase, same 7 abstract methods</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="F5">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#fbbf24;">F5</span>
+          <div>
+            <div class="task-text">Add forex pairs to watchlist config — EUR/USD, GBP/USD, USD/JPY at minimum</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="F6">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#fbbf24;">F6</span>
+          <div>
+            <div class="task-text">Adapt zone scanner for forex session hours — London (08:00–17:00 UTC), NY (13:00–22:00 UTC). Block entries outside active sessions.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="F7">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#fbbf24;">F7</span>
+          <div>
+            <div class="task-text">Run 7-day demo on broker demo account — same 8 go-live gates as crypto strategy</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="F8">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#fbbf24;">F8</span>
+          <div>
+            <div class="task-text">Go live with forex strategy — wire into same agent brain, separate strategy instance</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- ── AGENT ARCHITECTURE ── -->
+    <div class="task-section">
+      <div class="task-section-header" style="color:#a78bfa; font-size:1rem; font-weight:700; margin-bottom:16px; border-bottom:1px solid #2d0050; padding-bottom:8px;">
+        🧠 Agent Architecture (Analysis + Execution)
+      </div>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Analysis Layer — Single Brain</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="AA1">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#a78bfa;">AA1</span>
+          <div>
+            <div class="task-text">Build analysis engine — single process that scans all instruments, runs all gates, calls Claude Opus on zone-touch events. Runs once for all users regardless of user count.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="AA2">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#a78bfa;">AA2</span>
+          <div>
+            <div class="task-text">Build signal queue — when analysis finds a valid setup, publish it to a shared DB table or Redis queue: symbol, direction, entry zone, TP1, TP2, SL, timestamp</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="AA3">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#a78bfa;">AA3</span>
+          <div>
+            <div class="task-text">Signal expiry — mark signals stale after 30 minutes. Executor agents ignore expired signals — don't enter a trade on old data.</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Execution Layer — User Agent Swarm</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="AA4">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#a78bfa;">AA4</span>
+          <div>
+            <div class="task-text">Build user executor — lightweight agent per user. Subscribes to signal queue, reads user's risk mode, sizes the trade, places it on user's exchange. No scanning, no AI.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="AA5">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#a78bfa;">AA5</span>
+          <div>
+            <div class="task-text">Per-user isolation — each executor manages only that user's trades, TP/SL, body-close SL, and settlement. One user's exchange error never affects another user.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="AA6">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#a78bfa;">AA6</span>
+          <div>
+            <div class="task-text">Trading hold gate — executor checks user's payment status before acting on any signal. If on hold → skip all signals until hold lifted.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="AA7">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#a78bfa;">AA7</span>
+          <div>
+            <div class="task-text">Auto-spawn on signup — when new user connects their exchange API key, spin up their executor automatically. No manual deployment needed.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="AA8">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#a78bfa;">AA8</span>
+          <div>
+            <div class="task-text">Auto-stop on unsubscribe — when user disconnects or deletes account, shut down their executor cleanly, close any open positions first.</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Health Monitoring</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="AA9">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#a78bfa;">AA9</span>
+          <div>
+            <div class="task-text">Analysis engine heartbeat — ping every 5 minutes. If silent for 10 minutes → Telegram alert to admin immediately.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="AA10">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#a78bfa;">AA10</span>
+          <div>
+            <div class="task-text">Executor heartbeat — each user executor pings every 5 minutes. If any executor goes silent → alert admin + alert that user via Telegram.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="AA11">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#a78bfa;">AA11</span>
+          <div>
+            <div class="task-text">Auto-restart — if analysis engine or any executor crashes, Docker auto-restarts it within 30 seconds. Log the crash reason to DB.</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- ── ONBOARDING ── -->
+    <div class="task-section">
+      <div class="task-section-header" style="color:#34d399; font-size:1rem; font-weight:700; margin-bottom:16px; border-bottom:1px solid #064e3b; padding-bottom:8px;">
+        🚀 Onboarding Flow
+      </div>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Step 1 — Signup</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item done" data-id="OB1">
+          <span class="task-check done" onclick="toggleTask(this)">✓</span>
+          <span class="task-id" style="color:#34d399;">OB1</span>
+          <div>
+            <div class="task-text">Build signup screen — name, email, password + Google/GitHub/Phantom OAuth.</div>
+            <div class="task-note">✅ SignupPage.tsx — fully built, real BetterAuth integration</div>
+          </div>
+        </li>
+        <li class="task-item done" data-id="OB2">
+          <span class="task-check done" onclick="toggleTask(this)">✓</span>
+          <span class="task-id" style="color:#34d399;">OB2</span>
+          <div>
+            <div class="task-text">Email verification — user clicks link in email → marked verified → redirected back to app.</div>
+            <div class="task-note">✅ EmailVerificationBanner.tsx + BetterAuth handles this</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="OB3">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#34d399;">OB3</span>
+          <div>
+            <div class="task-text">Resume state — if user closes app mid-onboarding, save last completed step to DB. On next login, resume from where they left off.</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Step 2 — User Agreement</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="OB4">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#34d399;">OB4</span>
+          <div>
+            <div class="task-text">Draft user agreement in plain English — cover: 20% fee on profit, 15-day cycles, trading hold on non-payment, funds stay on user's exchange (no custody), CEX risk disclosure, trading involves loss risk.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="OB5">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#34d399;">OB5</span>
+          <div>
+            <div class="task-text">Build agreement screen — scrollable full text, key points highlighted. Must scroll to bottom before checkbox activates. User ticks checkbox + types "I AGREE" to proceed.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="OB6">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#34d399;">OB6</span>
+          <div>
+            <div class="task-text">Store agreement acceptance — save user_id, agreement version, timestamp, IP address to DB. Never let user skip this step.</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Step 3 — Pick Strategy</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="OB7">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#34d399;">OB7</span>
+          <div>
+            <div class="task-text">Build strategy picker screen — two cards side by side. Crypto card: 89% win rate, 24/7, 33 pairs. Forex card: London + NY sessions, major pairs. User can pick one or both.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="OB8">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#34d399;">OB8</span>
+          <div>
+            <div class="task-text">If user picks both strategies — run exchange connect step (Step 5) twice, once for each strategy.</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Step 4 — Pick Risk Mode</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="OB9">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#34d399;">OB9</span>
+          <div>
+            <div class="task-text">Build risk mode picker — three cards: Conservative (50–100x, 0.25% margin), Medium (200x, 0.5% margin), Aggressive (300x, 1% margin). Each card shows example trade on $100, max loss per trade, trades before liquidation.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="OB10">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#34d399;">OB10</span>
+          <div>
+            <div class="task-text">Save risk mode to DB — user can change later from Settings. Agent executor reads this on every trade entry.</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Step 5 — Connect Exchange</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="OB11">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#34d399;">OB11</span>
+          <div>
+            <div class="task-text">Build exchange connect screen — dropdown to pick exchange (Binance / MEXC / WEEX / Bybit for crypto, broker TBD for forex). Fields for API Key + Secret.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="OB12">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#34d399;">OB12</span>
+          <div>
+            <div class="task-text">Step-by-step API key guide — for each exchange show exact instructions with screenshots: "Go to API Management → Create API → Enable Futures → Disable Withdrawals → Copy Key + Secret."</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="OB13">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#34d399;">OB13</span>
+          <div>
+            <div class="task-text">API key validation — on paste, call GET /balance on that exchange. Green tick + balance shown if valid. Red error with fix instructions if invalid.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="OB14">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#34d399;">OB14</span>
+          <div>
+            <div class="task-text">Encrypt + store API key — AES-256 encrypt key + secret before saving to DB. Never store in plain text. Decrypt only inside agent executor at trade time.</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Step 6 — Fund Check</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="OB15">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#34d399;">OB15</span>
+          <div>
+            <div class="task-text">Balance check — read exchange balance via API key. If ≥ $50: green "You have $XXX. You're ready." If &lt; $50: yellow warning "Minimum $50 needed. Deposit on [exchange] then tap Refresh."</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="OB16">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#34d399;">OB16</span>
+          <div>
+            <div class="task-text">Refresh balance button — re-reads balance on demand. Deep link button to open exchange app/website deposit page directly.</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Step 7 — Confirm & Launch</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="OB17">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#34d399;">OB17</span>
+          <div>
+            <div class="task-text">Build summary screen — show full recap: strategy, risk mode, exchange, balance, fee structure. Big green "Start Trading" button.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="OB18">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#34d399;">OB18</span>
+          <div>
+            <div class="task-text">On "Start Trading" tap — spin up user's executor agent, subscribe it to signal queue, set cycle start date, mark user as active in DB.</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Step 8 — Agent Active Screen</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="OB19">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#34d399;">OB19</span>
+          <div>
+            <div class="task-text">Build success screen — confetti animation, "Your agent is live. First zone scan running now." Show agent status, next scan time (~40 min startup gate), Telegram connect button.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="OB20">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#34d399;">OB20</span>
+          <div>
+            <div class="task-text">Telegram connect — deep link to @tradelikeme_alerts_bot with user's unique token pre-filled. One tap connects their Telegram for all trade alerts.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="OB21">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#34d399;">OB21</span>
+          <div>
+            <div class="task-text">"Go to Dashboard" button — takes user to main dashboard. Onboarding complete flag set in DB. This flow never shows again.</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- ── PROFIT SETTLEMENT ── -->
+    <div class="task-section">
+      <div class="task-section-header" style="color:#f59e0b; font-size:1rem; font-weight:700; margin-bottom:16px; border-bottom:1px solid #451a03; padding-bottom:8px;">
+        💰 Profit Settlement System
+      </div>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Settlement Logic</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="S1">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S1</span>
+          <div>
+            <div class="task-text">Build settlement calculator — track opening balance per user per 15-day cycle, calculate profit at cycle end</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="S2">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S2</span>
+          <div>
+            <div class="task-text">First cycle trigger — detect when user balance hits 120% of initial deposit (e.g. $50 → $110). Fire settlement notification.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="S3">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S3</span>
+          <div>
+            <div class="task-text">Recurring cycle — after first settlement, trigger every 15 days regardless of profit amount. Calculate 20% of profit made in that window.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="S4">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S4</span>
+          <div>
+            <div class="task-text">Zero profit handling — if no profit in a 15-day window, skip fee, auto-start next cycle. Never charge on a flat or losing period.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="S5">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S5</span>
+          <div>
+            <div class="task-text">Store settlement history in DB — per user: cycle start date, end date, opening balance, closing balance, profit, fee owed, fee paid, status</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">User Options at Settlement</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="S6">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S6</span>
+          <div>
+            <div class="task-text">Option A — Withdraw initial capital: user gets $50 back, $48 stays trading (80% of profit), platform collects $12 (20% of profit)</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="S7">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S7</span>
+          <div>
+            <div class="task-text">Option B — Compound: full $98 stays trading, platform still collects $12 fee. Next 15-day cycle runs on $98.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="S8">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S8</span>
+          <div>
+            <div class="task-text">Build settlement notification — push + Telegram. Show breakdown: profit made, fee owed, Option A vs Option B with exact numbers. 48hr deadline to pay.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="S9">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S9</span>
+          <div>
+            <div class="task-text">Build in-app settlement screen — shows both options with exact dollar amounts, confirm button, payment instructions</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Enforcement</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="S10">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S10</span>
+          <div>
+            <div class="task-text">Trading hold — if fee not paid within 48 hours of settlement notification, agent pauses all trades for that user automatically</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="S11">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S11</span>
+          <div>
+            <div class="task-text">Hold notification — send Telegram + push: "Trading paused. Settle your $12 fee to resume." Include payment wallet address.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="S12">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S12</span>
+          <div>
+            <div class="task-text">Auto-resume — once fee payment detected on-chain, agent resumes trading within 5 minutes automatically</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="S13">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S13</span>
+          <div>
+            <div class="task-text">Draft user agreement — plain English, covers: 20% fee on profit, 15-day cycles, trading hold on non-payment, no custody (funds stay on user's exchange), CEX risk disclosure. User signs on signup.</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Admin</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="S14">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S14</span>
+          <div>
+            <div class="task-text">Admin settlement dashboard — list all users, current cycle, profit this cycle, fee owed, paid/unpaid status, trading active/paused</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="S15">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S15</span>
+          <div>
+            <div class="task-text">Revenue tracker — total fees collected all time, per month, per strategy. Running total visible in admin panel.</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Fee Payment Options</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="S16">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S16</span>
+          <div>
+            <div class="task-text">Build payment options screen — show all methods at settlement: Solana address, BEP20 address, Binance ID, MEXC ID, WEEX ID. User picks one, gets exact instructions.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="S17">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S17</span>
+          <div>
+            <div class="task-text">Store platform receiving addresses in config — Solana wallet, BEP20 wallet, Binance UID, MEXC UID, WEEX UID</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Payment Verification (Screenshot + ID)</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="S18">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S18</span>
+          <div>
+            <div class="task-text">Build payment submission screen — user uploads screenshot of their transfer + enters transaction ID or reference number. One submit button.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="S19">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S19</span>
+          <div>
+            <div class="task-text">Store submission in DB — user_id, cycle_id, screenshot_url, transaction_id, payment_method (Solana/BEP20/Binance/MEXC/WEEX), amount, submitted_at, status (pending/approved/rejected)</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="S20">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S20</span>
+          <div>
+            <div class="task-text">Admin verification queue — admin sees all pending submissions with screenshot, transaction ID, expected amount. One-click approve or reject with optional note.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="S21">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S21</span>
+          <div>
+            <div class="task-text">On approve — mark settlement as paid, auto-resume trading, send user confirmation notification: "Payment verified ✓ Trading resumed. Next cycle: [date]"</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="S22">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S22</span>
+          <div>
+            <div class="task-text">On reject — send user notification with reason: "Screenshot unclear / Amount mismatch / Transaction ID invalid. Please resubmit." User can resubmit immediately.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="S23">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S23</span>
+          <div>
+            <div class="task-text">Admin alert — Telegram notification to admin whenever a new payment submission arrives. Include user name, amount, method. Target: verify within 2 hours.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="S24">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S24</span>
+          <div>
+            <div class="task-text">Fraud prevention — flag duplicate transaction IDs (same ID submitted by two users). Block reuse of already-approved transaction IDs.</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Forex Fee Collection</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="S25">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S25</span>
+          <div>
+            <div class="task-text">Add forex payment options to verification screen — Bank Transfer (user sends to platform bank account, uploads receipt + reference number), Solana wallet, BEP20, Binance/MEXC/WEEX UID. Same screenshot + ID flow as crypto.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="S26">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S26</span>
+          <div>
+            <div class="task-text">Set up platform bank account for receiving bank transfers — add account details (bank name, account number, sort code/IBAN, reference format) to payment options screen. User includes their username as reference so admin can match payment to account.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="S27">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f59e0b;">S27</span>
+          <div>
+            <div class="task-text">Bank transfer verification — admin checks bank statement, matches reference number to user account, approves in admin queue. Same approve/reject flow as crypto submissions.</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- ── ADMIN PANEL ── -->
+    <div class="task-section">
+      <div class="task-section-header" style="color:#f87171; font-size:1rem; font-weight:700; margin-bottom:16px; border-bottom:1px solid #450a0a; padding-bottom:8px;">
+        🛡️ Admin Panel (Owner Only)
+      </div>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Access Control</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item done" data-id="AD1">
+          <span class="task-check done" onclick="toggleTask(this)">✓</span>
+          <span class="task-id" style="color:#f87171;">AD1</span>
+          <div>
+            <div class="task-text">Admin role in BetterAuth — single admin account (your email only). All admin routes check for admin role, return 403 for everyone else.</div>
+            <div class="task-note">✅ /admin/* route exists, protected. Confirm admin role check is enforced in BetterAuth config.</div>
+          </div>
+        </li>
+        <li class="task-item done" data-id="AD2">
+          <span class="task-check done" onclick="toggleTask(this)">✓</span>
+          <span class="task-id" style="color:#f87171;">AD2</span>
+          <div>
+            <div class="task-text">Admin panel on website — AdminPage.tsx with sidebar: Overview, Users, Approvals, Analytics.</div>
+            <div class="task-note">✅ Built on website. ❌ Mobile app access still needed (secret tap in settings).</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Users</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item done" data-id="AD3">
+          <span class="task-check done" onclick="toggleTask(this)">✓</span>
+          <span class="task-id" style="color:#f87171;">AD3</span>
+          <div>
+            <div class="task-text">Users list — AdminUserManagement.tsx exists.</div>
+            <div class="task-note">⚠️ Exists but uses mock data — needs wiring to real backend + add agent status (active/paused/hold) column.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="AD4">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f87171;">AD4</span>
+          <div>
+            <div class="task-text">User detail page — click any user to see full profile, open positions, trade history, settlement history, API key status (valid/invalid, never show key itself).</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="AD5">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f87171;">AD5</span>
+          <div>
+            <div class="task-text">Manual pause/resume — admin can pause or resume any user's executor with one click + optional note sent to user via Telegram.</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Positions & Trades</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="AD6">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f87171;">AD6</span>
+          <div>
+            <div class="task-text">Live positions view — all open positions across all users: user, coin, direction, entry, current P&L, TP1/TP2/SL levels, time open.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="AD7">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f87171;">AD7</span>
+          <div>
+            <div class="task-text">Trade history — all closed trades across all users with P&L, win/loss, strategy used. Filterable by date, strategy, user.</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Settlement Queue</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="AD8">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f87171;">AD8</span>
+          <div>
+            <div class="task-text">Settlement queue — all pending payment submissions with screenshot, transaction ID, amount, method. One-click approve or reject with note.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="AD9">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#f87171;">AD9</span>
+          <div>
+            <div class="task-text">Settlement history — all past cycles per user: opening balance, closing balance, profit, fee collected, date paid.</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Revenue</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item done" data-id="AD10">
+          <span class="task-check done" onclick="toggleTask(this)">✓</span>
+          <span class="task-id" style="color:#f87171;">AD10</span>
+          <div>
+            <div class="task-text">Revenue dashboard — AdminAnalytics.tsx exists with charts.</div>
+            <div class="task-note">⚠️ Exists but uses mock data — wire to real backend settlement records.</div>
+          </div>
+        </li>
+        <li class="task-item done" data-id="AD11">
+          <span class="task-check done" onclick="toggleTask(this)">✓</span>
+          <span class="task-id" style="color:#f87171;">AD11</span>
+          <div>
+            <div class="task-text">Platform stats — AdminOverview.tsx has stats dashboard.</div>
+            <div class="task-note">⚠️ Exists but uses mock data — wire to real backend.</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- ── LEGAL PAGES ── -->
+    <div class="task-section">
+      <div class="task-section-header" style="color:#94a3b8; font-size:1rem; font-weight:700; margin-bottom:16px; border-bottom:1px solid #1e293b; padding-bottom:8px;">
+        ⚖️ Legal Pages
+      </div>
+
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item done" data-id="LG1">
+          <span class="task-check done" onclick="toggleTask(this)">✓</span>
+          <span class="task-id" style="color:#94a3b8;">LG1</span>
+          <div>
+            <div class="task-text">User Agreement — plain English. Covers: 20% profit fee, 15-day cycles, trading hold on non-payment, no custody (funds on user's exchange), CEX risk, trading loss risk, account termination terms.</div>
+            <div class="task-note">⚠️ Needs update — add 15-day cycle model, screenshot payment flow, remove Drift vault refs (W12)</div>
+          </div>
+        </li>
+        <li class="task-item done" data-id="LG2">
+          <span class="task-check done" onclick="toggleTask(this)">✓</span>
+          <span class="task-id" style="color:#94a3b8;">LG2</span>
+          <div>
+            <div class="task-text">Terms of Service — platform rules, acceptable use, account suspension, liability limits, dispute resolution, governing law.</div>
+            <div class="task-note">✅ TermsPage.tsx exists at /terms — comprehensive legal doc</div>
+          </div>
+        </li>
+        <li class="task-item done" data-id="LG3">
+          <span class="task-check done" onclick="toggleTask(this)">✓</span>
+          <span class="task-id" style="color:#94a3b8;">LG3</span>
+          <div>
+            <div class="task-text">Privacy Policy — what data is collected (email, exchange balance, trade history), how it's stored, who it's shared with, right to delete account, GDPR compliance basics.</div>
+            <div class="task-note">✅ PrivacyPage.tsx exists at /privacy — 12 sections, production-level</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="LG4">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#94a3b8;">LG4</span>
+          <div>
+            <div class="task-text">Risk Disclosure — past performance not guaranteed, trading involves substantial risk of loss, leverage amplifies both gains and losses, only trade with money you can afford to lose.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="LG5">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#94a3b8;">LG5</span>
+          <div>
+            <div class="task-text">Cookie Policy — what cookies are used, why, how to disable. Required for App Store + EU users.</div>
+          </div>
+        </li>
+        <li class="task-item done" data-id="LG6">
+          <span class="task-check done" onclick="toggleTask(this)">✓</span>
+          <span class="task-id" style="color:#94a3b8;">LG6</span>
+          <div>
+            <div class="task-text">Build legal pages on website — /terms and /privacy already exist. /risk-disclosure and /cookie-policy still needed (see W13).</div>
+            <div class="task-note">✅ /terms and /privacy built. ❌ /risk-disclosure missing.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="LG7">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#94a3b8;">LG7</span>
+          <div>
+            <div class="task-text">Legal links in app — footer of every screen links to Terms, Privacy, Risk Disclosure. Required for App Store approval.</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- ── SECURITY ── -->
+    <div class="task-section">
+      <div class="task-section-header" style="color:#fb923c; font-size:1rem; font-weight:700; margin-bottom:16px; border-bottom:1px solid #431407; padding-bottom:8px;">
+        🔒 Security
+      </div>
+
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item done" data-id="SEC1">
+          <span class="task-check done" onclick="toggleTask(this)">✓</span>
+          <span class="task-id" style="color:#fb923c;">SEC1</span>
+          <div>
+            <div class="task-text">2FA — enable TOTP (Google Authenticator) via BetterAuth 2FA plugin. Optional for users, mandatory for admin account.</div>
+            <div class="task-note">✅ BetterAuth 2FA plugin wired in auth-client.ts</div>
+          </div>
+        </li>
+        <li class="task-item done" data-id="SEC2">
+          <span class="task-check done" onclick="toggleTask(this)">✓</span>
+          <span class="task-id" style="color:#fb923c;">SEC2</span>
+          <div>
+            <div class="task-text">2FA setup screen — QR code, TOTP verify, backup codes, success screen.</div>
+            <div class="task-note">✅ TwoFactorSetupPage.tsx — 4-step wizard, fully built</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="SEC3">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#fb923c;">SEC3</span>
+          <div>
+            <div class="task-text">API key encryption — AES-256 encrypt all CEX API keys before storing in DB. Encryption key stored in environment variable, never in code or DB.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="SEC4">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#fb923c;">SEC4</span>
+          <div>
+            <div class="task-text">Rate limiting — BetterAuth rate limiting on login (5 attempts then 15 min lockout), signup (3/hour per IP), API endpoints (100 req/min per user).</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="SEC5">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#fb923c;">SEC5</span>
+          <div>
+            <div class="task-text">Session management — 30-day sessions via BetterAuth. Show active sessions list in Security screen. Allow user to revoke any session remotely.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="SEC6">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#fb923c;">SEC6</span>
+          <div>
+            <div class="task-text">New login alert — Telegram + email notification when account is accessed from a new device or IP. Include device, location, time. "Not you? Revoke session" link.</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- ── EMPTY & ERROR STATES ── -->
+    <div class="task-section">
+      <div class="task-section-header" style="color:#818cf8; font-size:1rem; font-weight:700; margin-bottom:16px; border-bottom:1px solid #1e1b4b; padding-bottom:8px;">
+        🪣 Empty &amp; Error States
+      </div>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Empty States</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="ES1">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#818cf8;">ES1</span>
+          <div>
+            <div class="task-text">Dashboard — no deposit yet: "Agent is ready. Fund your exchange account ($50 min) to start trading." Button: "How to deposit".</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="ES2">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#818cf8;">ES2</span>
+          <div>
+            <div class="task-text">Dashboard — funded but no trades yet: "Agent is scanning markets. First trade will appear here when a valid setup is found."</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="ES3">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#818cf8;">ES3</span>
+          <div>
+            <div class="task-text">Trade History — no closed trades yet: "No completed trades yet. Your trade history will appear here."</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="ES4">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#818cf8;">ES4</span>
+          <div>
+            <div class="task-text">Notifications — no notifications yet: "No notifications yet. You'll be alerted here when your agent enters or closes a trade."</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Error States</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="ES5">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#818cf8;">ES5</span>
+          <div>
+            <div class="task-text">API key invalid/expired — banner on dashboard: "Your [Binance] API key is no longer valid. Tap to reconnect." Links directly to exchange connect screen.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="ES6">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#818cf8;">ES6</span>
+          <div>
+            <div class="task-text">Agent paused (trading hold) — full screen banner: "Trading paused. Fee payment required. Tap to settle." Shows amount owed and payment options.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="ES7">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#818cf8;">ES7</span>
+          <div>
+            <div class="task-text">Agent crashed — banner: "Your agent went offline. We're restarting it now. You'll be notified when it's back." Admin alerted automatically.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="ES8">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#818cf8;">ES8</span>
+          <div>
+            <div class="task-text">Exchange down — banner: "[Binance] API is currently unavailable. Agent is paused until exchange is back online. No action needed."</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="ES9">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#818cf8;">ES9</span>
+          <div>
+            <div class="task-text">Insufficient balance — notification + banner: "Balance too low to open new trades ($X remaining, minimum $50 needed). Deposit to continue."</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="ES10">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#818cf8;">ES10</span>
+          <div>
+            <div class="task-text">Network error — generic offline state across all screens: "No internet connection. Pull to refresh when you're back online."</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="ES11">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#818cf8;">ES11</span>
+          <div>
+            <div class="task-text">Trade failed — notification: "Trade entry failed on [Binance]: [reason]. Agent will retry on next valid setup." Log reason to DB for admin review.</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- ── WEBSITE ── -->
+    <div class="task-section">
+      <div class="task-section-header" style="color:#22d3ee; font-size:1rem; font-weight:700; margin-bottom:16px; border-bottom:1px solid #0c3a40; padding-bottom:8px;">
+        🌐 Website (tradelikeme.xyz)
+      </div>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#4ade80; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">✅ Already Built — Just Needs Updates</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item done" data-id="W1">
+          <span class="task-check done" onclick="toggleTask(this)">✓</span>
+          <span class="task-id" style="color:#22d3ee;">W1</span>
+          <div>
+            <div class="task-text">Landing page structure — hero, features, pricing, FAQ, footer all exist</div>
+          </div>
+        </li>
+        <li class="task-item done" data-id="W2">
+          <span class="task-check done" onclick="toggleTask(this)">✓</span>
+          <span class="task-id" style="color:#22d3ee;">W2</span>
+          <div>
+            <div class="task-text">Auth pages — signup, login, forgot password, reset password all built and wired to BetterAuth</div>
+          </div>
+        </li>
+        <li class="task-item done" data-id="W3">
+          <span class="task-check done" onclick="toggleTask(this)">✓</span>
+          <span class="task-id" style="color:#22d3ee;">W3</span>
+          <div>
+            <div class="task-text">Legal pages — Privacy Policy (/privacy) and Terms of Service (/terms) both exist with comprehensive real content</div>
+          </div>
+        </li>
+        <li class="task-item done" data-id="W4">
+          <span class="task-check done" onclick="toggleTask(this)">✓</span>
+          <span class="task-id" style="color:#22d3ee;">W4</span>
+          <div>
+            <div class="task-text">Dashboard — investor pages (11), trader pages (7), admin panel (5 sections) all built with real UI, falling back to mock data when backend unavailable</div>
+          </div>
+        </li>
+        <li class="task-item done" data-id="W5">
+          <span class="task-check done" onclick="toggleTask(this)">✓</span>
+          <span class="task-id" style="color:#22d3ee;">W5</span>
+          <div>
+            <div class="task-text">2FA setup page — fully built with QR code, TOTP verify, backup codes, success screen</div>
+          </div>
+        </li>
+        <li class="task-item done" data-id="W6">
+          <span class="task-check done" onclick="toggleTask(this)">✓</span>
+          <span class="task-id" style="color:#22d3ee;">W6</span>
+          <div>
+            <div class="task-text">Docs hub — full documentation site at /docs with sidebar navigation</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#fbbf24; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">⚠️ Needs Updating — Content Is Outdated</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="W7">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#22d3ee;">W7</span>
+          <div>
+            <div class="task-text">Update hero headline — change from "The first verified-strategy trading platform" to "We cloned a trader who turned $100 into $500,000 in 3 years — every trade verifiable."</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="W8">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#22d3ee;">W8</span>
+          <div>
+            <div class="task-text">Remove countdown timer and waitlist — replace with real signup CTA. Launch has happened, countdown to 9 May 2026 is stale.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="W9">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#22d3ee;">W9</span>
+          <div>
+            <div class="task-text">Update pricing page — change from HWM model to the 15-day cycle + 120% first trigger + 20% profit fee model decided in this session.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="W10">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#22d3ee;">W10</span>
+          <div>
+            <div class="task-text">Update how it works page — reflect the new CEX-only model (user keeps funds on their exchange), remove Drift vault / Solana mode references for now.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="W11">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#22d3ee;">W11</span>
+          <div>
+            <div class="task-text">Update footer — remove "coming 9 May 2026" labels. Wire Marketplace, About, Strategy Proof links to real pages.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="W12">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#22d3ee;">W12</span>
+          <div>
+            <div class="task-text">Update Terms of Service — add 15-day settlement cycle, 120% trigger, trading hold on non-payment, screenshot payment verification. Remove Drift vault / Solana vault references.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="W13">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#22d3ee;">W13</span>
+          <div>
+            <div class="task-text">Add Risk Disclosure page — past performance not guaranteed, leverage risk, only trade what you can afford to lose. Link from footer and onboarding.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="W14">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#22d3ee;">W14</span>
+          <div>
+            <div class="task-text">Admin panel — add settlement queue, payment verification queue, all-users trading status, manual pause/resume per user. Current admin only has overview/users/approvals/analytics.</div>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-bottom:6px; font-size:0.75rem; color:#f87171; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">❌ Missing — Needs Building</div>
+      <ul class="task-list" style="margin-bottom:20px;">
+        <li class="task-item" data-id="W15">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#22d3ee;">W15</span>
+          <div>
+            <div class="task-text">Sonum's $100→$500k trade history page — every verified trade, dates, P&L, TradingView chart links. This is the #1 conversion page. Nothing like it exists yet.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="W16">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#22d3ee;">W16</span>
+          <div>
+            <div class="task-text">Download page (/download) — APK download for Android, TestFlight link for iOS. Show QR code, platform badges, version number, what's new.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="W17">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#22d3ee;">W17</span>
+          <div>
+            <div class="task-text">Wire mock data to real backend — dashboard pages fall back to MOCK_VAULTS, MOCK_TRADES, MOCK_PNL etc. Wire VITE_API_URL to real FastAPI backend so real data flows through.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="W18">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#22d3ee;">W18</span>
+          <div>
+            <div class="task-text">Settlement screen on website — user needs to see their 15-day cycle status, profit made, fee owed, payment options (Solana/BEP20/Binance/MEXC/WEEX/Bank), upload screenshot. Currently no settlement UI exists.</div>
+          </div>
+        </li>
+        <li class="task-item" data-id="W19">
+          <span class="task-check todo" onclick="toggleTask(this)"></span>
+          <span class="task-id" style="color:#22d3ee;">W19</span>
+          <div>
+            <div class="task-text">Onboarding flow on website — same 8-step flow as mobile app. Users who sign up on web must also go through agreement → strategy → risk mode → API key → balance check → launch.</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+  </div>
+
+  <script>
+    function showPage(name) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('page-' + name).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    function toggleTask(checkEl) {
+      const item = checkEl.closest('.task-item');
+      const isDone = checkEl.classList.contains('done');
+      if (isDone) {
+        checkEl.classList.remove('done');
+        checkEl.classList.add('todo');
+        checkEl.textContent = '';
+        item.classList.remove('done');
+      } else {
+        checkEl.classList.remove('todo');
+        checkEl.classList.add('done');
+        checkEl.textContent = '✓';
+        item.classList.add('done');
+      }
+    }
+  </script>
+
+</body>
+</html>

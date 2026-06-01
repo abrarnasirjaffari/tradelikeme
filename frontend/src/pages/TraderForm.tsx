@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { pb } from '../lib/pocketbase'
 import { defaultTraderFields, TRADER_EXCHANGES, STRATEGY_TYPES, POPULAR_COINS, EXPERIENCE_OPTIONS, RR_OPTIONS, TRADER_NOTIFICATIONS } from './traderFormState'
 import type { TraderFields, TraderExchange, StrategyType, Experience, RR } from './traderFormState'
 import { inputStyle, labelStyle, fieldWrap, chipBase } from './formStyles'
@@ -41,29 +41,31 @@ export default function TraderForm({ onBack, onDone, badgeLabel, badgeColor, rol
     if (!email.trim()) return
     setSubmitting(true)
     setSubmitError(null)
-    const { error } = await supabase.from('waitlist').insert({
-      role: roleOverride ?? 'trader',
-      name,
-      email,
-      whatsapp: (sharedData ? sharedData.whatsapp : f.whatsapp) || null,
-      telegram: (sharedData ? sharedData.telegram : f.telegram) || null,
-      experience: f.experience || null,
-      win_rate: f.winRate,
-      trade_count: f.tradeCount,
-      strategy: f.strategy || null,
-      trader_exchanges: f.exchanges.length ? f.exchanges : null,
-      coins: f.coins.length ? f.coins : null,
-      rr: f.rr || null,
-      unique_edge: f.uniqueEdge || null,
-      trader_notifications: f.notifications.length ? f.notifications : null,
-      heard_from: (sharedData ? sharedData.heardFrom : f.heardFrom) || null,
-    })
-    setSubmitting(false)
-    if (error) {
+    try {
+      await pb.collection('waitlist').create({
+        role: roleOverride ?? 'trader',
+        name,
+        email,
+        whatsapp: (sharedData ? sharedData.whatsapp : f.whatsapp) || null,
+        telegram: (sharedData ? sharedData.telegram : f.telegram) || null,
+        experience: f.experience || null,
+        win_rate: f.winRate,
+        trade_count: f.tradeCount,
+        strategy: f.strategy || null,
+        trader_exchanges: f.exchanges.length ? f.exchanges : null,
+        coins: f.coins.length ? f.coins : null,
+        rr: f.rr || null,
+        unique_edge: f.uniqueEdge || null,
+        trader_notifications: f.notifications.length ? f.notifications : null,
+        heard_from: (sharedData ? sharedData.heardFrom : f.heardFrom) || null,
+      })
+    } catch (err) {
+      setSubmitting(false)
       setSubmitError('Something went wrong. Please try again.')
-      console.error('Waitlist insert error:', error)
+      console.error('Waitlist insert error:', err)
       return
     }
+    setSubmitting(false)
     onDone()
   }
 

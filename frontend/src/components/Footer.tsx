@@ -15,15 +15,15 @@ const COLS: { heading: string; links: FooterItem[] }[] = [
     links: [
       { label: 'Marketplace',   soon: true },
       { label: 'Pricing',       path: '/pricing' },
-      { label: 'How It Works',  path: '/how-it-works' },
+      { label: 'How It Works',  soon: true },
       { label: 'Open Source',   path: '/open-source' },
     ],
   },
   {
     heading: 'Resources',
     links: [
-      { label: 'Blog',           path: '/blog' },
-      { label: 'Docs',           path: '/docs' },
+      { label: 'Blog',           soon: true },
+      { label: 'Docs',           soon: true },
       { label: 'Strategy Proof', soon: true },
     ],
   },
@@ -37,7 +37,7 @@ const COLS: { heading: string; links: FooterItem[] }[] = [
   },
 ]
 
-const SOON_LABEL = '9 May 2026'
+const SOON_LABEL = 'Coming Soon'
 
 export default function Footer() {
   return (

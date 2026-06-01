@@ -1,0 +1,1999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeLikeMe — Platform Sitemap</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0f;
+            color: #e4e4e7;
+            padding: 40px;
+            min-height: 100vh;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            text-align: center;
+            color: #71717a;
+            margin-bottom: 48px;
+            font-size: 0.9rem;
+        }
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-bottom: 48px;
+        }
+        .stat {
+            text-align: center;
+            padding: 16px 24px;
+            background: #18181b;
+            border-radius: 12px;
+            border: 1px solid #27272a;
+        }
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            color: #71717a;
+            margin-top: 4px;
+        }
+        .section {
+            margin-bottom: 48px;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #27272a;
+        }
+        .section-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        .section-count {
+            background: #27272a;
+            color: #a1a1aa;
+            font-size: 0.7rem;
+            padding: 4px 8px;
+            border-radius: 20px;
+            margin-left: auto;
+        }
+        .pages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+        }
+        .page-card {
+            background: #18181b;
+            border: 1px solid #27272a;
+            border-radius: 10px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .page-card:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.1);
+        }
+        .page-card.expanded {
+            border-color: #3b82f6;
+            background: #1a1a2e;
+        }
+        .page-number {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            font-size: 0.65rem;
+            color: #52525b;
+            font-weight: 600;
+        }
+        .page-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .page-route {
+            font-size: 0.75rem;
+            color: #3b82f6;
+            font-family: monospace;
+            margin-bottom: 8px;
+        }
+        .page-desc {
+            font-size: 0.8rem;
+            color: #a1a1aa;
+            line-height: 1.4;
+        }
+        .page-details {
+            display: none;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #27272a;
+        }
+        .page-card.expanded .page-details {
+            display: block;
+        }
+        .detail-section {
+            margin-bottom: 10px;
+        }
+        .detail-label {
+            font-size: 0.7rem;
+            color: #71717a;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .detail-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .detail-tag {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #27272a;
+            color: #d4d4d8;
+        }
+        .nav-flow {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+        }
+        .nav-arrow {
+            color: #3b82f6;
+            font-size: 0.75rem;
+        }
+        .nav-target {
+            font-size: 0.7rem;
+            color: #8b5cf6;
+            font-family: monospace;
+        }
+
+        /* Section colors */
+        .public .section-icon { background: #1e3a5f; color: #60a5fa; }
+        .public .page-card:hover { border-color: #60a5fa; }
+        .auth .section-icon { background: #3b1f4a; color: #c084fc; }
+        .auth .page-card:hover { border-color: #c084fc; }
+        .investor .section-icon { background: #1a3d2e; color: #4ade80; }
+        .investor .page-card:hover { border-color: #4ade80; }
+        .trader .section-icon { background: #3d2e1a; color: #fb923c; }
+        .trader .page-card:hover { border-color: #fb923c; }
+        .admin .section-icon { background: #3d1a1a; color: #f87171; }
+        .admin .page-card:hover { border-color: #f87171; }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: #a1a1aa;
+        }
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .flow-section {
+            margin-top: 64px;
+            padding: 32px;
+            background: #18181b;
+            border-radius: 16px;
+            border: 1px solid #27272a;
+        }
+        .flow-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .flow-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .flow-node {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .flow-node.public { background: #1e3a5f; color: #60a5fa; border: 1px solid #2563eb; }
+        .flow-node.auth { background: #3b1f4a; color: #c084fc; border: 1px solid #7c3aed; }
+        .flow-node.investor { background: #1a3d2e; color: #4ade80; border: 1px solid #16a34a; }
+        .flow-node.trader { background: #3d2e1a; color: #fb923c; border: 1px solid #ea580c; }
+        .flow-node.admin { background: #3d1a1a; color: #f87171; border: 1px solid #dc2626; }
+        .flow-connector {
+            color: #52525b;
+            font-size: 1.2rem;
+        }
+
+        .profit-model {
+            margin-top: 48px;
+            padding: 24px;
+            background: #1a1a2e;
+            border-radius: 12px;
+            border: 1px solid #3b82f6;
+        }
+        .profit-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #3b82f6;
+        }
+        .profit-flow {
+            font-size: 0.85rem;
+            line-height: 2;
+            color: #d4d4d8;
+        }
+        .profit-flow code {
+            background: #27272a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>TradeLikeMe Platform Sitemap</h1>
+    <p class="subtitle">74 Total — Web (41) + Mobile (33) + Support Widget — Interactive Navigation Map</p>
+
+    <div class="stats">
+        <div class="stat">
+            <div class="stat-number">13</div>
+            <div class="stat-label">Public Pages</div>
+        </div>
+        <div class="stat">
+            <div class="stat-number">5</div>
+            <div class="stat-label">Auth Pages</div>
+        </div>
+        <div class="stat">
+            <div class="stat-number">12</div>
+            <div class="stat-label">Investor Dashboard</div>
+        </div>
+        <div class="stat">
+            <div class="stat-number">7</div>
+            <div class="stat-label">Trader Dashboard</div>
+        </div>
+        <div class="stat">
+            <div class="stat-number">4</div>
+            <div class="stat-label">Admin Pages</div>
+        </div>
+        <div class="stat">
+            <div class="stat-number">1</div>
+            <div class="stat-label">Support Widget</div>
+        </div>
+        <div class="stat">
+            <div class="stat-number">33</div>
+            <div class="stat-label">Mobile Screens</div>
+        </div>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#60a5fa"></div> Public</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#c084fc"></div> Auth</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div> Investor</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#fb923c"></div> Trader</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f87171"></div> Admin</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#2dd4bf"></div> Support Widget</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#a78bfa"></div> Mobile App</div>
+    </div>
+
+    <!-- PUBLIC PAGES -->
+    <div class="section public">
+        <div class="section-header">
+            <div class="section-icon">🌐</div>
+            <div class="section-title">Public Pages</div>
+            <div class="section-count">13 pages</div>
+        </div>
+        <div class="pages-grid">
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">P1</div>
+                <div class="page-name">Home / Landing</div>
+                <div class="page-route">/</div>
+                <div class="page-desc">Hero, value props, strategy stats, CTA to sign up</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Hero + CTA</span>
+                            <span class="detail-tag">Win Rate Counter</span>
+                            <span class="detail-tag">How It Works</span>
+                            <span class="detail-tag">Strategy Showcase</span>
+                            <span class="detail-tag">Testimonials</span>
+                            <span class="detail-tag">FAQ Accordion</span>
+                            <span class="detail-tag">Footer</span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label">Navigates To</div>
+                        <div class="nav-flow">
+                            <span class="nav-target">/signup</span>
+                            <span class="nav-target">/how-it-works</span>
+                            <span class="nav-target">/pricing</span>
+                            <span class="nav-target">/strategies</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">P2</div>
+                <div class="page-name">About Us</div>
+                <div class="page-route">/about</div>
+                <div class="page-desc">Team, mission, story behind the strategy</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Team Cards</span>
+                            <span class="detail-tag">Mission Statement</span>
+                            <span class="detail-tag">Timeline</span>
+                            <span class="detail-tag">Strategy Origin</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">P3</div>
+                <div class="page-name">How It Works</div>
+                <div class="page-route">/how-it-works</div>
+                <div class="page-desc">Step-by-step: connect → pick strategy → agent trades → earn</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">3-Step Flow</span>
+                            <span class="detail-tag">Animated Diagram</span>
+                            <span class="detail-tag">Wallet vs CEX Mode</span>
+                            <span class="detail-tag">Security Explainer</span>
+                            <span class="detail-tag">FAQ Mini</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">P4</div>
+                <div class="page-name">Pricing / Fees</div>
+                <div class="page-route">/pricing</div>
+                <div class="page-desc">20% profit share model, marketplace fee tiers (S/A/B/C)</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Fee Table</span>
+                            <span class="detail-tag">Calculator</span>
+                            <span class="detail-tag">Comparison (vs Binance Copy)</span>
+                            <span class="detail-tag">No Hidden Fees Banner</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">P5</div>
+                <div class="page-name">Blog</div>
+                <div class="page-route">/blog</div>
+                <div class="page-desc">Market updates, strategy insights, platform news</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Post Grid</span>
+                            <span class="detail-tag">Categories</span>
+                            <span class="detail-tag">Search</span>
+                            <span class="detail-tag">Post Detail /blog/:slug</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">P6</div>
+                <div class="page-name">Docs Hub</div>
+                <div class="page-route">/docs</div>
+                <div class="page-desc">Getting started guides, API reference, integration walkthroughs</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Sidebar Navigation</span>
+                            <span class="detail-tag">Search</span>
+                            <span class="detail-tag">Getting Started Guide</span>
+                            <span class="detail-tag">API Reference</span>
+                            <span class="detail-tag">Wallet Integration Guide</span>
+                            <span class="detail-tag">CEX Key Setup Guide</span>
+                            <span class="detail-tag">Code Examples</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">P7</div>
+                <div class="page-name">Open Source</div>
+                <div class="page-route">/open-source</div>
+                <div class="page-desc">Our OSS contributions, GitHub repos, contributor guide, licenses</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Repo Cards (GitHub)</span>
+                            <span class="detail-tag">Contribution Guide</span>
+                            <span class="detail-tag">License Info</span>
+                            <span class="detail-tag">Star / Fork Counts</span>
+                            <span class="detail-tag">How to Contribute CTA</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">P9</div>
+                <div class="page-name">Contact Us</div>
+                <div class="page-route">/contact</div>
+                <div class="page-desc">Support form, Telegram link, email</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Contact Form</span>
+                            <span class="detail-tag">Social Links</span>
+                            <span class="detail-tag">Telegram Bot Link</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">P10</div>
+                <div class="page-name">Terms of Service</div>
+                <div class="page-route">/terms</div>
+                <div class="page-desc">Legal terms, risk disclaimers, profit share agreement</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Markdown Render</span>
+                            <span class="detail-tag">Table of Contents</span>
+                            <span class="detail-tag">Last Updated Date</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">P11</div>
+                <div class="page-name">Privacy Policy</div>
+                <div class="page-route">/privacy</div>
+                <div class="page-desc">Data handling, API key encryption, no-withdrawal guarantee</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Markdown Render</span>
+                            <span class="detail-tag">Table of Contents</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">P12</div>
+                <div class="page-name">Changelog</div>
+                <div class="page-route">/changelog</div>
+                <div class="page-desc">Platform updates, new features, version history</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Version Timeline</span>
+                            <span class="detail-tag">Release Notes</span>
+                            <span class="detail-tag">Date Badges</span>
+                            <span class="detail-tag">Tag Filters (feature/fix/improvement)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">P13</div>
+                <div class="page-name">Security</div>
+                <div class="page-route">/security</div>
+                <div class="page-desc">How we protect API keys, encryption methods, audit reports, bug bounty</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Security Practices</span>
+                            <span class="detail-tag">Encryption Details</span>
+                            <span class="detail-tag">Audit Reports</span>
+                            <span class="detail-tag">Bug Bounty Program</span>
+                            <span class="detail-tag">No-Withdrawal Guarantee</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">P14</div>
+                <div class="page-name">Status Page</div>
+                <div class="page-route">/status</div>
+                <div class="page-desc">Agent uptime, API health, incident history, real-time status</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Service Status Indicators</span>
+                            <span class="detail-tag">Uptime Chart (90 days)</span>
+                            <span class="detail-tag">Incident Log</span>
+                            <span class="detail-tag">Subscribe to Updates</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUTH PAGES -->
+    <div class="section auth">
+        <div class="section-header">
+            <div class="section-icon">🔐</div>
+            <div class="section-title">Auth Pages</div>
+            <div class="section-count">5 pages</div>
+        </div>
+        <div class="pages-grid">
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">A1</div>
+                <div class="page-name">Login</div>
+                <div class="page-route">/login</div>
+                <div class="page-desc">Email/pass, Google, GitHub, Phantom wallet connect</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Email/Password Form</span>
+                            <span class="detail-tag">Social OAuth Buttons</span>
+                            <span class="detail-tag">Phantom Wallet Connect</span>
+                            <span class="detail-tag">Magic Link Option</span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label">Navigates To</div>
+                        <div class="nav-flow">
+                            <span class="nav-target">/dashboard</span>
+                            <span class="nav-target">/signup</span>
+                            <span class="nav-target">/forgot-password</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">A2</div>
+                <div class="page-name">Sign Up</div>
+                <div class="page-route">/signup</div>
+                <div class="page-desc">Create account, choose role (investor/trader)</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Role Selector</span>
+                            <span class="detail-tag">Email/Password</span>
+                            <span class="detail-tag">Social OAuth</span>
+                            <span class="detail-tag">Wallet Connect</span>
+                            <span class="detail-tag">Terms Checkbox</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">A3</div>
+                <div class="page-name">Forgot Password</div>
+                <div class="page-route">/forgot-password</div>
+                <div class="page-desc">Email input, send reset link</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Email Input</span>
+                            <span class="detail-tag">Success State</span>
+                            <span class="detail-tag">Back to Login</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">A4</div>
+                <div class="page-name">Email Verification</div>
+                <div class="page-route">/verify-email</div>
+                <div class="page-desc">Confirm email, resend option</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Verification Status</span>
+                            <span class="detail-tag">Resend Button</span>
+                            <span class="detail-tag">Auto-redirect</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">A5</div>
+                <div class="page-name">2FA Setup</div>
+                <div class="page-route">/2fa-setup</div>
+                <div class="page-desc">TOTP QR code, backup codes, verify</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">QR Code Display</span>
+                            <span class="detail-tag">Manual Key</span>
+                            <span class="detail-tag">6-Digit Verify Input</span>
+                            <span class="detail-tag">Backup Codes</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- INVESTOR DASHBOARD -->
+    <div class="section investor">
+        <div class="section-header">
+            <div class="section-icon">📈</div>
+            <div class="section-title">Investor Dashboard</div>
+            <div class="section-count">12 pages</div>
+        </div>
+        <div class="pages-grid">
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">I1</div>
+                <div class="page-name">Dashboard Overview</div>
+                <div class="page-route">/dashboard</div>
+                <div class="page-desc">Portfolio value, total P&L, active strategies, recent trades</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Portfolio Balance Card</span>
+                            <span class="detail-tag">P&L Chart (7d/30d/all)</span>
+                            <span class="detail-tag">Active Strategies List</span>
+                            <span class="detail-tag">Recent Trades Feed</span>
+                            <span class="detail-tag">Quick Stats Row</span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label">Data Sources</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">GET /users/:id/pnl</span>
+                            <span class="detail-tag">GET /users/:id/positions</span>
+                            <span class="detail-tag">WS /ws/live</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">I2</div>
+                <div class="page-name">Browse Strategies</div>
+                <div class="page-route">/strategies</div>
+                <div class="page-desc">Marketplace: filter by win rate, tier, returns, coins traded</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Strategy Cards Grid</span>
+                            <span class="detail-tag">Filters (tier, win rate, returns)</span>
+                            <span class="detail-tag">Sort Options</span>
+                            <span class="detail-tag">Search</span>
+                            <span class="detail-tag">Tier Badges (S/A/B/C)</span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label">Data Sources</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">GET /strategies</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">I3</div>
+                <div class="page-name">Strategy Detail</div>
+                <div class="page-route">/strategies/:id</div>
+                <div class="page-desc">Full stats, trade history, win rate chart, subscribe CTA</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Performance Chart</span>
+                            <span class="detail-tag">Win Rate / Drawdown</span>
+                            <span class="detail-tag">Trade History Table</span>
+                            <span class="detail-tag">Risk Modes Explained</span>
+                            <span class="detail-tag">Subscribe Button</span>
+                            <span class="detail-tag">Trader Profile Mini</span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label">Data Sources</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">GET /strategies/:id</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">I4</div>
+                <div class="page-name">My Vaults</div>
+                <div class="page-route">/vaults</div>
+                <div class="page-desc">Active vault connections, balances, delegation status</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Vault Cards</span>
+                            <span class="detail-tag">Delegation Status</span>
+                            <span class="detail-tag">Balance per Vault</span>
+                            <span class="detail-tag">Strategy Linked</span>
+                            <span class="detail-tag">Revoke Button</span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label">Data Sources</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">GET /users/:id/vaults</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">I5</div>
+                <div class="page-name">Connect Wallet / Exchange</div>
+                <div class="page-route">/connect</div>
+                <div class="page-desc">Connect Solana wallet (delegate) OR paste CEX API keys (trade-only)</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Mode Selector (Solana / CEX)</span>
+                            <span class="detail-tag">Phantom Wallet Connect</span>
+                            <span class="detail-tag">Delegation TX Signer</span>
+                            <span class="detail-tag">CEX API Key Form</span>
+                            <span class="detail-tag">Key Permission Checker</span>
+                            <span class="detail-tag">Security Explainer</span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label">Profit Share Model</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Solana: on-chain auto-split</span>
+                            <span class="detail-tag">CEX: per-trade tracking</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">I6</div>
+                <div class="page-name">Trade History</div>
+                <div class="page-route">/trades</div>
+                <div class="page-desc">All past trades: entry, exit, P&L, duration, strategy</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Filterable Table</span>
+                            <span class="detail-tag">Date Range Picker</span>
+                            <span class="detail-tag">Coin Filter</span>
+                            <span class="detail-tag">Win/Loss Filter</span>
+                            <span class="detail-tag">Export CSV</span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label">Data Sources</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">GET /users/:id/trades</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">I7</div>
+                <div class="page-name">Active Trades</div>
+                <div class="page-route">/trades/active</div>
+                <div class="page-desc">Live positions: unrealized P&L, TP/SL levels, entry time</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Live Position Cards</span>
+                            <span class="detail-tag">Real-time P&L (WS)</span>
+                            <span class="detail-tag">TP1/TP2/SL Markers</span>
+                            <span class="detail-tag">Entry Price + Time</span>
+                            <span class="detail-tag">% to TP / % to SL</span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label">Data Sources</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">GET /users/:id/positions</span>
+                            <span class="detail-tag">WS /ws/live</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">I8</div>
+                <div class="page-name">P&L Analytics</div>
+                <div class="page-route">/analytics</div>
+                <div class="page-desc">Charts: cumulative P&L, win rate over time, drawdown, monthly returns</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Cumulative P&L Line Chart</span>
+                            <span class="detail-tag">Monthly Returns Heatmap</span>
+                            <span class="detail-tag">Drawdown Chart</span>
+                            <span class="detail-tag">Win Rate Over Time</span>
+                            <span class="detail-tag">Coin Breakdown Pie</span>
+                            <span class="detail-tag">Best/Worst Trade</span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label">Data Sources</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">GET /users/:id/pnl</span>
+                            <span class="detail-tag">GET /users/:id/trades</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">I9</div>
+                <div class="page-name">Risk Mode Settings</div>
+                <div class="page-route">/settings/risk</div>
+                <div class="page-desc">Choose Conservative / Medium / Aggressive per strategy</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">3 Mode Cards</span>
+                            <span class="detail-tag">Risk Comparison Table</span>
+                            <span class="detail-tag">Per-Strategy Override</span>
+                            <span class="detail-tag">Confirm Change Modal</span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label">Data Sources</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">GET/POST /users/:id/risk-mode</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">I10</div>
+                <div class="page-name">Notification Settings</div>
+                <div class="page-route">/settings/notifications</div>
+                <div class="page-desc">Toggle Telegram/WhatsApp alerts per event type</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Channel Toggles</span>
+                            <span class="detail-tag">Event Type Matrix</span>
+                            <span class="detail-tag">Test Notification Button</span>
+                            <span class="detail-tag">Telegram Connect</span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label">Data Sources</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">GET/POST /notifications/config</span>
+                            <span class="detail-tag">POST /notifications/test</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">I11</div>
+                <div class="page-name">Account Settings</div>
+                <div class="page-route">/settings/account</div>
+                <div class="page-desc">Profile, password, 2FA, connected wallets/exchanges, delete account</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Profile Form</span>
+                            <span class="detail-tag">Change Password</span>
+                            <span class="detail-tag">2FA Toggle</span>
+                            <span class="detail-tag">Connected Accounts</span>
+                            <span class="detail-tag">Danger Zone (delete)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">I12</div>
+                <div class="page-name">Referral Program</div>
+                <div class="page-route">/referral</div>
+                <div class="page-desc">Share link, track referrals, earn commission on referred deposits</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Unique Referral Link</span>
+                            <span class="detail-tag">Copy + Share Buttons</span>
+                            <span class="detail-tag">Referral Stats</span>
+                            <span class="detail-tag">Earnings Table</span>
+                            <span class="detail-tag">Tier Progress</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TRADER DASHBOARD -->
+    <div class="section trader">
+        <div class="section-header">
+            <div class="section-icon">🎯</div>
+            <div class="section-title">Trader Dashboard</div>
+            <div class="section-count">7 pages</div>
+        </div>
+        <div class="pages-grid">
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">T1</div>
+                <div class="page-name">Trader Overview</div>
+                <div class="page-route">/trader</div>
+                <div class="page-desc">AUM under management, total earnings, subscriber count, live performance</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">AUM Card</span>
+                            <span class="detail-tag">Earnings Summary</span>
+                            <span class="detail-tag">Subscriber Count</span>
+                            <span class="detail-tag">Win Rate Gauge</span>
+                            <span class="detail-tag">Monthly Earnings Chart</span>
+                            <span class="detail-tag">Recent Activity Feed</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">T2</div>
+                <div class="page-name">Strategy Performance</div>
+                <div class="page-route">/trader/performance</div>
+                <div class="page-desc">Live stats: win rate, avg return, total trades, current streak, R:R ratio</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">P&L Equity Curve</span>
+                            <span class="detail-tag">Win Rate Over Time</span>
+                            <span class="detail-tag">Win/Loss Streaks</span>
+                            <span class="detail-tag">Coin Performance Breakdown</span>
+                            <span class="detail-tag">Max Drawdown</span>
+                            <span class="detail-tag">Sharpe / Sortino Ratios</span>
+                            <span class="detail-tag">Monthly Returns Grid</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">T3</div>
+                <div class="page-name">Trade Log</div>
+                <div class="page-route">/trader/trades</div>
+                <div class="page-desc">Every trade the agent executed: entry, exit, P&L, coin, duration, mode</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Filterable Trade Table</span>
+                            <span class="detail-tag">Date Range Picker</span>
+                            <span class="detail-tag">Coin Filter</span>
+                            <span class="detail-tag">Win/Loss Filter</span>
+                            <span class="detail-tag">Mode Filter (Solana/CEX)</span>
+                            <span class="detail-tag">Export CSV</span>
+                            <span class="detail-tag">Trade Detail Drawer</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">T4</div>
+                <div class="page-name">Earnings / Payouts</div>
+                <div class="page-route">/trader/earnings</div>
+                <div class="page-desc">Profit share history: what you earned, per epoch, per subscriber, payout status</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Total Earned (all time)</span>
+                            <span class="detail-tag">Monthly Earnings Chart</span>
+                            <span class="detail-tag">Payout History Table</span>
+                            <span class="detail-tag">Per-Subscriber Breakdown</span>
+                            <span class="detail-tag">Pending Payouts</span>
+                            <span class="detail-tag">Payout Wallet Config</span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label">Payout Methods</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Solana: auto on-chain (settle_epoch)</span>
+                            <span class="detail-tag">CEX: monthly invoice</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">T5</div>
+                <div class="page-name">Strategy Settings</div>
+                <div class="page-route">/trader/strategy</div>
+                <div class="page-desc">View/edit full strategy config: coins, leverage, risk modes, TF stack, rules. Submit changes for approval.</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Strategy Name + Description</span>
+                            <span class="detail-tag">Coin Selector</span>
+                            <span class="detail-tag">Leverage / Margin Config</span>
+                            <span class="detail-tag">3 Risk Mode Presets Editor</span>
+                            <span class="detail-tag">Entry/Exit Rules (rich text)</span>
+                            <span class="detail-tag">SL/TP Rules</span>
+                            <span class="detail-tag">TF Stack Config</span>
+                            <span class="detail-tag">Trading Hours</span>
+                            <span class="detail-tag">Max Concurrent Positions</span>
+                            <span class="detail-tag">Approval Status Badge</span>
+                            <span class="detail-tag">Submit for Approval Button</span>
+                            <span class="detail-tag">Version History / Diff</span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label">States</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Draft</span>
+                            <span class="detail-tag">Pending Approval</span>
+                            <span class="detail-tag">Approved (Live)</span>
+                            <span class="detail-tag">Changes Requested</span>
+                            <span class="detail-tag">Rejected</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">T6</div>
+                <div class="page-name">Subscriber List</div>
+                <div class="page-route">/trader/subscribers</div>
+                <div class="page-desc">All users following your strategy: deposit size, risk mode, join date, P&L per user</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Subscriber Table</span>
+                            <span class="detail-tag">Total AUM from Subs</span>
+                            <span class="detail-tag">Risk Mode Distribution</span>
+                            <span class="detail-tag">Per-User P&L</span>
+                            <span class="detail-tag">Growth Chart (subs over time)</span>
+                            <span class="detail-tag">Churn Rate</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">T7</div>
+                <div class="page-name">Submit New Strategy</div>
+                <div class="page-route">/trader/submit</div>
+                <div class="page-desc">Full onboarding form: strategy details, verification data, trade history upload</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Multi-Step Form Wizard</span>
+                            <span class="detail-tag">Strategy Name + Description</span>
+                            <span class="detail-tag">Coin Selection</span>
+                            <span class="detail-tag">Entry/Exit Rules Editor</span>
+                            <span class="detail-tag">Risk Parameters</span>
+                            <span class="detail-tag">Trade History Upload (CSV/JSON)</span>
+                            <span class="detail-tag">TradingView Verification Link</span>
+                            <span class="detail-tag">Win Rate Auto-Calculate</span>
+                            <span class="detail-tag">Terms Agreement</span>
+                            <span class="detail-tag">Submit Button</span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label">Requirements</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">50+ verified trades</span>
+                            <span class="detail-tag">55%+ win rate minimum</span>
+                            <span class="detail-tag">Clear written rules</span>
+                            <span class="detail-tag">TradingView verification</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN PAGES -->
+    <div class="section admin">
+        <div class="section-header">
+            <div class="section-icon">⚙️</div>
+            <div class="section-title">Admin Pages</div>
+            <div class="section-count">4 pages</div>
+        </div>
+        <div class="pages-grid">
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">AD1</div>
+                <div class="page-name">Admin Dashboard</div>
+                <div class="page-route">/admin</div>
+                <div class="page-desc">Total revenue, user growth, active agents, platform health</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Revenue Chart</span>
+                            <span class="detail-tag">User Growth Chart</span>
+                            <span class="detail-tag">Active Agents Status</span>
+                            <span class="detail-tag">Total AUM</span>
+                            <span class="detail-tag">Profit Share Collected</span>
+                            <span class="detail-tag">System Health</span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label">Data Sources</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">GET /admin/revenue</span>
+                            <span class="detail-tag">GET /admin/users</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">AD2</div>
+                <div class="page-name">User Management</div>
+                <div class="page-route">/admin/users</div>
+                <div class="page-desc">All users, roles, status, ban/suspend, impersonate</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">User Table (paginated)</span>
+                            <span class="detail-tag">Search + Filter</span>
+                            <span class="detail-tag">Role Management</span>
+                            <span class="detail-tag">Ban/Suspend Actions</span>
+                            <span class="detail-tag">User Detail Drawer</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">AD3</div>
+                <div class="page-name">Strategy Approval Queue</div>
+                <div class="page-route">/admin/approvals</div>
+                <div class="page-desc">Review submitted strategies, approve/reject/request changes</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Pending Queue List</span>
+                            <span class="detail-tag">Strategy Preview</span>
+                            <span class="detail-tag">Trade Verification Data</span>
+                            <span class="detail-tag">Win Rate Verification</span>
+                            <span class="detail-tag">Approve / Reject / Request Changes</span>
+                            <span class="detail-tag">Assign Tier (S/A/B/C)</span>
+                            <span class="detail-tag">Notes / Feedback Form</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)">
+                <div class="page-number">AD4</div>
+                <div class="page-name">Platform Analytics</div>
+                <div class="page-route">/admin/analytics</div>
+                <div class="page-desc">Deep metrics: revenue breakdown, strategy performance comparison, churn</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Components</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Revenue by Strategy</span>
+                            <span class="detail-tag">User Retention Chart</span>
+                            <span class="detail-tag">Strategy Comparison Table</span>
+                            <span class="detail-tag">Churn Analysis</span>
+                            <span class="detail-tag">Deposit/Withdraw Volume</span>
+                            <span class="detail-tag">Agent Uptime Logs</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FLOATING SUPPORT WIDGET -->
+    <div class="section" style="margin-bottom:48px">
+        <div class="section-header">
+            <div class="section-icon" style="background:#1a3d3d;color:#2dd4bf">💬</div>
+            <div class="section-title">Floating Support Widget</div>
+            <div class="section-count">All pages</div>
+        </div>
+        <div class="pages-grid">
+            <div class="page-card" onclick="toggle(this)" style="border-color:#2dd4bf30">
+                <div class="page-number">SW1</div>
+                <div class="page-name">Support Chat Bubble</div>
+                <div class="page-route">Fixed bottom-right on all pages</div>
+                <div class="page-desc">Floating call/chat button. Asks "Are you a Trader or Investor?" then answers contextual questions.</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Flow</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">1. Click bubble</span>
+                            <span class="detail-tag">2. "I am a..." (Trader / Investor)</span>
+                            <span class="detail-tag">3. Show role-specific FAQ</span>
+                            <span class="detail-tag">4. Free-text question input</span>
+                            <span class="detail-tag">5. AI-powered answers</span>
+                            <span class="detail-tag">6. Escalate to human (Telegram)</span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label">Investor Questions</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">How do I connect my wallet?</span>
+                            <span class="detail-tag">Is my money safe?</span>
+                            <span class="detail-tag">How does profit share work?</span>
+                            <span class="detail-tag">Can I withdraw anytime?</span>
+                            <span class="detail-tag">What's the minimum deposit?</span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label">Trader Questions</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">How do I submit a strategy?</span>
+                            <span class="detail-tag">What are the requirements?</span>
+                            <span class="detail-tag">How do I get paid?</span>
+                            <span class="detail-tag">Can I edit my strategy?</span>
+                            <span class="detail-tag">What tier will I get?</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MOBILE APP SCREENS -->
+    <div class="section" style="margin-bottom:48px">
+        <div class="section-header">
+            <div class="section-icon" style="background:#2d1b4e;color:#a78bfa">📱</div>
+            <div class="section-title">Mobile App — Onboarding</div>
+            <div class="section-count">4 screens</div>
+        </div>
+        <div class="pages-grid">
+            <div class="page-card" onclick="toggle(this)" style="border-color:#a78bfa30">
+                <div class="page-number">M1</div>
+                <div class="page-name">Splash Screen</div>
+                <div class="page-route">App launch</div>
+                <div class="page-desc">Logo animation, auto-check auth token, redirect</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#a78bfa30">
+                <div class="page-number">M2</div>
+                <div class="page-name">Onboarding Slides</div>
+                <div class="page-route">First launch only</div>
+                <div class="page-desc">3 slides: What we do, How it works, Get started</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#a78bfa30">
+                <div class="page-number">M3</div>
+                <div class="page-name">Role Selection</div>
+                <div class="page-route">After onboarding</div>
+                <div class="page-desc">Choose: "I want to invest" or "I'm a trader"</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#a78bfa30">
+                <div class="page-number">M4</div>
+                <div class="page-name">Push Notification Permission</div>
+                <div class="page-route">After role select</div>
+                <div class="page-desc">Request push permissions with explainer of what alerts they'll get</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section" style="margin-bottom:48px">
+        <div class="section-header">
+            <div class="section-icon" style="background:#2d1b4e;color:#a78bfa">📱</div>
+            <div class="section-title">Mobile App — Auth</div>
+            <div class="section-count">4 screens</div>
+        </div>
+        <div class="pages-grid">
+            <div class="page-card" onclick="toggle(this)" style="border-color:#a78bfa30">
+                <div class="page-number">M5</div>
+                <div class="page-name">Login</div>
+                <div class="page-route">Email + Social + Wallet</div>
+                <div class="page-desc">Email/pass, Google, GitHub, Phantom deep link wallet connect</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#a78bfa30">
+                <div class="page-number">M6</div>
+                <div class="page-name">Sign Up</div>
+                <div class="page-route">Create account</div>
+                <div class="page-desc">Email/pass + OAuth + role selection + terms</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#a78bfa30">
+                <div class="page-number">M7</div>
+                <div class="page-name">OTP / 2FA Verify</div>
+                <div class="page-route">After login if 2FA enabled</div>
+                <div class="page-desc">6-digit code input, countdown timer, resend option</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#a78bfa30">
+                <div class="page-number">M8</div>
+                <div class="page-name">Biometric Setup</div>
+                <div class="page-route">After first login</div>
+                <div class="page-desc">Face ID / Fingerprint setup for quick unlock</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section" style="margin-bottom:48px">
+        <div class="section-header">
+            <div class="section-icon" style="background:#1a3d2e;color:#4ade80">📱</div>
+            <div class="section-title">Mobile App — Investor Screens</div>
+            <div class="section-count">12 screens</div>
+        </div>
+        <div class="pages-grid">
+            <div class="page-card" onclick="toggle(this)" style="border-color:#4ade8030">
+                <div class="page-number">M9</div>
+                <div class="page-name">Dashboard Home</div>
+                <div class="page-route">Tab: Home</div>
+                <div class="page-desc">Portfolio value, P&L sparkline, quick stats, active strategies</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#4ade8030">
+                <div class="page-number">M10</div>
+                <div class="page-name">Strategy Browser</div>
+                <div class="page-route">Tab: Explore</div>
+                <div class="page-desc">Swipeable strategy cards, filter chips, tier badges</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#4ade8030">
+                <div class="page-number">M11</div>
+                <div class="page-name">Strategy Detail</div>
+                <div class="page-route">Tap strategy card</div>
+                <div class="page-desc">Full stats, trade history, subscribe button, risk mode picker</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#4ade8030">
+                <div class="page-number">M12</div>
+                <div class="page-name">Connect Wallet / Exchange</div>
+                <div class="page-route">From subscribe flow</div>
+                <div class="page-desc">Phantom deep link OR CEX API key paste, permission checker</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#4ade8030">
+                <div class="page-number">M13</div>
+                <div class="page-name">Active Trades</div>
+                <div class="page-route">Tab: Trades</div>
+                <div class="page-desc">Live positions list, real-time P&L, TP/SL progress bars</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#4ade8030">
+                <div class="page-number">M14</div>
+                <div class="page-name">Trade History</div>
+                <div class="page-route">Trades tab → History</div>
+                <div class="page-desc">Scrollable trade list, filters, green/red P&L badges</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#4ade8030">
+                <div class="page-number">M15</div>
+                <div class="page-name">P&L Analytics</div>
+                <div class="page-route">Tab: Analytics</div>
+                <div class="page-desc">Charts: equity curve, monthly returns, coin breakdown</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#4ade8030">
+                <div class="page-number">M16</div>
+                <div class="page-name">Notifications List</div>
+                <div class="page-route">Bell icon tap</div>
+                <div class="page-desc">All alerts: zone touch, trade entered, TP hit, SL hit</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#4ade8030">
+                <div class="page-number">M17</div>
+                <div class="page-name">Notification Detail</div>
+                <div class="page-route">Tap notification</div>
+                <div class="page-desc">Expanded trade alert: entry/exit prices, P&L, timestamp</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#4ade8030">
+                <div class="page-number">M18</div>
+                <div class="page-name">Risk Mode Picker</div>
+                <div class="page-route">Settings → Risk</div>
+                <div class="page-desc">3 mode cards with comparison, confirm change</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#4ade8030">
+                <div class="page-number">M19</div>
+                <div class="page-name">Account Settings</div>
+                <div class="page-route">Tab: Profile</div>
+                <div class="page-desc">Profile, password, 2FA, biometric, connected accounts, logout</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#4ade8030">
+                <div class="page-number">M20</div>
+                <div class="page-name">Referral Page</div>
+                <div class="page-route">Profile → Referral</div>
+                <div class="page-desc">Share link, referral stats, earnings from referrals</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section" style="margin-bottom:48px">
+        <div class="section-header">
+            <div class="section-icon" style="background:#3d2e1a;color:#fb923c">📱</div>
+            <div class="section-title">Mobile App — Trader Screens</div>
+            <div class="section-count">7 screens</div>
+        </div>
+        <div class="pages-grid">
+            <div class="page-card" onclick="toggle(this)" style="border-color:#fb923c30">
+                <div class="page-number">M21</div>
+                <div class="page-name">Trader Home</div>
+                <div class="page-route">Tab: Home (trader role)</div>
+                <div class="page-desc">AUM, earnings summary, subscriber count, win rate gauge</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#fb923c30">
+                <div class="page-number">M22</div>
+                <div class="page-name">Strategy Performance</div>
+                <div class="page-route">Tab: Performance</div>
+                <div class="page-desc">Equity curve, win rate, streaks, monthly returns grid</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#fb923c30">
+                <div class="page-number">M23</div>
+                <div class="page-name">Trade Log</div>
+                <div class="page-route">Tab: Trades</div>
+                <div class="page-desc">All agent-executed trades, filters, export</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#fb923c30">
+                <div class="page-number">M24</div>
+                <div class="page-name">Earnings / Payouts</div>
+                <div class="page-route">Tab: Earnings</div>
+                <div class="page-desc">Total earned, payout history, pending payouts, wallet config</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#fb923c30">
+                <div class="page-number">M25</div>
+                <div class="page-name">Strategy Editor</div>
+                <div class="page-route">Profile → My Strategy</div>
+                <div class="page-desc">Simplified mobile edit: coins, leverage, rules, submit for approval</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#fb923c30">
+                <div class="page-number">M26</div>
+                <div class="page-name">Subscriber List</div>
+                <div class="page-route">Home → Subscribers</div>
+                <div class="page-desc">User list, AUM per user, risk mode distribution</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#fb923c30">
+                <div class="page-number">M27</div>
+                <div class="page-name">Submit Strategy</div>
+                <div class="page-route">Profile → Submit New</div>
+                <div class="page-desc">Mobile multi-step wizard: details, rules, upload trades, submit</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section" style="margin-bottom:48px">
+        <div class="section-header">
+            <div class="section-icon" style="background:#2d1b4e;color:#a78bfa">📱</div>
+            <div class="section-title">Mobile App — Shared Screens</div>
+            <div class="section-count">6 screens</div>
+        </div>
+        <div class="pages-grid">
+            <div class="page-card" onclick="toggle(this)" style="border-color:#a78bfa30">
+                <div class="page-number">M28</div>
+                <div class="page-name">Support Chat</div>
+                <div class="page-route">Floating button → Full screen</div>
+                <div class="page-desc">Same as web widget but full-screen on mobile. Role-based Q&A.</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#a78bfa30">
+                <div class="page-number">M29</div>
+                <div class="page-name">Deep Link Handler</div>
+                <div class="page-route">From Telegram / push notification</div>
+                <div class="page-desc">Opens specific trade or alert directly from Telegram notification link</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#a78bfa30">
+                <div class="page-number">M30</div>
+                <div class="page-name">Deposit Confirmation</div>
+                <div class="page-route">After wallet delegation</div>
+                <div class="page-desc">Success state, tx hash link, "Agent is now trading" message</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#a78bfa30">
+                <div class="page-number">M31</div>
+                <div class="page-name">Withdraw Confirmation</div>
+                <div class="page-route">After withdraw action</div>
+                <div class="page-desc">Confirm amount, tx processing state, success</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#a78bfa30">
+                <div class="page-number">M32</div>
+                <div class="page-name">Search</div>
+                <div class="page-route">Search icon (global)</div>
+                <div class="page-desc">Search strategies, coins, trades. Recent searches, suggestions.</div>
+            </div>
+            <div class="page-card" onclick="toggle(this)" style="border-color:#a78bfa30">
+                <div class="page-number">M33</div>
+                <div class="page-name">Leaderboard</div>
+                <div class="page-route">Explore tab → Leaderboard</div>
+                <div class="page-desc">Top strategies ranked by returns, win rate, subscribers. Filters by period.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NAVIGATION FLOW -->
+    <div class="flow-section">
+        <div class="flow-title">Navigation Flow</div>
+        <div class="flow-diagram">
+            <div class="flow-row">
+                <div class="flow-node public">Landing /</div>
+                <span class="flow-connector">→</span>
+                <div class="flow-node auth">Login / Signup</div>
+                <span class="flow-connector">→</span>
+                <div class="flow-node auth">Verify Email</div>
+            </div>
+            <div class="flow-row">
+                <span class="flow-connector">↓</span>
+            </div>
+            <div class="flow-row">
+                <div class="flow-node investor">Investor Dashboard</div>
+                <span class="flow-connector">or</span>
+                <div class="flow-node trader">Trader Dashboard</div>
+                <span class="flow-connector">or</span>
+                <div class="flow-node admin">Admin Panel</div>
+            </div>
+            <div class="flow-row">
+                <span class="flow-connector">↓</span>
+                <span style="width:180px"></span>
+                <span class="flow-connector">↓</span>
+                <span style="width:140px"></span>
+                <span class="flow-connector">↓</span>
+            </div>
+            <div class="flow-row">
+                <div class="flow-node investor">Browse Strategies</div>
+                <span class="flow-connector">→</span>
+                <div class="flow-node investor">Connect Wallet/CEX</div>
+                <span class="flow-connector">→</span>
+                <div class="flow-node investor">Agent Trades</div>
+            </div>
+            <div class="flow-row">
+                <div class="flow-node trader">Strategy Editor</div>
+                <span class="flow-connector">→</span>
+                <div class="flow-node admin">Approval Queue</div>
+                <span class="flow-connector">→</span>
+                <div class="flow-node investor">Live on Marketplace</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROFIT SHARE MODEL -->
+    <div class="profit-model">
+        <div class="profit-title">💰 Profit Share Model — No Platform Deposits</div>
+        <div class="profit-flow">
+            <strong>Solana Mode:</strong> User connects Phantom → delegates trade authority to agent → agent trades on user's account → on-chain <code>settle_epoch()</code> auto-splits 20% profit to platform wallet<br><br>
+            <strong>CEX Mode:</strong> User pastes trade-only API keys → agent trades on user's exchange account → per-trade P&L tracked → monthly invoice for 20% profit share<br><br>
+            <strong>Key:</strong> Money NEVER enters our platform. It stays in the user's own wallet/exchange. We only get paid from profits, automatically (Solana) or invoiced (CEX).
+        </div>
+    </div>
+
+    <!-- OPEN SOURCE TOOLS -->
+    <div class="flow-section" style="margin-top:64px;border-color:#4ade8040">
+        <div class="flow-title" style="color:#4ade80">Open Source Tools & Software Stack</div>
+        <p style="text-align:center;color:#71717a;font-size:0.8rem;margin-bottom:32px">Every tool we use is open source or has a free tier. Total cost: $0</p>
+
+        <div class="pages-grid" style="gap:16px">
+
+            <!-- Frontend -->
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #60a5fa">
+                <div class="page-number">FE</div>
+                <div class="page-name">React 19</div>
+                <div class="page-route">MIT — frontend/</div>
+                <div class="page-desc">UI library for web app + dashboard</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Why</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Most popular UI lib</span>
+                            <span class="detail-tag">Huge ecosystem</span>
+                            <span class="detail-tag">React Native for mobile</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #60a5fa">
+                <div class="page-number">FE</div>
+                <div class="page-name">Vite</div>
+                <div class="page-route">MIT — build tool</div>
+                <div class="page-desc">Lightning-fast dev server + bundler</div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #60a5fa">
+                <div class="page-number">FE</div>
+                <div class="page-name">React Router 7</div>
+                <div class="page-route">MIT — routing</div>
+                <div class="page-desc">Client-side routing, protected routes, nested layouts</div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #60a5fa">
+                <div class="page-number">FE</div>
+                <div class="page-name">Tailwind CSS</div>
+                <div class="page-route">MIT — styling</div>
+                <div class="page-desc">Utility-first CSS framework</div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #60a5fa">
+                <div class="page-number">FE</div>
+                <div class="page-name">Framer Motion</div>
+                <div class="page-route">MIT — animations</div>
+                <div class="page-desc">Page transitions, micro-interactions, scroll animations</div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #60a5fa">
+                <div class="page-number">FE</div>
+                <div class="page-name">Recharts</div>
+                <div class="page-route">MIT — charts</div>
+                <div class="page-desc">P&L charts, equity curves, analytics dashboards</div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #60a5fa">
+                <div class="page-number">FE</div>
+                <div class="page-name">Sonner</div>
+                <div class="page-route">MIT — toasts</div>
+                <div class="page-desc">Toast notifications for trade alerts, errors, success</div>
+            </div>
+
+            <!-- Mobile -->
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #a78bfa">
+                <div class="page-number">MOB</div>
+                <div class="page-name">React Native</div>
+                <div class="page-route">MIT — mobile app</div>
+                <div class="page-desc">Cross-platform iOS + Android from one codebase</div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #a78bfa">
+                <div class="page-number">MOB</div>
+                <div class="page-name">Expo</div>
+                <div class="page-route">MIT — mobile framework</div>
+                <div class="page-desc">Build, deploy, OTA updates. Push notifications via expo-notifications</div>
+            </div>
+
+            <!-- Auth -->
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #c084fc">
+                <div class="page-number">AUTH</div>
+                <div class="page-name">BetterAuth</div>
+                <div class="page-route">MIT — auth/</div>
+                <div class="page-desc">Sessions, social login, 2FA, magic link, admin panel, rate limiting</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Features Used</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Email/password</span>
+                            <span class="detail-tag">Google OAuth</span>
+                            <span class="detail-tag">GitHub OAuth</span>
+                            <span class="detail-tag">TOTP 2FA</span>
+                            <span class="detail-tag">30-day sessions</span>
+                            <span class="detail-tag">Role-based access</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #c084fc">
+                <div class="page-number">AUTH</div>
+                <div class="page-name">Hono</div>
+                <div class="page-route">MIT — auth server runtime</div>
+                <div class="page-desc">Ultrafast web framework for auth service</div>
+            </div>
+
+            <!-- Backend -->
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #fbbf24">
+                <div class="page-number">BE</div>
+                <div class="page-name">FastAPI</div>
+                <div class="page-route">MIT — backend/</div>
+                <div class="page-desc">REST API + WebSocket server. Async, auto-docs, type-safe.</div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #fbbf24">
+                <div class="page-number">BE</div>
+                <div class="page-name">SQLAlchemy</div>
+                <div class="page-route">MIT — ORM</div>
+                <div class="page-desc">Database ORM for Supabase PostgreSQL</div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #fbbf24">
+                <div class="page-number">BE</div>
+                <div class="page-name">Pydantic</div>
+                <div class="page-route">MIT — validation</div>
+                <div class="page-desc">Request/response validation, settings management</div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #fbbf24">
+                <div class="page-number">BE</div>
+                <div class="page-name">Uvicorn</div>
+                <div class="page-route">BSD — ASGI server</div>
+                <div class="page-desc">Production ASGI server for FastAPI</div>
+            </div>
+
+            <!-- Solana / Blockchain -->
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #14f195">
+                <div class="page-number">SOL</div>
+                <div class="page-name">Anchor Framework</div>
+                <div class="page-route">Apache-2.0 — vault program</div>
+                <div class="page-desc">Solana smart contract framework. Vault deposit/delegate/settle/withdraw.</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Used For</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">Vault PDA</span>
+                            <span class="detail-tag">Trustless delegation</span>
+                            <span class="detail-tag">On-chain profit split</span>
+                            <span class="detail-tag">User withdraw anytime</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #14f195">
+                <div class="page-number">SOL</div>
+                <div class="page-name">@solana/web3.js</div>
+                <div class="page-route">MIT — Solana SDK</div>
+                <div class="page-desc">Transaction building, signing, RPC calls</div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #14f195">
+                <div class="page-number">SOL</div>
+                <div class="page-name">@solana/wallet-adapter</div>
+                <div class="page-route">Apache-2.0 — wallet connect</div>
+                <div class="page-desc">Phantom, Solflare, Backpack wallet connections</div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #14f195">
+                <div class="page-number">SOL</div>
+                <div class="page-name">Zeta Markets SDK</div>
+                <div class="page-route">MIT — perps (primary)</div>
+                <div class="page-desc">SOL/BTC/ETH/APT/ARB perpetual futures, cross-margin USDC</div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #14f195">
+                <div class="page-number">SOL</div>
+                <div class="page-name">Jupiter Perps SDK</div>
+                <div class="page-route">MIT — perps (fallback)</div>
+                <div class="page-desc">SOL/BTC/ETH, 100x leverage, fallback exchange</div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #14f195">
+                <div class="page-number">SOL</div>
+                <div class="page-name">Pyth Network SDK</div>
+                <div class="page-route">Apache-2.0 — price oracle</div>
+                <div class="page-desc">Real-time price feeds via Hermes WebSocket + REST fallback</div>
+            </div>
+
+            <!-- Trading Agent -->
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #f87171">
+                <div class="page-number">AGENT</div>
+                <div class="page-name">Python asyncio</div>
+                <div class="page-route">PSF — agent runtime</div>
+                <div class="page-desc">Async event loop for sentinel + trade agent + zone scanner</div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #f87171">
+                <div class="page-number">AGENT</div>
+                <div class="page-name">websockets</div>
+                <div class="page-route">BSD — price feed</div>
+                <div class="page-desc">WebSocket client for Pyth + exchange price streams</div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #f87171">
+                <div class="page-number">AGENT</div>
+                <div class="page-name">aiohttp</div>
+                <div class="page-route">Apache-2.0 — HTTP client</div>
+                <div class="page-desc">Async HTTP for exchange REST APIs</div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #f87171">
+                <div class="page-number">AGENT</div>
+                <div class="page-name">SQLite</div>
+                <div class="page-route">Public domain — journal</div>
+                <div class="page-desc">Per-strategy trade journal, lightweight, zero-config</div>
+            </div>
+
+            <!-- Zone Scanning -->
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #fb923c">
+                <div class="page-number">SCAN</div>
+                <div class="page-name">KLineChart Pro</div>
+                <div class="page-route">Apache-2.0 — chart engine</div>
+                <div class="page-desc">Self-hosted TradingView replacement. Headless chart rendering for zone scanning.</div>
+                <div class="page-details">
+                    <div class="detail-section">
+                        <div class="detail-label">Stack</div>
+                        <div class="detail-items">
+                            <span class="detail-tag">KLineChart v10 (canvas)</span>
+                            <span class="detail-tag">KLineChart Pro (UI)</span>
+                            <span class="detail-tag">Binance datafeed</span>
+                            <span class="detail-tag">Pyth fallback</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #fb923c">
+                <div class="page-number">SCAN</div>
+                <div class="page-name">Playwright</div>
+                <div class="page-route">Apache-2.0 — browser automation</div>
+                <div class="page-desc">Headless Chromium screenshots of charts for AI zone analysis</div>
+            </div>
+
+            <!-- AI -->
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #ec4899">
+                <div class="page-number">AI</div>
+                <div class="page-name">Claude Opus 4.6</div>
+                <div class="page-route">AWS Bedrock — zone analysis</div>
+                <div class="page-desc">Visual S/D zone identification from chart screenshots</div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #ec4899">
+                <div class="page-number">AI</div>
+                <div class="page-name">Claude Code</div>
+                <div class="page-route">Anthropic — dev tool</div>
+                <div class="page-desc">AI pair programmer building this entire platform</div>
+            </div>
+
+            <!-- Database -->
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #06b6d4">
+                <div class="page-number">DB</div>
+                <div class="page-name">Supabase</div>
+                <div class="page-route">Apache-2.0 — PostgreSQL</div>
+                <div class="page-desc">Platform database: users, sessions, strategies, subscriptions</div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #06b6d4">
+                <div class="page-number">DB</div>
+                <div class="page-name">Kysely</div>
+                <div class="page-route">MIT — query builder</div>
+                <div class="page-desc">Type-safe SQL query builder for BetterAuth</div>
+            </div>
+
+            <!-- Infra -->
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #8b5cf6">
+                <div class="page-number">INFRA</div>
+                <div class="page-name">Docker</div>
+                <div class="page-route">Apache-2.0 — containers</div>
+                <div class="page-desc">Containerized deployment: backend, auth, agent services</div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #8b5cf6">
+                <div class="page-number">INFRA</div>
+                <div class="page-name">Docker Compose</div>
+                <div class="page-route">Apache-2.0 — orchestration</div>
+                <div class="page-desc">Multi-service orchestration: 3 services on one EC2</div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #8b5cf6">
+                <div class="page-number">INFRA</div>
+                <div class="page-name">Dokploy</div>
+                <div class="page-route">Apache-2.0 — PaaS (33.4k stars)</div>
+                <div class="page-desc">Self-hosted Vercel/Heroku. Auto-SSL, monitoring, deploy notifications.</div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #8b5cf6">
+                <div class="page-number">INFRA</div>
+                <div class="page-name">Traefik</div>
+                <div class="page-route">MIT — reverse proxy</div>
+                <div class="page-desc">Auto-SSL, routing: tradelikeme.xyz, api.tradelikeme.xyz, auth.tradelikeme.xyz</div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #8b5cf6">
+                <div class="page-number">INFRA</div>
+                <div class="page-name">Nginx</div>
+                <div class="page-route">BSD — web server</div>
+                <div class="page-desc">Static file serving, frontend build deployment</div>
+            </div>
+
+            <!-- Notifications -->
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #2dd4bf">
+                <div class="page-number">NOTIF</div>
+                <div class="page-name">Telegram Bot API</div>
+                <div class="page-route">Free — notifications</div>
+                <div class="page-desc">Trade alerts, zone touch, TP/SL hit, daily summary</div>
+            </div>
+
+            <!-- Wallet -->
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #14f195">
+                <div class="page-number">WALLET</div>
+                <div class="page-name">Phantom Connect</div>
+                <div class="page-route">Proprietary (sponsor) — wallet auth</div>
+                <div class="page-desc">Email sign-in for web2 users + native wallet for web3</div>
+            </div>
+
+            <!-- RPC -->
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #14f195">
+                <div class="page-number">RPC</div>
+                <div class="page-name">Helius</div>
+                <div class="page-route">Free tier — Solana RPC</div>
+                <div class="page-desc">1M credits/month, 10 RPS, WebSocket included. We use ~5%.</div>
+            </div>
+
+            <!-- Testing -->
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #a3e635">
+                <div class="page-number">TEST</div>
+                <div class="page-name">Vitest</div>
+                <div class="page-route">MIT — testing</div>
+                <div class="page-desc">Unit + integration tests for auth service (79 tests)</div>
+            </div>
+
+            <div class="page-card" onclick="toggle(this)" style="border-left:3px solid #a3e635">
+                <div class="page-number">TEST</div>
+                <div class="page-name">pytest</div>
+                <div class="page-route">MIT — Python testing</div>
+                <div class="page-desc">32 integration tests for backend + agent</div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function toggle(el) {
+            el.classList.toggle('expanded');
+        }
+    </script>
+</body>
+</html>

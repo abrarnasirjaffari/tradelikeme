@@ -4,32 +4,21 @@ Self-hosted WebRTC voice agent for TradeLikeMe support, powered by Dograh (https
 
 ## What This Is
 
-Dograh is an open-source voice agent platform (Pipecat-based). For TradeLikeMe we use it as a support assistant — users call in via the web widget embedded in the dashboard and get voice answers about their trades, deposits, and the strategy.
+Dograh is an open-source voice agent platform (Pipecat-based). For TradeLikeMe we use it as a support assistant — users call in via the embedded WebRTC widget and get voice answers about their trades, deposits, and the strategy.
 
-The LLM is Claude Sonnet 4.6 via AWS Bedrock. STT is Deepgram. TTS is Cartesia.
+- LLM: Claude Haiku 4.5 via AWS Bedrock (~$2/mo)
+- STT: Speaches + faster-whisper-large-v3 (self-hosted, 99 languages, $0)
+- TTS: Speaches + Kokoro-82M (self-hosted, natural voice, $0)
 
 ## Prerequisites
 
 - Docker Desktop running
-- Free Deepgram API key: https://console.deepgram.com (free tier = $200 credit)
-- Free Cartesia API key: https://play.cartesia.ai (free tier available)
 - AWS creds already in `.env.dograh` (pre-filled)
+- No external API keys needed — STT and TTS run locally via Speaches
 
 ## Local Setup
 
-### 1. Fill in `.env.dograh`
-
-Open `F:/AgentTeam/hackathon/Platform/.env.dograh` and add:
-
-```
-DEEPGRAM_API_KEY=<your key from console.deepgram.com>
-CARTESIA_API_KEY=<your key from play.cartesia.ai>
-CARTESIA_VOICE_ID=<optional — leave blank to use Cartesia default>
-```
-
-The AWS Bedrock credentials (for Claude Sonnet 4.6) are already filled in.
-
-### 2. Start Dograh
+### 1. Start the full stack
 
 From the Platform root (`F:/AgentTeam/hackathon/Platform/`):
 
@@ -37,9 +26,17 @@ From the Platform root (`F:/AgentTeam/hackathon/Platform/`):
 docker compose -f infra/docker-compose.yml --profile dograh up
 ```
 
-First run pulls ~1.5 GB of images. Subsequent starts are fast.
+First run pulls images + downloads ML models (~4.5GB total: Whisper 3GB + Kokoro 400MB + Docker images). Subsequent starts are fast.
 
-### 3. Configure the LLM, STT, and TTS
+Services started:
+- `dograh-postgres` — agent data
+- `dograh-redis` — session cache
+- `dograh-minio` — audio storage
+- `dograh-api` (port 8010) — agent orchestration
+- `dograh-ui` (port 3010) — web call UI
+- `speaches` (internal only) — STT + TTS engine
+
+### 2. Configure the LLM, STT, and TTS
 
 Open http://localhost:3010 in your browser. This is the Dograh dashboard.
 
@@ -47,22 +44,28 @@ Go to **Model Configurations** (http://localhost:3010/model-configurations) and 
 
 **LLM (Language Model):**
 - Provider: `Amazon Bedrock`
-- Model: `us.anthropic.claude-sonnet-4-6`
+- Model: `global.anthropic.claude-haiku-4-5-20251001-v1:0`
 - AWS Access Key ID: (from `.env.dograh`)
 - AWS Secret Access Key: (from `.env.dograh`)
 - AWS Region: `us-east-1`
 
 **Transcriber (STT):**
-- Provider: `Deepgram`
-- API Key: (from `.env.dograh`)
-- Language: `auto`
+- Provider: `speaches`
+- Model: `Systran/faster-whisper-large-v3`
+- Language: `auto` (Whisper auto-detects: English, Arabic, Urdu, Spanish, Hindi, 95+ more)
+- Base URL: `http://speaches:8000/v1`
+- API Key: (leave blank)
 
 **Voice (TTS):**
-- Provider: `Cartesia`
-- API Key: (from `.env.dograh`)
-- Voice: "Helpful Woman" or "Support Man" (or paste a Cartesia voice ID)
+- Provider: `speaches`
+- Model: `hexgrad/Kokoro-82M`
+- Voice: `af_heart` (American Female — most natural)
+- Base URL: `http://speaches:8000/v1`
+- API Key: (leave blank)
 
-### 4. Create a Support Agent
+Other voice options: `am_adam` (American Male), `bf_emma` (British Female), `bm_lewis` (British Male), `hf_alpha` (Hindi Female)
+
+### 3. Create a Support Agent
 
 1. Click **New Agent** in the Dograh dashboard.
 2. Name it: `TradeLikeMe Support`
@@ -70,38 +73,27 @@ Go to **Model Configurations** (http://localhost:3010/model-configurations) and 
 4. Paste the contents of `kb/system_prompt.txt` into the node's system prompt field.
 5. Click **Web Call** to test instantly in the browser.
 
-### 5. Embed in the Frontend (optional)
+### 4. Frontend Integration
 
-Dograh provides a web SDK. To embed the voice widget in the React dashboard:
+The voice widget is embedded via iframe in `frontend/src/components/VoiceCallButton.tsx`. It loads Dograh's UI directly:
+- Local: `http://localhost:3010`
+- Production: `https://voice.tradelikeme.xyz`
 
-```bash
-npm install @dograh/sdk
-```
-
-Basic usage (connect to agent by ID):
-
-```ts
-import { DograhClient } from "@dograh/sdk";
-
-const client = new DograhClient({
-  baseUrl: "http://localhost:8010",   // dograh-api on port 8010 locally
-  apiKey: process.env.DOGRAH_API_KEY, // from Dograh dashboard → API Keys
-});
-```
-
-For the full web call widget, use the iframe embed from the agent's **Share** tab in the dashboard, pointing to `http://localhost:3010`.
+Set via `VITE_DOGRAH_URL` in `frontend/.env.local`.
 
 ## Architecture
 
 ```
-User browser (WebRTC) → Dograh UI (port 3010) → Dograh API (port 8010)
-                                                       ↓
-                                              AWS Bedrock (Claude Sonnet 4.6)
-                                              Deepgram (STT)
-                                              Cartesia (TTS)
+User browser (WebRTC iframe) → Dograh UI (port 3010) → Dograh API (port 8010)
+                                                              ↓
+                                                     Speaches (internal, port 8000)
+                                                        ├── STT: faster-whisper-large-v3
+                                                        └── TTS: Kokoro-82M
+                                                              ↓
+                                                     AWS Bedrock (Claude Haiku 4.5)
 ```
 
-All audio processing happens inside the Dograh containers. No audio data leaves your machine during local testing.
+All STT/TTS processing happens inside the Speaches container on your machine. Only LLM calls go to AWS.
 
 ## Stopping Dograh
 

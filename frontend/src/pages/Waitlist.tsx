@@ -2,9 +2,6 @@ import FadingVideo from '../components/FadingVideo'
 import ScrollProgress from '../components/ScrollProgress'
 import WaitlistNavbar from './WaitlistNavbar'
 import WaitlistHero from './WaitlistHero'
-import WaitlistSocialProof from './WaitlistSocialProof'
-import SolanaSection from './SolanaSection'
-import FAQ from '../components/FAQ'
 import WaitlistFinalCTA from './WaitlistFinalCTA'
 import Footer from '../components/Footer'
 
@@ -19,11 +16,6 @@ export default function Waitlist() {
         <ScrollProgress />
         <WaitlistNavbar />
         <WaitlistHero />
-        <div style={{ background: 'rgba(2,4,12,0.92)', backdropFilter: 'blur(2px)' }}>
-          <WaitlistSocialProof />
-          <SolanaSection />
-          <FAQ />
-        </div>
         <WaitlistFinalCTA />
         <Footer />
       </div>

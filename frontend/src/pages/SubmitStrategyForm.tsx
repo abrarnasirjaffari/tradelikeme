@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowUpRight, Check } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { pb } from '../lib/pocketbase'
 import { inputStyle, labelStyle, fieldWrap, chipBase } from './formStyles'
 
 const fade = {
@@ -59,12 +59,8 @@ export default function SubmitStrategyForm() {
     if (!/^[a-z0-9_]{3,20}$/.test(cleaned)) return
     setUsernameStatus('checking')
     debounceRef.current = setTimeout(async () => {
-      const { data } = await supabase
-        .from('strategy_submissions')
-        .select('username')
-        .eq('username', cleaned)
-        .maybeSingle()
-      setUsernameStatus(data ? 'taken' : 'available')
+      const result = await pb.collection('strategy_submissions').getList(1, 1, { filter: `username="${cleaned}"` })
+      setUsernameStatus(result.totalItems > 0 ? 'taken' : 'available')
     }, 500)
   }
 
@@ -78,21 +74,26 @@ export default function SubmitStrategyForm() {
     e.preventDefault()
     if (!emailValid) return
     setSubmitting(true); setError(null)
-    const { error: err } = await supabase.from('strategy_submissions').insert({
-      name: f.name, username: f.username || null, email: f.email, telegram: f.telegram || null, whatsapp: f.whatsapp || null,
-      experience: f.experience || null, win_rate: f.winRate, trade_count: f.tradeCount,
-      strategy_type: f.strategyType || null, timeframes: f.timeframes.length ? f.timeframes : null,
-      asset_classes: f.assetClasses.length ? f.assetClasses : null,
-      exchanges: f.exchanges.length ? f.exchanges : null,
-      coins: f.coins.length ? f.coins : null,
-      rr: f.rr || null, sessions: f.sessions.length ? f.sessions : null,
-      avg_hold_time: f.avgHoldTime || null,
-      entry_rules: f.entryRules || null, sl_rules: f.slRules || null, tp_rules: f.tpRules || null,
-      unique_edge: f.uniqueEdge || null, tv_link: f.tvLink || null,
-      heard_from: f.heardFrom || null,
-    })
+    try {
+      await pb.collection('strategy_submissions').create({
+        name: f.name, username: f.username || null, email: f.email, telegram: f.telegram || null, whatsapp: f.whatsapp || null,
+        experience: f.experience || null, win_rate: f.winRate, trade_count: f.tradeCount,
+        strategy_type: f.strategyType || null, timeframes: f.timeframes.length ? f.timeframes : null,
+        asset_classes: f.assetClasses.length ? f.assetClasses : null,
+        exchanges: f.exchanges.length ? f.exchanges : null,
+        coins: f.coins.length ? f.coins : null,
+        rr: f.rr || null, sessions: f.sessions.length ? f.sessions : null,
+        avg_hold_time: f.avgHoldTime || null,
+        entry_rules: f.entryRules || null, sl_rules: f.slRules || null, tp_rules: f.tpRules || null,
+        unique_edge: f.uniqueEdge || null, tv_link: f.tvLink || null,
+        heard_from: f.heardFrom || null,
+      })
+    } catch (err) {
+      setSubmitting(false)
+      setError('Something went wrong. Please try again.')
+      return
+    }
     setSubmitting(false)
-    if (err) { setError('Something went wrong. Please try again.'); return }
     setSubmitted(true)
   }
 
