@@ -33,6 +33,7 @@ import TwoFactorSetupPage from './pages/TwoFactorSetupPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import PublicOnlyRoute from './components/PublicOnlyRoute'
 import SubmitStrategyPage from './pages/SubmitStrategyPage'
+import ContactPage from './pages/ContactPage'
 import AdminPage from './pages/admin/AdminPage'
 import StrategiesPage from './pages/investor/StrategiesPage'
 import StrategyDetailPage from './pages/investor/StrategyDetailPage'
@@ -118,6 +119,7 @@ export default function App() {
         <Route path="/blog/:slug" element={<BlogPostPage />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/submit-strategy" element={<SubmitStrategyPage />} />
+        <Route path="/contact" element={<ContactPage />} />
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="/2fa-setup" element={<ProtectedRoute><TwoFactorSetupPage /></ProtectedRoute>} />
         <Route path="/admin/*" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />

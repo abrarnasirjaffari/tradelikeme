@@ -31,7 +31,7 @@ const COLS: { heading: string; links: FooterItem[] }[] = [
     heading: 'Company',
     links: [
       { label: 'About',   soon: true },
-      { label: 'Sponsor', soon: true },
+      { label: 'Contact', path: '/contact' },
       { label: 'GitHub',  href: 'https://github.com/abrarnasirjaffari/tradelikeme' },
     ],
   },
