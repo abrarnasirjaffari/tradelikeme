@@ -33,7 +33,6 @@ import TwoFactorSetupPage from './pages/TwoFactorSetupPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import PublicOnlyRoute from './components/PublicOnlyRoute'
 import SubmitStrategyPage from './pages/SubmitStrategyPage'
-import VoiceCallButton from './components/VoiceCallButton'
 import AdminPage from './pages/admin/AdminPage'
 import StrategiesPage from './pages/investor/StrategiesPage'
 import StrategyDetailPage from './pages/investor/StrategyDetailPage'
@@ -147,7 +146,6 @@ export default function App() {
         <Route path="/trader/subscribers" element={<ProtectedRoute><TraderSubscribersPage /></ProtectedRoute>} />
         <Route path="/trader/submit" element={<ProtectedRoute><TraderSubmitStrategyPage /></ProtectedRoute>} />
       </Routes>
-      <VoiceCallButton variant="floating" />
     </>
   )
 }
