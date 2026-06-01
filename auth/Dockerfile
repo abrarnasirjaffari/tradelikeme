@@ -8,7 +8,7 @@ RUN npm install
 
 COPY . .
 
-RUN npx tsx --version && npx esbuild server.ts --bundle --platform=node --format=esm --outfile=dist/server.mjs --external:pg-native --external:better-sqlite3
+RUN npx tsx --version && npx esbuild server.ts --bundle --platform=node --format=cjs --outfile=dist/server.cjs --external:pg-native --external:better-sqlite3
 
 # Stage 2: Runtime
 FROM node:20-alpine
@@ -26,4 +26,4 @@ USER appuser
 
 EXPOSE 3001
 
-CMD ["node", "dist/server.mjs"]
+CMD ["node", "dist/server.cjs"]
