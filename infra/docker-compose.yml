@@ -1,11 +1,9 @@
 services:
   postgres:
     image: postgres:16-alpine
-    env_file:
-      - ../.env
     environment:
       POSTGRES_USER: tradelikeme
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: TradeLikeMe2026!
       POSTGRES_DB: tradelikeme
     volumes:
       - postgres_data:/var/lib/postgresql/data
